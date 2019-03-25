@@ -30,8 +30,10 @@
 
 int  trustmEngine_init(void);
 void trustmEngine_close(void);
-void trustmEngine_arm_timer(void);
-void trustmEngine_disarm_timer(void);
+
+uint16_t trustmEngine_init_rand(ENGINE *e);
+uint16_t trustmEngine_init_rsa(ENGINE *e);
+EVP_PKEY *trustm_rsa_loadkey(void);
 
 EVP_PKEY *trustmEngine_ec_loadKey(
   ENGINE      *e,

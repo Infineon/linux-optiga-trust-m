@@ -34,15 +34,18 @@
 #include <openssl/asn1.h>
 
 //#include "optiga/ifx_i2c/ifx_i2c_config.h"
-//#include "optiga/optiga_util.h"
+#include "optiga/optiga_util.h"
 
 #include "trustm_helper.h"
+
+//extern void pal_os_event_disarm(void);
 
 /*************************************************************************
 *  Global
 *************************************************************************/
 optiga_util_t * me_util;
 optiga_lib_status_t optiga_lib_status;
+uint16_t trustm_open_flag = 0;
 
 /*************************************************************************
 *  functions
@@ -62,9 +65,9 @@ void optiga_util_callback(void * context, optiga_lib_status_t return_status)
 *************************************************************************/
 
 static char __ALW[] = "ALW";
-//static char __CONF[] = "Conf";
-//static char __INT[] = "Int";
-//static char __LUC[] = "Luc";
+static char __CONF[] = "Conf";
+static char __INT[] = "Int";
+static char __LUC[] = "Luc";
 static char __LCSG[] = "LcsG";
 static char __LCSA[] = "LcsA";
 static char __LCSO[] = "LcsO";
@@ -75,13 +78,13 @@ static char __AND[] = "&&";
 static char __OR[] = "||";
 static char __NEV[] = "NEV";
 
-//static char __BSTR[] = "BSTR";
-//static char __UPCTR[] = "UPCTR";
-//static char __TA[] = "TA";
-//static char __DEVCERT[] = "DEVCERT";
-//static char __PRESSEC[] = "PRESSEC";
-//static char __PTFBIND[] = "PTFBIND";
-//static char __UPDATSEC[] = "UPDATSEC";
+static char __BSTR[] = "BSTR";
+static char __UPCTR[] = "UPCTR";
+static char __TA[] = "TA";
+static char __DEVCERT[] = "DEVCERT";
+static char __PRESSEC[] = "PRESSEC";
+static char __PTFBIND[] = "PTFBIND";
+static char __UPDATSEC[] = "UPDATSEC";
 
 static char __ECC256[] = "ECC256";
 static char __ECC384[] = "ECC384";
@@ -209,7 +212,12 @@ void trustmdecodeMetaData(uint8_t * metaData)
 					LcsO = *(metaData+(i++));
 					printf("LcsO:0x%.2X, ",LcsO);
 					break;
-				
+					
+				case 0xC1:
+					// len is always 2
+					len = *(metaData+(i++));
+					printf("Ver:%.2x%.2x, ", *(metaData+(i++)),*(metaData+(i++)));
+					break;
 				case 0xC4:
 					// len is 1 or 2
 					len = *(metaData+(i++));
@@ -285,9 +293,9 @@ void trustmdecodeMetaData(uint8_t * metaData)
 					}
 					break;
 				
-				case 0xD2:
+				case 0xD3:
 					len = *(metaData+(i++));
-					printf("D:");
+					printf("E:");
 					for (j=0; j<len;j++)
 					{
 						if((*(metaData+(i)) == 0x00)||(*(metaData+(i)) == 0xff) )
@@ -509,6 +517,74 @@ uint16_t trustmReadX509PEM(X509 **x509, const char *filename)
 }
 
 /**********************************************************************
+* trustm_readUID()
+**********************************************************************/
+optiga_lib_status_t trustm_readUID(utrustm_UID_t *UID)
+{
+    uint16_t offset, bytes_to_read;
+    uint16_t optiga_oid;
+    uint8_t read_data_buffer[1024];
+
+    optiga_lib_status_t return_status;
+
+    uint16_t i;
+
+    do
+    {
+
+        //Read device UID
+        optiga_oid = 0xE0C2;
+        offset = 0x00;
+        bytes_to_read = sizeof(read_data_buffer);
+
+        optiga_lib_status = OPTIGA_LIB_BUSY;
+        return_status = optiga_util_read_data(me_util,
+											  optiga_oid,
+                                              offset,
+                                              read_data_buffer,
+                                              &bytes_to_read);
+
+        if (OPTIGA_LIB_SUCCESS != return_status)
+        {
+			//Reading the data object failed.
+			TRUSTM_HELPER_ERRFN("optiga_util_read_data : FAIL!!!\n");
+            break;
+        }
+
+        while (OPTIGA_LIB_BUSY == optiga_lib_status) 
+        {
+            //Wait until the optiga_util_read_metadata operation is completed
+        }
+
+        if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
+        {
+            //Reading metadata data object failed.
+            break;
+        }        
+
+		for (i=0;i<bytes_to_read;i++)
+		{
+			UID->b[i] = read_data_buffer[i];
+		}
+
+    } while(FALSE);
+
+    return return_status;
+}
+
+/**********************************************************************
+* optiga_crypt_callback()
+**********************************************************************/
+void optiga_crypt_callback(void * context, optiga_lib_status_t return_status)
+{
+    optiga_lib_status = return_status;
+    if (NULL != context)
+    {
+        // callback to upper layer here
+    }
+}
+
+/**********************************************************************
 * trustm_Open()
 **********************************************************************/
 optiga_lib_status_t trustm_Open(void)
@@ -516,11 +592,18 @@ optiga_lib_status_t trustm_Open(void)
 	uint16_t i;
     optiga_lib_status_t return_status;
 
+	TRUSTM_HELPER_DBGFN(">");
+    trustm_open_flag = 0;
     do
     {
         //Create an instance of optiga_util to open the application on OPTIGA.
         me_util = optiga_util_create(0, optiga_util_callback, NULL);
-		printf("TrustM Open. \n");
+        if (NULL == me_util)
+        {
+            TRUSTM_HELPER_ERRFN("Fail : optiga_util_create\n");
+            break;
+        }
+		TRUSTM_HELPER_DBGFN("TrustM Open. \n");
 
         /**
          * Open the application on OPTIGA which is a precondition to perform any other operations
@@ -531,7 +614,7 @@ optiga_lib_status_t trustm_Open(void)
 
         if (OPTIGA_LIB_SUCCESS != return_status)
         {
-            printf("Fail : optiga_util_open_application[1] \n");
+            TRUSTM_HELPER_ERRFN("Fail : optiga_util_open_application[1] \n");
             break;
         }
 
@@ -553,13 +636,19 @@ optiga_lib_status_t trustm_Open(void)
         if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
         {
             //optiga util open application failed
-			printf("Fail : optiga_util_open_application \n");
-			printf("optiga_lib_status: %x\n",optiga_lib_status);
+			TRUSTM_HELPER_ERRFN("Fail : optiga_util_open_application \n");
+			TRUSTM_HELPER_ERRFN("optiga_lib_status: %x\n",optiga_lib_status);
 			return_status = optiga_lib_status;
             break;
         }
+        
+        trustm_open_flag = 1;
+        TRUSTM_HELPER_DBGFN("Success : optiga_util_open_application \n");
     }while(FALSE);      
 
+
+
+	TRUSTM_HELPER_DBGFN("<");
 	return return_status;
 }
 
@@ -569,40 +658,53 @@ optiga_lib_status_t trustm_Open(void)
 optiga_lib_status_t trustm_Close(void)
 {
     optiga_lib_status_t return_status;
+
+	TRUSTM_HELPER_DBGFN(">");
 	
 	do{
+		if (trustm_open_flag != 1)
+		{
+			TRUSTM_HELPER_ERRFN("trustM is not open \n");
+			break;
+		}
+		
         optiga_lib_status = OPTIGA_LIB_BUSY;
         //++ty++ OPTIGA_COMMS_PROTECTION_MANAGE_CONTEXT(me_util, OPTIGA_COMMS_SESSION_CONTEXT_NONE);
         return_status = optiga_util_close_application(me_util, 0);
         
         if (OPTIGA_LIB_SUCCESS != return_status)
         {
-			printf("Fail : optiga_util_close_application \n");
+			TRUSTM_HELPER_ERRFN("Fail : optiga_util_close_application \n");
             break;
         }
 
         while (optiga_lib_status == OPTIGA_LIB_BUSY)
         {
             //Wait until the optiga_util_close_application is completed
-			printf("Waiting : optiga_util_close_application \n");
+			//printf("Waiting : optiga_util_close_application \n");
+			//printf(".");
         }
         
         if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
         {
             //optiga util close application failed
-			printf("Fail : optiga_util_close_application \n");
+			TRUSTM_HELPER_ERRFN("Fail : optiga_util_close_application \n");
 			return_status = optiga_lib_status;
             break;
         }
 
-		printf("Success : optiga_util_close_application \n");
+		trustm_open_flag = 0;
+		TRUSTM_HELPER_DBGFN("Success : optiga_util_close_application \n");
 
 	}while(FALSE);
 
     // destroy util and crypt instances
-    optiga_util_destroy(me_util);	
+    if (me_util != NULL)
+		optiga_util_destroy(me_util);	
 	
-	printf("TrustM Closed.\n");
+	//pal_os_event_disarm();
 	
+	TRUSTM_HELPER_DBGFN("TrustM Closed.\n");
+	TRUSTM_HELPER_DBGFN("<");
 	return return_status;
 }

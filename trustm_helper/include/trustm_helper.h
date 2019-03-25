@@ -40,7 +40,7 @@
 #include "optiga_crypt.h"
 
 //Debug Print
-#define DEBUG_TRUSTM_HELPER =1
+//#define DEBUG_TRUSTM_HELPER =1
 
 #ifdef DEBUG_TRUSTM_HELPER
 
@@ -85,10 +85,12 @@ typedef enum _tag_trustm_LifeCycStatus {
 
 // *********** Extern
 extern optiga_util_t * me_util;
+extern optiga_lib_status_t optiga_lib_status;
 
 // Function Prototype
 optiga_lib_status_t trustm_Open(void);
 optiga_lib_status_t trustm_Close(void);
+void optiga_crypt_callback(void * context, optiga_lib_status_t return_status);
 
 void trustmHexDump(uint8_t *pdata, uint32_t len);
 uint16_t trustmWritePEM(uint8_t *buf, uint32_t len, const char *filename, char *name);
@@ -98,5 +100,7 @@ uint16_t trustmReadDER(uint8_t *buf, uint32_t *len, const char *filename);
 void trustmdecodeMetaData(uint8_t * metaData);
 uint16_t trustmWriteX509PEM(X509 *x509, const char *filename);
 uint16_t trustmReadX509PEM(X509 **x509, const char *filename);
+
+optiga_lib_status_t trustm_readUID(utrustm_UID_t *UID);
 
 #endif	// _TRUSTM_HELPER_H_

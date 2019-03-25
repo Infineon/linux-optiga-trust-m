@@ -60,26 +60,6 @@ void example_optiga_crypt_rsa_decrypt_and_store(void);
 void example_optiga_crypt_rsa_encrypt_message(void);
 void example_optiga_crypt_rsa_encrypt_session(void);
 
-void example_log_function_name(const char_t* function)
-{
-    optiga_lib_print_string("Entering function : ");
-    optiga_lib_print_string(function);
-    optiga_lib_print_string(" \n");
-}
-void example_log_execution_status(const char_t* function, uint8_t status)
-{
-    //function name
-    optiga_lib_print_string(function);
-    if(status == 1)
-    {
-        optiga_lib_print_string(" : SUCCEED \n");
-    }
-    else
-    {
-        optiga_lib_print_string(" : FAILED \n");
-    }   
-
-}
 
 /*******************************************************************
 	main()
@@ -90,11 +70,11 @@ int32_t main(void)
 
     do
     {
-		return_status = trustm_Open();
-		if (return_status != OPTIGA_LIB_SUCCESS)
-			break;
+        return_status = trustm_Open();
+        if (return_status != OPTIGA_LIB_SUCCESS)
+                break;
 
-		printf("return_status: %x\n", return_status);
+        printf("return_status: %x\n", return_status);
 		
         //Example: Generate RSA pre master secret
         //example_optiga_crypt_rsa_pre_master_secret();
@@ -106,46 +86,46 @@ int32_t main(void)
         //example_optiga_util_write_data();
 
         //Example: Generate Random
-        //example_optiga_crypt_random();
+        example_optiga_crypt_random();
 
         //Example: Generate Hash
-        //example_optiga_crypt_hash();
+        example_optiga_crypt_hash();
 
         //Example: Generate ECC Key pair
-        //example_optiga_crypt_ecc_generate_keypair();
+        example_optiga_crypt_ecc_generate_keypair();
 
         //Example: Sign the given digest
-        //example_optiga_crypt_ecdsa_sign();
+        example_optiga_crypt_ecdsa_sign();
 
         //Example: Verify the signature
-        //example_optiga_crypt_ecdsa_verify();
+        example_optiga_crypt_ecdsa_verify();
 
         //Example: Generate shared secret using ECDH
-        //example_optiga_crypt_ecdh();
+        example_optiga_crypt_ecdh();
 
         //Example: Derive the keys using TLS PRF SHA256
-        //example_optiga_crypt_tls_prf_sha256();
+        example_optiga_crypt_tls_prf_sha256();
         
         //Example: Generate RSA Key pair
-        //example_optiga_crypt_rsa_generate_keypair();
+        example_optiga_crypt_rsa_generate_keypair();
 
         //Example: Sign the given digest using RSA signature scheme
-        //example_optiga_crypt_rsa_sign();
+        example_optiga_crypt_rsa_sign();
         
         //Example: Verify the rsa signature
-        //example_optiga_crypt_rsa_verify();
+        example_optiga_crypt_rsa_verify();
         
         //Example: Verify the rsa decrypt and export
-        //example_optiga_crypt_rsa_decrypt_and_export();
+        example_optiga_crypt_rsa_decrypt_and_export();
         
         //Example: Verify the rsa decrypt and store in session OID
-        //example_optiga_crypt_rsa_decrypt_and_store();
+        example_optiga_crypt_rsa_decrypt_and_store();
         
         // RSA Encryption of message
-        //example_optiga_crypt_rsa_encrypt_message();
+        example_optiga_crypt_rsa_encrypt_message();
         
         // RSA Encryption of session
-        //example_optiga_crypt_rsa_encrypt_session();
+        example_optiga_crypt_rsa_encrypt_session();
         
         /**
          * Close the application on OPTIGA after all the operations are executed
