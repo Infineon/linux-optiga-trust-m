@@ -30,8 +30,10 @@
 #include "trustm_engine_common.h"
 #include "trustm_engine.h"
 
-//extern void pal_os_event_disarm(void);
-//extern void pal_os_event_arm(void);
+#ifdef WORKAROUND
+	extern void pal_os_event_disarm(void);
+	extern void pal_os_event_arm(void);
+#endif
 
 static int trustmEngine_getrandom(unsigned char *buf, int num);
 static int trustmEngine_rand_status(void);
@@ -95,7 +97,9 @@ static int trustmEngine_getrandom(unsigned char *buf, int num)
 	j = (num - i)/MAX_RAND_INPUT; // Get the count 
 
 	do {
-		//pal_os_event_arm();
+#ifdef WORKAROUND		
+		pal_os_event_arm();
+#endif
 		me = optiga_crypt_create(0, optiga_crypt_callback, NULL);
 		if (NULL == me)
 		{

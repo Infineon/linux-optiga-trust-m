@@ -30,8 +30,10 @@
 
 #include "trustm_helper.h"
 
-//extern void pal_os_event_disarm(void);
-//extern void pal_os_event_arm(void);
+#ifdef WORKAROUND
+	extern void pal_os_event_disarm(void);
+	extern void pal_os_event_arm(void);
+#endif
 
 static uint8_t dummy_public_key_2048[] = {
 0x30,0x82,0x01,0x22,0x30,0x0D,0x06,0x09,0x2A,0x86,0x48,0x86,0xF7,0x0D,0x01,0x01,
@@ -372,7 +374,9 @@ static int trustmEngine_rsa_sign(int type,
 		//Implement code here;
 	
 		key_oid = trustm_ctx.key_oid;
-		//pal_os_event_arm();
+#ifdef WORKAROUND		
+		pal_os_event_arm();
+#endif		
 
         me = optiga_crypt_create(0, optiga_crypt_callback, NULL);
         if (NULL == me)
@@ -418,8 +422,11 @@ static int trustmEngine_rsa_sign(int type,
         //Destroy the instance after the completion of usecase if not required.
         return_status = optiga_crypt_destroy(me);
     }
-    
-//	pal_os_event_disarm();	
+
+#ifdef WORKAROUND    
+	pal_os_event_disarm();	
+#endif
+	
 	TRUSTM_ENGINE_DBGFN("<");	
 	return ret;	
 }
@@ -455,14 +462,16 @@ static int trustmEngine_rsa_verify(int dtype,
 
 	//trustmHexDump(trustm_ctx.pubkey,trustm_ctx.pubkeylen);
     do {
-	//pal_os_event_arm();
+
+#ifdef WORKAROUND	    
+	pal_os_event_arm();
+#endif
 	
 	for(i=0;i<(trustm_ctx.pubkeylen - 19);i++)
 	{
 		public_key[i] = trustm_ctx.pubkey[i+19];
 	}
 	//trustmHexDump(public_key,trustm_ctx.pubkeylen - 19);
-	
 
         me = optiga_crypt_create(0, optiga_crypt_callback, NULL);
         if (NULL == me)
@@ -470,7 +479,7 @@ static int trustmEngine_rsa_verify(int dtype,
 	    TRUSTM_ENGINE_MSGFN("optiga_crypt_create fail.");
             break;
         }
-
+	
         optiga_lib_status = OPTIGA_LIB_BUSY;
         return_status = optiga_crypt_rsa_verify (me,
                                                  trustm_ctx.rsa_key_sig_scheme,
@@ -487,16 +496,16 @@ static int trustmEngine_rsa_verify(int dtype,
 			TRUSTM_ENGINE_MSGFN("optiga_crypt_rsa_verify fail_1");
             break;
         }
-
         while (OPTIGA_LIB_BUSY == optiga_lib_status) 
         {
             //Wait until the optiga_crypt_rsa_sign operation is completed
+		//printf("test point 1\n");
         }
 
         if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
         {
             //RSA Signature generation failed.
-			TRUSTM_ENGINE_MSGFN("optiga_crypt_rsa_verify fail_2");
+	    TRUSTM_ENGINE_MSGFN("optiga_crypt_rsa_verify fail_2");
             break;
         }
 		
@@ -508,8 +517,11 @@ static int trustmEngine_rsa_verify(int dtype,
         //Destroy the instance after the completion of usecase if not required.
         return_status = optiga_crypt_destroy(me);
     }
-    
-//	pal_os_event_disarm();	
+ 
+#ifdef WORKAROUND    
+	pal_os_event_disarm();
+#endif
+	
 	TRUSTM_ENGINE_DBGFN("<");	
 	return ret;	
 }

@@ -38,7 +38,9 @@
 
 #include "trustm_helper.h"
 
-//extern void pal_os_event_disarm(void);
+#ifdef WORKAROUND
+	extern void pal_os_event_disarm(void);
+#endif
 
 /*************************************************************************
 *  Global
@@ -701,8 +703,10 @@ optiga_lib_status_t trustm_Close(void)
     // destroy util and crypt instances
     if (me_util != NULL)
 		optiga_util_destroy(me_util);	
-	
-	//pal_os_event_disarm();
+
+#ifdef WORKAROUND	
+	pal_os_event_disarm();
+#endif
 	
 	TRUSTM_HELPER_DBGFN("TrustM Closed.\n");
 	TRUSTM_HELPER_DBGFN("<");

@@ -32,9 +32,11 @@
 
 trustm_ctx_t trustm_ctx;
 
-//extern void pal_os_event_disarm(void);
-//extern void pal_os_event_arm(void);
-//extern void pal_os_event_destroy1(void);
+#ifdef WORKAROUND
+	extern void pal_os_event_disarm(void);
+	extern void pal_os_event_arm(void);
+	extern void pal_os_event_destroy1(void);
+#endif
 
 static const char *engine_id   = "trustm_engine";
 static const char *engine_name = "Infineon OPTIGA TrustM Engine";
@@ -187,11 +189,15 @@ static int engine_destroy(ENGINE *e)
 		trustm_ctx.pubkey[i] = 0x00;
 	}
 
-
-	//pal_os_event_arm();
+#ifdef WORKAROUND
+	pal_os_event_arm();
+#endif
+	
 	trustm_Close();
-	//pal_os_event_disarm();
-	//pal_os_event_destroy1();
+#ifdef WORKAROUND	
+	pal_os_event_disarm();
+	pal_os_event_destroy1();
+#endif
 
 	TRUSTM_ENGINE_DBGFN("<");
 	return TRUSTM_ENGINE_SUCCESS;
@@ -257,8 +263,11 @@ static EVP_PKEY * engine_load_privkey(ENGINE *e, const char *key_id, UI_METHOD *
 		}
 		
 	}while(FALSE);
-	
-//	pal_os_event_disarm();
+
+#ifdef WORKAROUND	
+	pal_os_event_disarm();
+#endif
+
 	TRUSTM_ENGINE_DBGFN("<");
     return key;
 }
@@ -321,8 +330,11 @@ static EVP_PKEY * engine_load_pubkey(ENGINE *e, const char *key_id, UI_METHOD *u
 		}
 		
 	}while(FALSE);
-	
-//	pal_os_event_disarm();
+
+#ifdef WORKAROUND	
+	pal_os_event_disarm();
+#endif
+
 	TRUSTM_ENGINE_DBGFN("<");
     return key;
 }
