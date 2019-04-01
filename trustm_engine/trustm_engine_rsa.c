@@ -229,6 +229,7 @@ EVP_PKEY *trustm_rsa_loadkey(void)
 			data = dummy_public_key_2048;
 			len = sizeof(dummy_public_key_2048);
 			key = d2i_PUBKEY(NULL,(const unsigned char **)&data,len);
+			trustm_ctx.pubkeylen = 0;
 		}
 	}
     } while (FALSE);
@@ -445,12 +446,8 @@ static int trustmEngine_rsa_verify(int dtype,
     uint16_t i;
     //uint16_t key_oid;
     //uint16_t templen = 500;
-    public_key_from_host_t public_key_details = 
-    {
-         public_key,
-         trustm_ctx.pubkeylen - 19,
-         trustm_ctx.rsa_key_type
-    };
+    
+    
 
 	TRUSTM_ENGINE_DBGFN(">");
 
@@ -462,6 +459,18 @@ static int trustmEngine_rsa_verify(int dtype,
 
 	//trustmHexDump(trustm_ctx.pubkey,trustm_ctx.pubkeylen);
     do {
+	if (trustm_ctx.pubkeylen == 0)
+	{
+		 TRUSTM_ENGINE_ERRFN("Error No Public loaded!!!");
+		 break;
+	}
+
+	public_key_from_host_t public_key_details = 
+	{
+		public_key,
+		trustm_ctx.pubkeylen - 19,
+		trustm_ctx.rsa_key_type
+	};
 
 #ifdef WORKAROUND	    
 	pal_os_event_arm();

@@ -345,6 +345,9 @@ static int engine_ctrl(ENGINE *e, int cmd, long i, void *p, void (*f) ())
 	int ret = TRUSTM_ENGINE_SUCCESS;
 
 	TRUSTM_ENGINE_DBGFN(">");
+	TRUSTM_ENGINE_DBGFN(">");
+	TRUSTM_ENGINE_DBGFN("cmd: %d", cmd);
+	TRUSTM_ENGINE_DBGFN("P : %s", (char *)p);
 
 	do {
 		TRUSTM_ENGINE_MSGFN("Function Not implemented.");
