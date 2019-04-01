@@ -28,7 +28,7 @@
 #include "trustm_helper.h"
 
 #include "trustm_engine_common.h"
-#include "trustm_engine.h"
+
 
 #ifdef WORKAROUND
 	extern void pal_os_event_disarm(void);

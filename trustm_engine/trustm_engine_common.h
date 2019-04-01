@@ -80,6 +80,7 @@
 #define PUBKEYFILE_SIZE 256
 #define PUBKEY_SIZE 1024
 
+
 //typedefine
 typedef enum trustmEngine_flag
 {
@@ -108,5 +109,13 @@ typedef struct trustm_ctx_str
 
 //extern
 extern trustm_ctx_t trustm_ctx;
+
+//function prototype
+int  trustmEngine_init(void);
+void trustmEngine_close(void);
+
+uint16_t trustmEngine_init_rand(ENGINE *e);
+uint16_t trustmEngine_init_rsa(ENGINE *e);
+EVP_PKEY *trustm_rsa_loadkey(void);
 
 #endif // _TRUSTM_ENGINE_COMMON_H_

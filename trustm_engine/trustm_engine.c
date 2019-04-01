@@ -27,7 +27,6 @@
 
 #include "trustm_helper.h"
 
-#include "trustm_engine.h"
 #include "trustm_engine_common.h"
 
 trustm_ctx_t trustm_ctx;

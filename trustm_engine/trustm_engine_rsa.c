@@ -22,12 +22,10 @@
 * SOFTWARE
 
 */
-#include "trustm_engine_common.h"
-
 #include <string.h>
 #include <openssl/engine.h>
-#include "trustm_engine.h"
 
+#include "trustm_engine_common.h"
 #include "trustm_helper.h"
 
 #ifdef WORKAROUND
