@@ -1,3 +1,0 @@
-[submodule "trustm_lib"]
-	path = trustm_lib
-	url = https://github.com/Infineon/optiga-trust-m.git
