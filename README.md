@@ -1,6 +1,5 @@
 # Command Line Interface (CLI) & OpenSSL Engine for OPTIGA™ Trust M1 security solution
 
-##Contents:
 #### [1. About](#about)
 #### [1.1 Prerequisites](#prerequisities)
 #### [1.2 Contents of the package](#contents)
