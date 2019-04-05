@@ -79,7 +79,7 @@ Note:
 ### <a name="rand"></a>4.1 rand
     Usuage : Random number generation
     Example 
-        $openssl rand –engine trustm_engine –base64 1024
+        $openssl rand -engine trustm_engine -base64 1024
     Note : 
     If trustM random number generation fails, there will still be random number output. 
     This is control by openSSL engine do not have control over it.
@@ -87,7 +87,7 @@ Note:
 ### <a name="req"></a>4.2 req
     Usuage : Certificate request / self signed cert / key generation
     Example
-        $openssl req –keyform engine –engine trustm_engine –key <OID>:<Public key file | *>:<NEW> -new –out test.csr –verify
+        $openssl req -keyform engine -engine trustm_engine -key <OID>:<Public key file | *>:<NEW> -new -out test.csr -verify
     Note:
     If wrong public is used or no pubkey is submitted the certificate generation will still 
     go through but verification will fail. Pubic key input only in PEM

@@ -105,19 +105,23 @@ all : $(BINDIR)/$(LIB) $(APPS) $(BINDIR)/$(ENG)
 
 $(BINDIR)/$(ENG): %: $(ENGOBJ) $(INCSRC) $(BINDIR)/$(LIB)
 	@echo "******* Linking $@ "
+	@mkdir -p -m 777 $(BINDIR)
 	@$(CC) $(LDFLAGS) $(LDFLAGS_1) $(ENGOBJ) -shared -o $@
 
 $(APPS): %: $(OTHOBJ) $(INCSRC) %.o
 	@echo "******* Linking $@ "
+	@mkdir -p -m 777 $(BINDIR)
 	@$(CC) $(LDFLAGS) $(LDFLAGS_1) $@.o $(OTHOBJ) -o $@
 	@cp $@ bin/.
 
 $(BINDIR)/$(LIB): %: $(LIBOBJ) $(INCSRC)
 	@echo "******* Linking $@ "
+	@mkdir -p -m 777 $(BINDIR)
 	@$(CC) $(LDFLAGS) $(LIBOBJ) -shared -o $@
-	
+
 $(LIBOBJ): %.o: %.c $(INCSRC)
 	@echo "+++++++ Generating lib object: $< "
+	@mkdir -p -m 777 $(BINDIR)
 	@$(CC) $(CFLAGS) $< -o $@
 
 %.o: %.c $(INCSRC)
@@ -137,7 +141,7 @@ clean :
 	@echo "Removing all application from $(APPDIR)"	
 	@rm -rf $(APPS)
 	@echo "Removing all application from $(BINDIR)"	
-	@rm -rf bin/*
+	@rm -r $(BINDIR)
 
 install_debug_lib: uninstall_lib $(BINDIR)/$(LIB)
 	@echo "Create debug link library $(LIB_INSTALL_DIR)/$(LIB)"	
