@@ -1,19 +1,19 @@
 # Command Line Interface (CLI) & OpenSSL Engine for OPTIGA™ Trust M1 security solution
 
-#### [1. About](#about)
-#### [1.1 Prerequisites](#prerequisites)
-#### [1.2 Contents of the package](#contents_of_package)
-#### [2  Getting Started](#getting_started)
-#### [2.1 First time building the library](#build_lib)
-#### [2.2 Building the engine](#build_engine) 
-#### [3. CLI Tools Usage](#cli_usage)
-#### [3.1 trustm_chipinfo](#chipinfo)
-#### [4. Trust M1 OpenSSL Engine usage](#engine_usage)
-#### [4.1 rand](#rand)
-#### [4.2 req](#req)
-#### [4.3 pkey](#pkey)
-#### [4.4 dgst](#dgst)
-#### [5. Known issues](#known_issues)
+1. [About](#about)
+    * [Prerequisites](#prerequisites)
+    * [Contents of the package](#contents_of_package)
+2. [Getting Started](#getting_started)
+    * [First time building the library](#build_lib)
+    * [Building the engine](#build_engine) 
+3. [CLI Tools Usage](#cli_usage)
+    * [trustm_chipinfo](#chipinfo)
+4. [Trust M1 OpenSSL Engine usage](#engine_usage)
+    * [rand](#rand)
+    * [req](#req)
+    * [pkey](#pkey)
+    * [dgst](#dgst)
+5. [Known issues](#known_issues)
 
 ## <a name="about"></a>1. About
 
