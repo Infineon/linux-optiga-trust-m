@@ -97,10 +97,10 @@ Note:
     Example
         $openssl pkey -engine trustm_engine -pubout -inform engine -in 0xe0fc:*:NEW -out testpube0fc.pem
 
-### <a name="dgst"></a>4.4 dgst
+### <a name="dgst"></a>dgst
     Usuage : Sign and verify
     Example
         $openssl dgst -sign 0xe0fc -engine trustm_engine -keyform engine -out helloworld.sig helloworld.txt
         $openssl dgst -engine trustm_engine -verify testpube0fc.pem -keyform engine -signature helloworld.sig helloworld.txt
 
-## <a name="known_issues"></a>5. Known issues
+## <a name="known_issues"></a>Known issues
