@@ -15,12 +15,12 @@
     * [dgst](#dgst)
 5. [Known issues](#known_issues)
 
-## <a name="about"></a>1. About
+## <a name="about"></a>About
 
     This is a command line tools tools and OpenSSL Engine for OPTIGA Trust M1 on Linux platform.
 
 
-### <a name="prerequisites"></a>1.1 Prerequisites
+### <a name="prerequisites"></a>Prerequisites
 
     Following is the software component to build the tools :
 	- GCC
@@ -34,7 +34,7 @@
     Tested platforms:
       - Raspberry PI 3 on Linux kernal 4.19
 
-### <a name="contents_of_package"></a>1.2 Contents of Package
+### <a name="contents_of_package"></a>Contents of Package
 
     This tools consists of the following files & directory:
 	.
@@ -55,13 +55,13 @@
 	│   └── trustm_helper.c		// Helper source 
 	└── trustm_lib                  // Directory for trust M library
 
-## <a name="getting_started"></a>2. Getting Started
-### <a name="build_lib"></a>2.1 First time building the library
+## <a name="getting_started"></a>Getting Started
+### <a name="build_lib"></a>First time building the library
     - sudo make install_debug_lib 
       or 
     - sudo make install_lib
 
-### <a name="build_engine"></a>2.2 Building the engine
+### <a name="build_engine"></a>Building the engine
     - sudo make install_debug_engine 
       or 
     - sudo make install_engine
@@ -71,12 +71,12 @@ Note:
   soft-link to the bin directory
 - If without debug than every time you build the library or engine you must reinstall
 
-## <a name="cli_usage"></a>3. CLI Tools Usage
-### <a name="chipinfo"></a>3.1 trustm_chipinfo
+## <a name="cli_usage"></a>CLI Tools Usage
+### <a name="chipinfo"></a>trustm_chipinfo
     Display the trustm chip information.
 
-## <a name="engine_usage"></a>4. Trust M1 OpenSSL Engine usage
-### <a name="rand"></a>4.1 rand
+## <a name="engine_usage"></a>Trust M1 OpenSSL Engine usage
+### <a name="rand"></a>rand
     Usuage : Random number generation
     Example 
         $openssl rand -engine trustm_engine -base64 1024
@@ -84,7 +84,7 @@ Note:
     If trustM random number generation fails, there will still be random number output. 
     This is control by openSSL engine do not have control over it.
 
-### <a name="req"></a>4.2 req
+### <a name="req"></a>req
     Usuage : Certificate request / self signed cert / key generation
     Example
         $openssl req -keyform engine -engine trustm_engine -key <OID>:<Public key file | *>:<NEW> -new -out test.csr -verify
@@ -92,7 +92,7 @@ Note:
     If wrong public is used or no pubkey is submitted the certificate generation will still 
     go through but verification will fail. Pubic key input only in PEM
 
-### <a name="pkey"></a>4.3 pkey
+### <a name="pkey"></a>pkey
     Usuage : Key tools / Key generation
     Example
         $openssl pkey -engine trustm_engine -pubout -inform engine -in 0xe0fc:*:NEW -out testpube0fc.pem
