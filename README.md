@@ -21,27 +21,28 @@
 
 ## <a name="about"></a>About
 
-    This is a command line tools tools and OpenSSL Engine for OPTIGA Trust M1 on Linux platform.
+This is a command line tools tools and OpenSSL Engine for OPTIGA Trust M1 on Linux platform.
 
 
 ### <a name="prerequisites"></a>Prerequisites
 
-    Following is the software component to build the tools :
-	- GCC
-	- OpenSSL development library (libssl-dev)
-	- OpenSSL 1.1.X
-	- OPTIGA Trust M1 library (source code)
-	- wiringPI
-	- pthread
-	- rt
+Following is the software component to build the tools :
+* GCC
+* OpenSSL development library (libssl-dev)
+* OpenSSL 1.1.X
+* OPTIGA Trust M1 library (source code)
+* wiringPI
+* pthread
+* rt
 
-    Tested platforms:
-      - Raspberry PI 3 on Linux kernal 4.19
+Tested platforms:
+* Raspberry PI 3 on Linux kernal 4.19
 
 ### <a name="contents_of_package"></a>Contents of Package
 
-    This tools consists of the following files & directory:
-	.
+This tools consists of the following files & directory:
+```formated
+        .
 	├── bin				/* all executable amd .so file is store here	 */
 	├── LICENSE                     // MIT license file
 	├── linux_example               // Source code for executable file
@@ -58,6 +59,7 @@
 	│   │   └── trustm_helper.h	// Helper header file
 	│   └── trustm_helper.c		// Helper source 
 	└── trustm_lib                  // Directory for trust M library
+```
 
 ## <a name="getting_started"></a>Getting Started
 ### <a name="build_lib"></a>First time building the library
