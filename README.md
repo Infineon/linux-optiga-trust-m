@@ -1,26 +1,30 @@
 # Command Line Interface (CLI) & OpenSSL Engine for OPTIGA™ Trust M1 security solution
 
-#### [1. About](#about)
-#### [1.1 Prerequisites](#prerequisities)
-#### [1.2 Contents of the package](#contents)
-#### [2  Getting Started](getting_started)
-#### [2.1 First time building the library](#build_lib)
-#### [2.2 Building the engine](#build_engine) 
-#### [3. CLI Tools Usage](#cli_tools)
-#### [3.1 trustm_chipinfo](#chipinfo)
-#### [4. Trust M1 OpenSSL Engine usage](#engine_usage)
-#### [4.1 rand](#rand)
-#### [4.2 req](#req)
-#### [4.3 pkey](#pkey)
-#### [4.4 dgst](#dgst)
-#### [5. Known issues](#known_issues)
+1. [About](#about)
+    * [Prerequisites](#prerequisites)
+    * [Contents of the package](#contents_of_package)
+2. [Getting Started](#getting_started)
+    * [First time building the library](#build_lib)
+    * [Building the engine](#build_engine) 
+3. [CLI Tools Usage](#cli_usage)
+    * [trustm_chipinfo](#trustm_chipinfo)
+    * [trustm_data](#trustm_data)
+    * [trustm_readmetadata_data](#trustm_readmetadata_data)
+    * [trustm_readmetadata_status](#trustm_readmetadata_status)
+    * [trustm_readmetadata_private](#trustm_readmetadata_private)
+4. [Trust M1 OpenSSL Engine usage](#engine_usage)
+    * [rand](#rand)
+    * [req](#req)
+    * [pkey](#pkey)
+    * [dgst](#dgst)
+5. [Known issues](#known_issues)
 
-## <a name="about"></a>1. About
+## <a name="about"></a>About
 
     This is a command line tools tools and OpenSSL Engine for OPTIGA Trust M1 on Linux platform.
 
 
-### <a name="prerequisites"></a>1.1 Prerequisites
+### <a name="prerequisites"></a>Prerequisites
 
     Following is the software component to build the tools :
 	- GCC
@@ -34,7 +38,7 @@
     Tested platforms:
       - Raspberry PI 3 on Linux kernal 4.19
 
-### <a name="contents_of_package"></a>1.2 Contents of Package
+### <a name="contents_of_package"></a>Contents of Package
 
     This tools consists of the following files & directory:
 	.
@@ -55,13 +59,13 @@
 	│   └── trustm_helper.c		// Helper source 
 	└── trustm_lib                  // Directory for trust M library
 
-## <a name="getting_started"></a>2. Getting Started
-### <a name="build_lib"></a>2.1 First time building the library
+## <a name="getting_started"></a>Getting Started
+### <a name="build_lib"></a>First time building the library
     - sudo make install_debug_lib 
       or 
     - sudo make install_lib
 
-### <a name="build_engine"></a>2.2 Building the engine
+### <a name="build_engine"></a>Building the engine
     - sudo make install_debug_engine 
       or 
     - sudo make install_engine
@@ -71,36 +75,64 @@ Note:
   soft-link to the bin directory
 - If without debug than every time you build the library or engine you must reinstall
 
-## <a name="cli_usage"></a>3. CLI Tools Usage
-### <a name="chipinfo"></a>3.1 trustm_chipinfo
+## <a name="cli_usage"></a>CLI Tools Usage
+### <a name="trustm_chipinfo"></a>trustm_chipinfo
     Display the trustm chip information.
 
-## <a name="engine_usage"></a>4. Trust M1 OpenSSL Engine usage
-### <a name="rand"></a>4.1 rand
+### <a name="trustm_data"></a>trustm_data
+    Read/Write/Erase OID data object
+	Help menu: trustm_data <option> ...<option>
+	option:- 
+	-r <OID>      : Read from OID 0xNNNN 
+	-w <OID>      : Write to OID
+	-i <filename> : Input file 
+	-o <filename> : Output file 
+	-p <offset>   : Offset position 
+	-e            : Erase and wirte 
+	-h            : Print this help
+
+### <a name="trustm_readmetadata_data"></a>trustm_readmetadata_data
+    Read all data object metadata listed below
+    oid : 0xE0E0-0xE0E3, 0xE0E8-0xE0E9, 0xE0EF, 
+          0xE120-0xE123, 0xE140, 
+          0xF1D0-0xF1DB, 0xF1E0-0xF1E1
+          
+### <a name="trustm_readmetadata_status"></a>trustm_readmetadata_status
+    Read all data object metadata listed below
+    oid : 0xE0C0-0xE0C6
+          0xF1C0-0xF1C2
+
+### <a name="trustm_readmetadata_private"></a>trustm_readmetadata_private
+    Read all data object metadata listed below
+    oid : 0xE0F0-0xE0F3
+          0xF1FC-0xE0FD
+
+## <a name="engine_usage"></a>Trust M1 OpenSSL Engine usage
+### <a name="rand"></a>rand
     Usuage : Random number generation
     Example 
-        $openssl rand –engine trustm_engine –base64 1024
+        $openssl rand -engine trustm_engine -base64 1024
     Note : 
     If trustM random number generation fails, there will still be random number output. 
     This is control by openSSL engine do not have control over it.
 
-### <a name="req"></a>4.2 req
+### <a name="req"></a>req
     Usuage : Certificate request / self signed cert / key generation
     Example
-        $openssl req –keyform engine –engine trustm_engine –key <OID>:<Public key file | *>:<NEW> -new –out test.csr –verify
+        $openssl req -keyform engine -engine trustm_engine -key <OID>:<Public key file | *>:<NEW> -new -out test.csr -verify
     Note:
     If wrong public is used or no pubkey is submitted the certificate generation will still 
     go through but verification will fail. Pubic key input only in PEM
 
-### <a name="pkey"></a>4.3 pkey
+### <a name="pkey"></a>pkey
     Usuage : Key tools / Key generation
     Example
         $openssl pkey -engine trustm_engine -pubout -inform engine -in 0xe0fc:*:NEW -out testpube0fc.pem
 
-### <a name="dgst"></a>4.4 dgst
+### <a name="dgst"></a>dgst
     Usuage : Sign and verify
     Example
         $openssl dgst -sign 0xe0fc -engine trustm_engine -keyform engine -out helloworld.sig helloworld.txt
         $openssl dgst -engine trustm_engine -verify testpube0fc.pem -keyform engine -signature helloworld.sig helloworld.txt
 
-## <a name="known_issues"></a>5. Known issues
+## <a name="known_issues"></a>Known issues
