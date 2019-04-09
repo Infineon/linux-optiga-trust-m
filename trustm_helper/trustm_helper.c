@@ -90,6 +90,8 @@ static char __UPDATSEC[] = "UPDATSEC";
 
 static char __ECC256[] = "ECC256";
 static char __ECC384[] = "ECC384";
+static char __RSA1024[] = "RSA1024";
+static char __RSA2048[] = "RSA2048";
 static char __SHA256[] = "SHA256";
 static char __AUTH[] = "Auth";
 static char __ENC[] = "Enc";
@@ -99,6 +101,37 @@ static char __SIGN[] = "Sign";
 static char __AGREE[] = "Agreement";
 static char __E1[100];
 
+
+static char* __decodeDataObj(uint8_t data)
+{
+	char *ret;
+	switch (data)
+	{
+		case 0x00:
+			ret = __BSTR; 
+			break;
+		case 0x01:
+			ret = __UPCTR; 
+			break;
+		case 0x11:
+			ret = __TA; 
+			break;
+		case 0x12:
+			ret = __DEVCERT; 
+			break;
+		case 0x21:
+			ret = __PRESSEC; 
+			break;
+		case 0x22:
+			ret = __PTFBIND; 
+			break;
+		case 0x23:
+			ret = __UPDATSEC; 
+			break;
+	}
+	return ret;
+}
+
 static char* __decodeAC(uint8_t data)
 {
 	char *ret;
@@ -106,6 +139,15 @@ static char* __decodeAC(uint8_t data)
 	{
 		case 0x00:
 			ret = __ALW; 
+			break;
+		case 0x20:
+			ret = __CONF; 
+			break;
+		case 0x21:
+			ret = __INT; 
+			break;
+		case 0x40:
+			ret = __LUC; 
 			break;
 		case 0x70:
 			ret = __LCSG;
@@ -139,6 +181,12 @@ static char* __decodeAC(uint8_t data)
 			break;
 		case 0x04:
 			ret = __ECC384;
+			break;
+		case 0x41:
+			ret = __RSA1024;
+			break;
+		case 0x42:
+			ret = __RSA2048;
 			break;
 		case 0xE2:
 			ret = __SHA256;
@@ -218,7 +266,9 @@ void trustmdecodeMetaData(uint8_t * metaData)
 				case 0xC1:
 					// len is always 2
 					len = *(metaData+(i++));
-					printf("Ver:%.2x%.2x, ", *(metaData+(i++)),*(metaData+(i++)));
+					printf("Ver:%.2x%.2x, ", *(metaData+(i+1)),*(metaData+(i+2)));
+					i++;
+					i++;
 					break;
 				case 0xC4:
 					// len is 1 or 2
@@ -272,7 +322,7 @@ void trustmdecodeMetaData(uint8_t * metaData)
 					for (j=0; j<len;j++)
 					{
 						if((*(metaData+(i)) == 0x00)||(*(metaData+(i)) == 0xff) )
-							printf("%s",__decodeAC(*(metaData+(i++))));
+							printf("%s, ",__decodeAC(*(metaData+(i++))));
 						else
 						{
 							if((*(metaData+(i)) > 0xfa) && 
@@ -301,7 +351,7 @@ void trustmdecodeMetaData(uint8_t * metaData)
 					for (j=0; j<len;j++)
 					{
 						if((*(metaData+(i)) == 0x00)||(*(metaData+(i)) == 0xff) )
-							printf("%s",__decodeAC(*(metaData+(i++))));
+							printf("%s, ",__decodeAC(*(metaData+(i++))));
 						else
 						{
 							if((*(metaData+(i)) > 0xfa) && 
@@ -336,6 +386,11 @@ void trustmdecodeMetaData(uint8_t * metaData)
 					printf("Key:%s, ",__decodeAC_E1(*(metaData+(i++))));				
 					break;
 				
+				case 0xE8:
+					//
+					len = *(metaData+(i++));
+					printf("DType:%s, ",__decodeDataObj(*(metaData+(i++))));				
+					break;
 				default:
 					i = metaLen;
 					break;
