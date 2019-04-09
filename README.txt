@@ -12,6 +12,10 @@ Contents:
 2.2 Building the engine 
 3. CLI Tools Usage
 3.1 trustm_chipinfo
+3.2 trustm_data
+3.3 trustm_readmetadata_data
+3.4 trustm_readmetadata_status
+3.5 trustm_readmetadata_private
 4. Trust M1 OpenSSL Engine usage
 4.1 rand
 4.2 req
@@ -79,6 +83,34 @@ Note:
 3. CLI Tools Usage
 3.1 trustm_chipinfo
     Display the trustm chip information.
+
+3.2 trustm_data
+    Read/Write/Erase OID data object
+	Help menu: trustm_data <option> ...<option>
+	option:- 
+	-r <OID>      : Read from OID 0xNNNN 
+	-w <OID>      : Write to OID
+	-i <filename> : Input file 
+	-o <filename> : Output file 
+	-p <offset>   : Offset position 
+	-e            : Erase and wirte 
+	-h            : Print this help
+
+3.3 trustm_readmetadata_data
+    Read all data object metadata listed below
+    oid : 0xE0E0-0xE0E3, 0xE0E8-0xE0E9, 0xE0EF, 
+          0xE120-0xE123, 0xE140, 
+          0xF1D0-0xF1DB, 0xF1E0-0xF1E1
+          
+3.4 trustm_readmetadata_status
+    Read all data object metadata listed below
+    oid : 0xE0C0-0xE0C6
+          0xF1C0-0xF1C2
+
+3.5 trustm_readmetadata_private
+    Read all data object metadata listed below
+    oid : 0xE0F0-0xE0F3
+          0xF1FC-0xE0FD
 
 4. Trust M1 OpenSSL Engine usage
 4.1 rand

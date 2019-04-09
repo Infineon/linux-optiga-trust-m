@@ -7,7 +7,11 @@
     * [First time building the library](#build_lib)
     * [Building the engine](#build_engine) 
 3. [CLI Tools Usage](#cli_usage)
-    * [trustm_chipinfo](#chipinfo)
+    * [trustm_chipinfo](#trustm_chipinfo)
+    * [trustm_data](#trustm_data)
+    * [trustm_readmetadata_data](#trustm_readmetadata_data)
+    * [trustm_readmetadata_status](#trustm_readmetadata_status)
+    * [trustm_readmetadata_private](#trustm_readmetadata_private)
 4. [Trust M1 OpenSSL Engine usage](#engine_usage)
     * [rand](#rand)
     * [req](#req)
@@ -72,8 +76,36 @@ Note:
 - If without debug than every time you build the library or engine you must reinstall
 
 ## <a name="cli_usage"></a>CLI Tools Usage
-### <a name="chipinfo"></a>trustm_chipinfo
+### <a name="trustm_chipinfo"></a>trustm_chipinfo
     Display the trustm chip information.
+
+### <a name="trustm_data"></a>trustm_data
+    Read/Write/Erase OID data object
+	Help menu: trustm_data <option> ...<option>
+	option:- 
+	-r <OID>      : Read from OID 0xNNNN 
+	-w <OID>      : Write to OID
+	-i <filename> : Input file 
+	-o <filename> : Output file 
+	-p <offset>   : Offset position 
+	-e            : Erase and wirte 
+	-h            : Print this help
+
+### <a name="trustm_readmetadata_data"></a>trustm_readmetadata_data
+    Read all data object metadata listed below
+    oid : 0xE0E0-0xE0E3, 0xE0E8-0xE0E9, 0xE0EF, 
+          0xE120-0xE123, 0xE140, 
+          0xF1D0-0xF1DB, 0xF1E0-0xF1E1
+          
+### <a name="trustm_readmetadata_status"></a>trustm_readmetadata_status
+    Read all data object metadata listed below
+    oid : 0xE0C0-0xE0C6
+          0xF1C0-0xF1C2
+
+### <a name="trustm_readmetadata_private"></a>trustm_readmetadata_private
+    Read all data object metadata listed below
+    oid : 0xE0F0-0xE0F3
+          0xF1FC-0xE0FD
 
 ## <a name="engine_usage"></a>Trust M1 OpenSSL Engine usage
 ### <a name="rand"></a>rand
