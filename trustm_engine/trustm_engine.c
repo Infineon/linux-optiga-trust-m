@@ -341,7 +341,7 @@ static int engine_init(ENGINE *e)
     static int initialized = 0;
     optiga_lib_status_t return_status;
 
-    int ret = TRUSTM_ENGINE_SUCCESS;
+    int ret = TRUSTM_ENGINE_FAIL;
     TRUSTM_ENGINE_DBGFN("> Engine 0x%x init", (unsigned int) e);
 
     do {
