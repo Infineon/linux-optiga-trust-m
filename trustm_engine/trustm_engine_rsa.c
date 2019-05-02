@@ -289,8 +289,8 @@ static int trustmEngine_rsa_priv_dec(int flen,
     optiga_crypt_t * me;    
     
     TRUSTM_ENGINE_DBGFN(">");
-    TRUSTM_ENGINE_DBGFN("From len : %d",flen);
-    trustmHexDump((uint8_t *)from,flen);
+    //TRUSTM_ENGINE_DBGFN("From len : %d",flen);
+    //trustmHexDump((uint8_t *)from,flen);
 
     do
     {
