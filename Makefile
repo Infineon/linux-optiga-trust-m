@@ -36,7 +36,7 @@ LIBDIR += $(TRUSTM)/optiga/cmd
 LIBDIR += trustm_helper
 
 
-#OTHDIR = $(TRUSTM)/examples/optiga
+OTHDIR = $(TRUSTM)/examples/optiga
  
 BINDIR = bin
 APPDIR = linux_example

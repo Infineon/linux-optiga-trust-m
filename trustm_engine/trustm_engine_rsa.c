@@ -279,17 +279,89 @@ static int trustmEngine_rsa_priv_dec(int flen,
 				RSA * rsa,
 				int padding)
 {
-	int ret = TRUSTM_ENGINE_FAIL;
-	TRUSTM_ENGINE_DBGFN(">");
+    int ret = TRUSTM_ENGINE_FAIL;
+    
+    optiga_lib_status_t return_status;
+    optiga_rsa_encryption_scheme_t encryption_scheme;
+    uint8_t decrypted_message[2048];
+    uint16_t decrypted_message_length = sizeof(decrypted_message);
 
-	do {
-		TRUSTM_ENGINE_MSGFN("Function Not supported.");
-		//Implement code here;
-		//ret = TRUSTM_ENGINE_SUCCESS;
-	}while(FALSE);
+    optiga_crypt_t * me;    
+    
+    TRUSTM_ENGINE_DBGFN(">");
+    TRUSTM_ENGINE_DBGFN("From len : %d",flen);
+    trustmHexDump((uint8_t *)from,flen);
+
+    do
+    {
+        me = optiga_crypt_create(0, optiga_crypt_callback, NULL);
+        if (NULL == me)
+        {
+	    TRUSTM_ENGINE_ERRFN("optiga_crypt_create fail!!");
+            break;
+        }
+
+#ifdef WORKAROUND		
+		pal_os_event_arm();
+#endif	
 	
-	TRUSTM_ENGINE_DBGFN("<");	
-	return ret;	
+        optiga_lib_status = OPTIGA_LIB_BUSY;
+        encryption_scheme = OPTIGA_RSAES_PKCS1_V15;
+	
+        // OPTIGA Comms Shielded connection settings to enable the protection
+        OPTIGA_CRYPT_SET_COMMS_PROTOCOL_VERSION(me, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
+        OPTIGA_CRYPT_SET_COMMS_PROTECTION_LEVEL(me, OPTIGA_COMMS_RESPONSE_PROTECTION);	
+	
+        return_status = optiga_crypt_rsa_decrypt_and_export(me,
+                                                            encryption_scheme,
+                                                            from,
+                                                            flen,
+                                                            NULL,
+                                                            0,
+                                                            trustm_ctx.key_oid,
+                                                            decrypted_message,
+                                                            &decrypted_message_length);
+							    
+        if (OPTIGA_LIB_SUCCESS != return_status)
+        {
+		TRUSTM_ENGINE_ERRFN("optiga_crypt_rsa_decrypt_and_export fail-1!!");
+            break;
+        }
+
+	printf("Please wait decrypting message .......\n");
+        while (OPTIGA_LIB_BUSY == optiga_lib_status) 
+        {
+		//Wait until the optiga_crypt_rsa_generate_keypair operation is completed
+        }
+
+        if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
+        {
+		//RSA Key pair generation failed
+		TRUSTM_ENGINE_ERRFN("optiga_crypt_rsa_decrypt_message fail-2!!");
+		printf("error : %x \n", optiga_lib_status);
+		break;
+        }
+        
+	
+	memcpy(to,decrypted_message,decrypted_message_length);
+        printf("length : %d\n",decrypted_message_length);
+        trustmHexDump(to,decrypted_message_length);
+	ret = decrypted_message_length;
+
+    } while (FALSE);
+
+    if (me)
+    {
+        //Destroy the instance after the completion of usecase if not required.
+        return_status = optiga_crypt_destroy(me);
+    }
+
+#ifdef WORKAROUND    
+	pal_os_event_disarm();	
+#endif    
+	
+    TRUSTM_ENGINE_DBGFN("<");	
+    return ret;	
 }
 
 /** Encrypt data using pub trustM key 
@@ -308,17 +380,92 @@ static int trustmEngine_rsa_pub_enc(int flen,
 				RSA * rsa,
 				int padding)
 {
-	int ret = TRUSTM_ENGINE_FAIL;
-	TRUSTM_ENGINE_DBGFN(">");
+    int ret = TRUSTM_ENGINE_FAIL;
+    
+    optiga_lib_status_t return_status;
+    optiga_rsa_encryption_scheme_t encryption_scheme;
+    uint8_t encrypted_message[2048];
+    uint16_t encrypted_message_length = sizeof(encrypted_message);
+    public_key_from_host_t public_key_from_host;
 
-	do {
-		TRUSTM_ENGINE_MSGFN("Function Not supported.");
-		//Implement code here;
-		//ret = TRUSTM_ENGINE_SUCCESS;
-	}while(FALSE);
+    optiga_crypt_t * me;    
+    
+    TRUSTM_ENGINE_DBGFN(">");
+    //TRUSTM_ENGINE_DBGFN("From len : %d",flen);
+    //trustmHexDump((uint8_t *)from,flen);
+
+    do
+    {
+        me = optiga_crypt_create(0, optiga_crypt_callback, NULL);
+        if (NULL == me)
+        {
+	    TRUSTM_ENGINE_ERRFN("optiga_crypt_create fail!!");
+            break;
+        }
+
+#ifdef WORKAROUND		
+		pal_os_event_arm();
+#endif	
+
+        optiga_lib_status = OPTIGA_LIB_BUSY;
 	
-	TRUSTM_ENGINE_DBGFN("<");	
-	return ret;	
+        encryption_scheme = OPTIGA_RSAES_PKCS1_V15;
+        public_key_from_host.public_key = (uint8_t *)(trustm_ctx.pubkey+19);
+        public_key_from_host.length = (trustm_ctx.pubkeylen)-19;
+        public_key_from_host.key_type = (uint8_t)OPTIGA_RSA_KEY_2048_BIT_EXPONENTIAL;	
+	
+	//printf("Pubkey:\n");
+	//trustmHexDump(public_key_from_host.public_key, public_key_from_host.length);
+	
+        return_status = optiga_crypt_rsa_encrypt_message(me, 
+                                                            encryption_scheme,
+                                                            from,
+                                                            flen,
+                                                            NULL,
+                                                            0,
+                                                            OPTIGA_CRYPT_HOST_DATA,
+                                                            &public_key_from_host,
+                                                            encrypted_message,
+                                                            &encrypted_message_length);
+        if (OPTIGA_LIB_SUCCESS != return_status)
+        {
+		TRUSTM_ENGINE_ERRFN("optiga_crypt_rsa_generate_keypair fail-1!!");
+            break;
+        }
+
+	printf("Please wait encrypting message .......\n");
+        while (OPTIGA_LIB_BUSY == optiga_lib_status) 
+        {
+		//Wait until the optiga_crypt_rsa_generate_keypair operation is completed
+        }
+
+        if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
+        {
+		//RSA Key pair generation failed
+		TRUSTM_ENGINE_ERRFN("optiga_crypt_rsa_encrypt_message fail-2!!");
+		break;
+        }
+        
+	
+	memcpy(to,encrypted_message,encrypted_message_length);
+        //printf("length : %d\n",encrypted_message_length);
+        //trustmHexDump(to,encrypted_message_length);
+	ret = encrypted_message_length;
+
+    } while (FALSE);
+
+    if (me)
+    {
+        //Destroy the instance after the completion of usecase if not required.
+        return_status = optiga_crypt_destroy(me);
+    }
+
+#ifdef WORKAROUND    
+	pal_os_event_disarm();	
+#endif    
+	
+    TRUSTM_ENGINE_DBGFN("<");	
+    return ret;	
 }
 
 /** Decrypt data using pub trustM key 

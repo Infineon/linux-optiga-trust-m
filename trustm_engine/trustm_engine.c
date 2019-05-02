@@ -384,7 +384,7 @@ static int engine_init(ENGINE *e)
 		//Init TrustM context
 		trustm_ctx.key_oid = 0x0000;
 		trustm_ctx.rsa_key_type = OPTIGA_RSA_KEY_2048_BIT_EXPONENTIAL;
-		trustm_ctx.rsa_key_usage = OPTIGA_KEY_USAGE_AUTHENTICATION;
+		trustm_ctx.rsa_key_usage = (OPTIGA_KEY_USAGE_AUTHENTICATION | OPTIGA_KEY_USAGE_ENCRYPTION);
 		trustm_ctx.rsa_key_enc_scheme = OPTIGA_RSAES_PKCS1_V15;
 		trustm_ctx.rsa_key_sig_scheme = OPTIGA_RSASSA_PKCS1_V15_SHA256;
 		trustm_ctx.rsa_flag = TRUSTM_ENGINE_FLAG_NONE;
