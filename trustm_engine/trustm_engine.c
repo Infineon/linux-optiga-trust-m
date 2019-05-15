@@ -60,7 +60,7 @@ static uint32_t parseKeyParams(const char *aArg)
 	}
 	  
 	i = 0;
-	token[0] = strtok((char *)aArg, ":");
+	token[0] = strtok(in, ":");
 	
 	if (token[0] == NULL)
 	{

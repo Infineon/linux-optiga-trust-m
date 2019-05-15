@@ -750,13 +750,14 @@ uint16_t trustmEngine_init_rsa(ENGINE *e)
 		RSA_meth_set_priv_dec(rsa_methods, trustmEngine_rsa_priv_dec);
 
 		RSA_meth_set_pub_enc(rsa_methods, trustmEngine_rsa_pub_enc);
-		RSA_meth_set_pub_dec(rsa_methods, trustmEngine_rsa_pub_dec);
+		//RSA_meth_set_pub_dec(rsa_methods, trustmEngine_rsa_pub_dec);
 		
 		RSA_meth_set_init(rsa_methods, trustmEngine_rsa_init);
 		RSA_meth_set_finish(rsa_methods, trustmEngine_rsa_finish);
 
 		RSA_meth_set_sign(rsa_methods, trustmEngine_rsa_sign);
-		RSA_meth_set_verify(rsa_methods, trustmEngine_rsa_verify);
+		
+		//RSA_meth_set_verify(rsa_methods, trustmEngine_rsa_verify);
 		
 		RSA_meth_set_keygen(rsa_methods, trustmEngine_rsa_keygen);
 		
