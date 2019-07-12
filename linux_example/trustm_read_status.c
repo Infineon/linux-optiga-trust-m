@@ -35,7 +35,7 @@ int main (int argc, char **argv)
 	optiga_lib_status_t return_status;
 	uint16_t i, j, k, skip_flag;
 	
-	uint16_t bytes_to_read;
+	uint16_t offset, bytes_to_read;
     uint16_t optiga_oid;
     uint8_t read_data_buffer[1024];
 
@@ -43,15 +43,15 @@ int main (int argc, char **argv)
 	if (return_status != OPTIGA_LIB_SUCCESS)
 		exit(1);
 
+
 	do
 	{
 		printf("===========================================\n");	
-		
 
-
-		for (i = 0; i < (0xE0FD-0xE0F0+1); i++) // Limit to Obj
+		for (i = 0; i < (0xF200-0xE0C0-1); i++) 
 		{
-			optiga_oid = 0xE0F0;
+			optiga_oid = 0xE0C0;
+			offset = 0x00;
 			skip_flag = 0;	
 			optiga_oid += i;
 			switch (optiga_oid)
@@ -78,6 +78,7 @@ int main (int argc, char **argv)
 				case 0xE0C6:
 					printf("Max Com Buffer Size         [0x%.4X] ", optiga_oid);
 					break;
+				/* 
 				case 0xE0E0:
 					printf("Device Public Key IFX       [0x%.4X] ", optiga_oid);
 					skip_flag = 1;
@@ -100,16 +101,15 @@ int main (int argc, char **argv)
 					printf("Root CA Public Key Cert8    [0x%.4X] ", optiga_oid);
 					skip_flag = 1;
 					break;
+				*/
+				/*
 				case 0xE0F0:
 					printf("Device EC Privte Key 1         [0x%.4X] ", optiga_oid);
 					break;
 				case 0xE0F1:
 				case 0xE0F2:
-					printf("Device EC Privte Key x         [0x%.4X] ", optiga_oid);
-					break;
 				case 0xE0F3:
 					printf("Device EC Privte Key x         [0x%.4X] ", optiga_oid);
-					i = 0xb;
 					break;
 				case 0xE0FC:
 				case 0xE0FD:
@@ -120,16 +120,22 @@ int main (int argc, char **argv)
 				case 0xE102:
 				case 0xE103:
 					printf("Session Context x           [0x%.4X] ", optiga_oid);
-					break;					
+					break;		
+				*/			
+				/*
 				case 0xE120:
 				case 0xE121:
 				case 0xE122:
 				case 0xE123:
 					printf("Monotonic Counter x         [0x%.4X] ", optiga_oid);
+					skip_flag = 1;
 					break;
 				case 0xE140:
 					printf("Shared Platform Binding Secert. [0x%.4x] ", optiga_oid);
+					skip_flag = 1;
 					break;
+				*/
+					
 				case 0xF1C0:
 					printf("Application Life Cycle Sts  [0x%.4X] ", optiga_oid);
 					break;					
@@ -138,7 +144,9 @@ int main (int argc, char **argv)
 					break;					
 				case 0xF1C2:
 					printf("Application Error Codes     [0x%.4X] ", optiga_oid);
-					break;					
+					break;
+				
+				/*					
 				case 0xF1D0:
 				case 0xF1D1:
 				case 0xF1D2:
@@ -151,14 +159,15 @@ int main (int argc, char **argv)
 				case 0xF1D9:
 				case 0xF1DA:
 				case 0xF1DB:
-					printf("App DataStrucObj type 3     [0x%.4X] ", optiga_oid);
+					printf("App DataStrucObj type 1     [0x%.4X] ", optiga_oid);
 					skip_flag = 1;
 					break;					
 				case 0xF1E0:
 				case 0xF1E1:
 					printf("App DataStrucObj type 2     [0x%.4X] ", optiga_oid);
 					skip_flag = 1;
-					break;						
+					break;
+				*/						
 				default:
 					skip_flag = 2;
 					break;
@@ -168,13 +177,15 @@ int main (int argc, char **argv)
 			{
 				bytes_to_read = sizeof(read_data_buffer);
 				optiga_lib_status = OPTIGA_LIB_BUSY;
-				return_status = optiga_util_read_metadata(me_util,
-															optiga_oid,
-															read_data_buffer,
-															&bytes_to_read);
+				return_status = optiga_util_read_data(me_util,
+													optiga_oid,
+													offset,
+													read_data_buffer,
+													(uint16_t *)&bytes_to_read);
 				if (OPTIGA_LIB_SUCCESS != return_status)
 				{
-					break;
+					printf("Error!!! [0x%.8X]\n",return_status);
+					//break;
 				}
 
 				while (OPTIGA_LIB_BUSY == optiga_lib_status) 
@@ -185,40 +196,52 @@ int main (int argc, char **argv)
 				if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
 				{
 					//Reading metadata data object failed.
-					break;
-				}
+					//printf("\nError!!! [0x%.8X]\n",optiga_lib_status);
+					//break;					
+					return_status = optiga_lib_status;
+				}				
+				/*
+				return_status = optiga_util_read_data(optiga_oid,
+													offset,
+													read_data_buffer,
+													&bytes_to_read);
+				*/
 				if (return_status != OPTIGA_LIB_SUCCESS)
 				{
-					printf("Error!!! [0x%.8X]\n", return_status);
+					printf("\n  Error!!! [0x%.8X]\n\n",return_status);
 				}
 				else
 				{
 					k=0;
-					printf("[Size %.4d] : \n\t", bytes_to_read);
+					printf("[Size %.4d] : ", bytes_to_read);
 					
+					if (skip_flag == 1)
+						printf("\n  ");
+						
 					for (j=0;j<bytes_to_read;j++)
 					{
 						printf("%.2X ", read_data_buffer[j]);
-						if(k < 25)
+						if(k < 15)
 						{
 							k++;
 						}	
 						else
 						{
-							printf("\n\t");
+							printf("\n  ");
 							k=0;
 						}
 					}
-					printf("\n\t");
-					trustmdecodeMetaData(read_data_buffer);
-					printf("\n");
-				}
-			}
-		}
+					//printf("\n");
+					if (k!=0)
+						printf("\n");
+					
+				} // End of if
+			} // End of if
+		} // End of for loop
 	}while(FALSE);
 
 	printf("===========================================\n");	
-
 	trustm_Close();
+
 	return 0;
 }

@@ -266,7 +266,7 @@ void trustmdecodeMetaData(uint8_t * metaData)
 				case 0xC1:
 					// len is always 2
 					len = *(metaData+(i++));
-					printf("Ver:%.2x%.2x, ", *(metaData+(i+1)),*(metaData+(i+2)));
+					printf("Ver:%.2x%.2x, ", *(metaData+(i)),*(metaData+(i+1)));
 					i++;
 					i++;
 					break;
@@ -292,28 +292,38 @@ void trustmdecodeMetaData(uint8_t * metaData)
 					printf("C:");
 					for (j=0; j<len;j++)
 					{
-						if((*(metaData+(i)) == 0x00)||(*(metaData+(i)) == 0xff) )
-							printf("%s, ",__decodeAC(*(metaData+(i++))));
+						if((*(metaData+(i)) == 0x00)||(*(metaData+(i)) == 0xff))
+							printf("%s",__decodeAC(*(metaData+(i++))));
 						else
 						{
-							if((*(metaData+(i)) > 0xfa) && 
-								(*(metaData+(i)) <= 0xff))
+							if((*(metaData+(i)) == 0x20)||(*(metaData+(i)) == 0x21)||
+								(*(metaData+(i)) == 0x40))
 							{
-								printf("%s",__decodeAC(*(metaData+(i++))));
+									printf("%s",__decodeAC(*(metaData+(i++))));
+									printf("(0x%X",*(metaData+(i++)));j++;
+									printf("%X)",*(metaData+(i++)));j++;										
 							}
 							else
 							{
-								if((*(metaData+(i)) == 0x70)||(*(metaData+(i)) == 0xe1))
+								if((*(metaData+(i)) > 0xfa) && 
+									(*(metaData+(i)) <= 0xff))
+								{
 									printf("%s",__decodeAC(*(metaData+(i++))));
+								}
 								else
 								{
-									printf("%d",*(metaData+(i++)));
-									if ((len-j) < 3)
-										printf(", ");
+									if((*(metaData+(i)) == 0x70)||(*(metaData+(i)) == 0xe0)||
+										(*(metaData+(i)) == 0xe1))
+									{
+										printf("%s",__decodeAC(*(metaData+(i++))));
+										printf("%s",__decodeAC(*(metaData+(i++))));j++;
+										printf("%d",*(metaData+(i++)));j++;
+									}
 								}
-							}
+							}	
 						}
 					}
+					printf(", ");
 					break;
 				
 				case 0xD1:
@@ -321,28 +331,38 @@ void trustmdecodeMetaData(uint8_t * metaData)
 					printf("R:");
 					for (j=0; j<len;j++)
 					{
-						if((*(metaData+(i)) == 0x00)||(*(metaData+(i)) == 0xff) )
-							printf("%s, ",__decodeAC(*(metaData+(i++))));
+						if((*(metaData+(i)) == 0x00)||(*(metaData+(i)) == 0xff))
+							printf("%s",__decodeAC(*(metaData+(i++))));
 						else
 						{
-							if((*(metaData+(i)) > 0xfa) && 
-								(*(metaData+(i)) <= 0xff))
+							if((*(metaData+(i)) == 0x20)||(*(metaData+(i)) == 0x21)||
+								(*(metaData+(i)) == 0x40))
 							{
-								printf("%s",__decodeAC(*(metaData+(i++))));
+									printf("%s",__decodeAC(*(metaData+(i++))));
+									printf("(0x%X",*(metaData+(i++)));j++;
+									printf("%X)",*(metaData+(i++)));j++;										
 							}
 							else
 							{
-								if((*(metaData+(i)) == 0x70)||(*(metaData+(i)) == 0xe1))
+								if((*(metaData+(i)) > 0xfa) && 
+									(*(metaData+(i)) <= 0xff))
+								{
 									printf("%s",__decodeAC(*(metaData+(i++))));
+								}
 								else
 								{
-									printf("%d",*(metaData+(i++)));
-									if ((len-j) < 3)
-										printf(", ");
+									if((*(metaData+(i)) == 0x70)||(*(metaData+(i)) == 0xe0)||
+										(*(metaData+(i)) == 0xe1))
+									{
+										printf("%s",__decodeAC(*(metaData+(i++))));
+										printf("%s",__decodeAC(*(metaData+(i++))));j++;
+										printf("%d",*(metaData+(i++)));j++;
+									}
 								}
-							}
+							}	
 						}
 					}
+					printf(", ");
 					break;
 				
 				case 0xD3:
@@ -350,28 +370,38 @@ void trustmdecodeMetaData(uint8_t * metaData)
 					printf("E:");
 					for (j=0; j<len;j++)
 					{
-						if((*(metaData+(i)) == 0x00)||(*(metaData+(i)) == 0xff) )
-							printf("%s, ",__decodeAC(*(metaData+(i++))));
+						if((*(metaData+(i)) == 0x00)||(*(metaData+(i)) == 0xff))
+							printf("%s",__decodeAC(*(metaData+(i++))));
 						else
 						{
-							if((*(metaData+(i)) > 0xfa) && 
-								(*(metaData+(i)) <= 0xff))
+							if((*(metaData+(i)) == 0x20)||(*(metaData+(i)) == 0x21)||
+								(*(metaData+(i)) == 0x40))
 							{
-								printf("%s",__decodeAC(*(metaData+(i++))));
+									printf("%s",__decodeAC(*(metaData+(i++))));
+									printf("(0x%X",*(metaData+(i++)));j++;
+									printf("%X)",*(metaData+(i++)));j++;										
 							}
 							else
 							{
-								if((*(metaData+(i)) == 0x70)||(*(metaData+(i)) == 0xe1))
+								if((*(metaData+(i)) > 0xfa) && 
+									(*(metaData+(i)) <= 0xff))
+								{
 									printf("%s",__decodeAC(*(metaData+(i++))));
+								}
 								else
 								{
-									printf("%d",*(metaData+(i++)));
-									if ((len-j) < 3)
-										printf(", ");
+									if((*(metaData+(i)) == 0x70)||(*(metaData+(i)) == 0xe0)||
+										(*(metaData+(i)) == 0xe1))
+									{
+										printf("%s",__decodeAC(*(metaData+(i++))));
+										printf("%s",__decodeAC(*(metaData+(i++))));j++;
+										printf("%d",*(metaData+(i++)));j++;
+									}
 								}
-							}
+							}	
 						}
-					}				
+					}
+					printf(", ");				
 					break;
 					
 				case 0xE0:

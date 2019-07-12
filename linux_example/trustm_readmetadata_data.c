@@ -95,7 +95,7 @@ int main (int argc, char **argv)
 				case 0xF1D9:
 				case 0xF1DA:
 				case 0xF1DB:
-					printf("App DataStrucObj type 1     [0x%.4X] ", optiga_oid);
+					printf("App DataStrucObj type 3     [0x%.4X] ", optiga_oid);
 					break;					
 				case 0xF1E0:
 				case 0xF1E1:
@@ -135,22 +135,24 @@ int main (int argc, char **argv)
 				else
 				{
 					k=0;
-					printf("[Size %.4d] : \n\t", bytes_to_read);
+					printf("[Size %.4d] :", bytes_to_read);
 					
 					for (j=0;j<bytes_to_read;j++)
 					{
+						if (k==0)
+							printf("\n  ");
+
 						printf("%.2X ", read_data_buffer[j]);
-						if(k < 40)
+						if(k < 20)
 						{
 							k++;
 						}	
 						else
 						{
-							printf("\n\t");
 							k=0;
-						}
+						}				
 					}
-					printf("\n\t");
+					printf("\n  ");
 					trustmdecodeMetaData(read_data_buffer);
 					printf("\n");
 				}
