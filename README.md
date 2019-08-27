@@ -31,7 +31,6 @@ Following is the software component to build the tools :
 * OpenSSL development library (libssl-dev)
 * OpenSSL 1.1.X
 * OPTIGA Trust M1 library (source code)
-* wiringPI
 * pthread
 * rt
 
@@ -46,7 +45,15 @@ This tools consists of the following files & directory:
 	├── bin				/* all executable amd .so file is store here	 */
 	├── LICENSE                     // MIT license file
 	├── linux_example               // Source code for executable file
-	│   └── trustm_chipinfo.c       // source to list chip info
+	│   ├── trustx_cert.c                 // read and store x.509 certificate in OPTIGA™ Trust M
+	│   └── trustx_chipinfo.c             // list chip info
+	│   ├── trustx_data.c                 // read and store raw data in OPTIGA™ Trust M
+	│   ├── trustx_metadata.c             // read and modify metadata of selected OID 
+	│   ├── trustx_read_data.c            // read all app1 data
+	│   ├── trustx_readmetadata_data.c    // read all metadata of data objects
+	│   ├── trustx_readmetadata_private.c // read all metadata of keys OID
+	│   ├── trustx_readmetadata_status.c  // read all metadata of status OID
+	│   └── trustx_read_status.c          // read all status data
 	├── Makefile                    // this project Makefile 
 	├── README.md                   // this read me file in Markdown format 
 	├── trustm_engine               /* all trust M1 OpenSSL Engine source code       */
@@ -63,27 +70,21 @@ This tools consists of the following files & directory:
 
 ## <a name="getting_started"></a>Getting Started
 ### <a name="build_lib"></a>First time building the library
+
 ```console 
-foo@bar:~$ sudo make install_debug_lib
+foo@bar:~$ make
 ```
-or 
+ to install
+ 
 ```console 
-foo@bar:~$ sudo make install_lib
+foo@bar:~$ sudo make install
 ```
 
-### <a name="build_engine"></a>Building the engine
-```console 
-foo@bar:~$ sudo make install_debug_engine
-```
-or 
-```console 
-foo@bar:~$ sudo make install_engine
-```
+to uninstall
 
-Note:
-- If debug is used subsequence building just do a ‘make’ as the Makefile creates a 
-  soft-link to the bin directory
-- If without debug than every time you build the library or engine you must reinstall
+```console 
+foo@bar:~$ sudo make uninstall
+```
 
 ## <a name="cli_usage"></a>CLI Tools Usage
 ### <a name="trustm_chipinfo"></a>trustm_chipinfo
