@@ -34,6 +34,9 @@
 #include <openssl/asn1.h>
 
 #include "optiga/optiga_util.h"
+#include "optiga/pal/pal_os_timer.h"
+#include "optiga/pal/pal_gpio.h"
+#include "optiga/pal/pal_ifx_i2c_config.h"
 
 #include "trustm_helper.h"
 
@@ -43,7 +46,6 @@
 optiga_util_t * me_util;
 optiga_lib_status_t optiga_lib_status;
 uint16_t trustm_open_flag = 0;
-
 /*************************************************************************
 *  functions
 *************************************************************************/
@@ -605,7 +607,7 @@ optiga_lib_status_t trustm_readUID(utrustm_UID_t *UID)
 
         while (OPTIGA_LIB_BUSY == optiga_lib_status) 
         {
-            //Wait until the optiga_util_read_metadata operation is completed
+            pal_os_timer_delay_in_milliseconds(10);
         }
 
         if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
@@ -641,13 +643,14 @@ void optiga_crypt_callback(void * context, optiga_lib_status_t return_status)
 **********************************************************************/
 optiga_lib_status_t trustm_Open(void)
 {
-    uint16_t i;
     optiga_lib_status_t return_status;
 
     TRUSTM_HELPER_DBGFN(">");
     trustm_open_flag = 0;
     do
     {
+		pal_gpio_init(&optiga_reset_0);
+		pal_gpio_init(&optiga_vdd_0);
         //Create an instance of optiga_util to open the application on OPTIGA.
         me_util = optiga_util_create(0, optiga_util_callback, NULL);
         if (NULL == me_util)
@@ -673,14 +676,12 @@ optiga_lib_status_t trustm_Open(void)
 
         TRUSTM_HELPER_DBGFN("waiting (max count: 50)");
         //Wait until the optiga_util_open_application is completed
-        i=0;
-        while (optiga_lib_status == OPTIGA_LIB_BUSY)
+        while (optiga_lib_status == OPTIGA_LIB_BUSY )
         {
             TRUSTM_HELPER_DBG(".");
-            i++;
-            usleep(50000);
-            if (i == 50)
-                break;
+            pal_os_timer_delay_in_milliseconds(50);
+			//i++;
+			//i++;
         }
         TRUSTM_HELPER_DBG("\n");
         TRUSTM_HELPER_DBGFN("count : %d \n",i);
@@ -746,6 +747,8 @@ optiga_lib_status_t trustm_Close(void)
         }
 
         trustm_open_flag = 0;
+		pal_gpio_deinit(&optiga_reset_0);
+		pal_gpio_deinit(&optiga_vdd_0);
         TRUSTM_HELPER_DBGFN("Success : optiga_util_close_application \n");
 
     }while(FALSE);

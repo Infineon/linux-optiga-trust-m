@@ -25,16 +25,17 @@
 
 TRUSTM = trustm_lib
 
+BUILD_FOR_RPI = YES
+BUILD_FOR_ULTRA96 = NO
 
-LIBDIR = $(TRUSTM)/pal/raspberry_pi3
-LIBDIR += $(TRUSTM)/optiga/util
+PALDIR =  $(TRUSTM)/pal/linux
+LIBDIR = $(TRUSTM)/optiga/util
 LIBDIR += $(TRUSTM)/optiga/crypt
 LIBDIR += $(TRUSTM)/optiga/comms
 LIBDIR += $(TRUSTM)/optiga/common
 LIBDIR += $(TRUSTM)/optiga/cmd
 #LIBDIR += $(TRUSTM)/externals/mbedtls
 LIBDIR += trustm_helper
-
 
 #OTHDIR = $(TRUSTM)/examples/optiga
  
@@ -50,10 +51,10 @@ INCDIR += $(TRUSTM)/optiga/include/optiga/ifx_i2c
 INCDIR += $(TRUSTM)/optiga/include/optiga/comms
 INCDIR += $(TRUSTM)/optiga/include/optiga/common
 INCDIR += $(TRUSTM)/optiga/include/optiga/cmd
+INCDIR += $(TRUSTM)/optiga/include/optiga/pal
+INCDIR += $(TRUSTM)/pal/linux
 INCDIR += trustm_helper/include
 INCDIR += trustm_engine
-#INCDIR += $(TRUSTM)/externals/mbedtls/include
-#INCDIR += $(TRUSTM)/externals/mbedtls/include/mbedtls
 
 ifdef INCDIR
 INCSRC := $(shell find $(INCDIR) -name '*.h')
@@ -61,7 +62,26 @@ INCDIR := $(addprefix -I ,$(INCDIR))
 endif
 
 ifdef LIBDIR
-	LIBSRC := $(shell find $(LIBDIR) -name '*.c') 
+	ifdef PALDIR
+	        LIBSRC =  $(PALDIR)/pal.c
+	        LIBSRC += $(PALDIR)/pal_gpio.c
+	        LIBSRC += $(PALDIR)/pal_i2c.c
+			LIBSRC += $(PALDIR)/pal_logger.c
+			LIBSRC += $(PALDIR)/pal_os_datastore.c
+	        LIBSRC += $(PALDIR)/pal_os_event.c
+        	LIBSRC += $(PALDIR)/pal_os_lock.c
+	        LIBSRC += $(PALDIR)/pal_os_timer.c
+			LIBSRC += $(TRUSTM)/pal/pal_crypt_openssl.c
+	        ifeq ($(BUILD_FOR_RPI), YES)
+	                LIBSRC += $(PALDIR)/target/rpi3/pal_ifx_i2c_config.c
+        	endif
+
+	        ifeq ($(BUILD_FOR_ULTRA96), YES)
+                	LIBSRC += $(PALDIR)/target/ultra96/pal_ifx_i2c_config.c
+        	endif
+	endif
+
+	LIBSRC += $(shell find $(LIBDIR) -name '*.c') 
 	LIBOBJ := $(patsubst %.c,%.o,$(LIBSRC))
 	LIB = libtrustm.so
 endif
@@ -93,42 +113,31 @@ CFLAGS += -Wall
 CFLAGS += -DENGINE_DYNAMIC_SUPPORT
 #CFLAGS += -DMODULE_ENABLE_DTLS_MUTUAL_AUTH
 
-LDFLAGS += -lwiringPi
 LDFLAGS += -lpthread
 LDFLAGS += -lssl
 LDFLAGS += -lcrypto
 LDFLAGS += -lrt
 
-LDFLAGS_1 = -ltrustm
+LDFLAGS_1 = -L$(BINDIR) -Wl,-R$(BINDIR)
+LDFLAGS_1 += -ltrustm
+
+.Phony : install uninstall all clean install_lib install_engine
 
 all : $(BINDIR)/$(LIB) $(APPS) $(BINDIR)/$(ENG)
 
-$(BINDIR)/$(ENG): %: $(ENGOBJ) $(INCSRC) $(BINDIR)/$(LIB)
-	@echo "******* Linking $@ "
-	@mkdir -p -m 777 $(BINDIR)
-	@$(CC) $(LDFLAGS) $(LDFLAGS_1) $(ENGOBJ) -shared -o $@
 
-$(APPS): %: $(OTHOBJ) $(INCSRC) %.o
-	@echo "******* Linking $@ "
-	@mkdir -p -m 777 $(BINDIR)
-	@$(CC) $(LDFLAGS) $(LDFLAGS_1) $@.o $(OTHOBJ) -o $@
-	@cp $@ bin/.
+install:
+	@echo "Create symbolic link to the openssl engine $(ENGINE_INSTALL_DIR)/$(ENG)"
+	@ln -s $(realpath $(BINDIR)/$(ENG)) $(ENGINE_INSTALL_DIR)/$(ENG)
+	@echo "Create symbolic link to trustx_lib $(LIB_INSTALL_DIR)/$(LIB)"
+	@ln -s $(realpath $(BINDIR)/$(LIB)) $(LIB_INSTALL_DIR)/$(LIB)
+	
+uninstall: clean
+	@echo "Removing openssl symbolic link from $(ENGINE_INSTALL_DIR)"	
+	@-rm $(ENGINE_INSTALL_DIR)/$(ENG)
+	@echo "Removing trustm_lib $(LIB_INSTALL_DIR)/$(LIB)"
+	@-rm $(LIB_INSTALL_DIR)/$(LIB)
 
-$(BINDIR)/$(LIB): %: $(LIBOBJ) $(INCSRC)
-	@echo "******* Linking $@ "
-	@mkdir -p -m 777 $(BINDIR)
-	@$(CC) $(LDFLAGS) $(LIBOBJ) -shared -o $@
-
-$(LIBOBJ): %.o: %.c $(INCSRC)
-	@echo "+++++++ Generating lib object: $< "
-	@mkdir -p -m 777 $(BINDIR)
-	@$(CC) $(CFLAGS) $< -o $@
-
-%.o: %.c $(INCSRC)
-	@echo "------- Generating application objects: $< "
-	@$(CC) $(CFLAGS) $< -o $@
-
-.Phony : clean uninstall_lib uninstall_engine
 clean :
 	@echo "Removing *.o from $(LIBDIR)" 
 	@rm -rf $(LIBOBJ)
@@ -141,29 +150,29 @@ clean :
 	@echo "Removing all application from $(APPDIR)"	
 	@rm -rf $(APPS)
 	@echo "Removing all application from $(BINDIR)"	
-	@rm -r $(BINDIR)
+	@rm -rf bin/*
+	
+$(BINDIR)/$(ENG): %: $(ENGOBJ) $(INCSRC) $(BINDIR)/$(LIB)
+	@echo "******* Linking $@ "
+	@mkdir -p bin
+	@$(CC) $(LDFLAGS) $(LDFLAGS_1) $(ENGOBJ) -shared -o $@
 
-install_debug_lib: uninstall_lib $(BINDIR)/$(LIB)
-	@echo "Create debug link library $(LIB_INSTALL_DIR)/$(LIB)"	
-	@ln -s $(realpath $(BINDIR)/$(LIB)) $(LIB_INSTALL_DIR)/$(LIB)
+$(APPS): %: $(OTHOBJ) $(INCSRC) %.o
+	@echo "******* Linking $@ "
+	@mkdir -p bin
+	@$(CC) $(LDFLAGS) $(LDFLAGS_1) $@.o $(OTHOBJ) -o $@
+	@cp $@ bin/.
 
-install_lib: uninstall_lib $(BINDIR)/$(LIB)
-	@echo "$(LIB_INSTALL_DIR)/$(LIB)"	
-	@cp $(BINDIR)/$(LIB) $(LIB_INSTALL_DIR)/$(LIB)
+$(BINDIR)/$(LIB): %: $(LIBOBJ) $(INCSRC)
+	@echo "******* Linking $@ "
+	@mkdir -p bin
+	@$(CC) $(LDFLAGS) $(LIBOBJ) -shared -o $@
 
-install_debug_engine: uninstall_engine $(BINDIR)/$(ENG)
-	@echo "Create debug link library $(ENGINE_INSTALL_DIR)/$(ENG)"	
-	@ln -s $(realpath $(BINDIR)/$(ENG)) $(ENGINE_INSTALL_DIR)/$(ENG)
+$(LIBOBJ): %.o: %.c $(INCSRC)
+	@echo "+++++++ Generating lib object: $< "
+	@$(CC) $(CFLAGS) $< -o $@
 
-install_engine: uninstall_engine $(BINDIR)/$(ENG) 
-	@echo "Installing library : $(ENGINE_INSTALL_DIR)/$(ENG)"	
-	@mkdir -p $(ENGINE_INSTALL_DIR)
-	@cp $(BINDIR)/$(ENG) $(ENGINE_INSTALL_DIR)/$(ENG)
-
-uninstall_engine:
-	@echo "Removing library : $(ENGINE_INSTALL_DIR)/$(ENG)"	
-	@rm -f $(ENGINE_INSTALL_DIR)/$(ENG)
-
-uninstall_lib:
-	@echo "Removing library : $(LIB_INSTALL_DIR)/$(LIB)"	
-	@rm -f $(LIB_INSTALL_DIR)/$(LIB)
+%.o: %.c $(INCSRC)
+	@echo "------- Generating application objects: $< "
+	@$(CC) $(CFLAGS) $< -o $@
+	

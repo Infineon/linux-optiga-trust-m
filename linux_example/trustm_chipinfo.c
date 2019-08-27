@@ -85,17 +85,19 @@ int main (int argc, char **argv)
     }
     printf("\n");
 
-    printf("Chip software build ");    
+    printf("Chip software build: \n");    
     if ((UID.st.rgbESWBuild[0] == 0x05) && (UID.st.rgbESWBuild[1] == 0x10))
-        printf("V1.0.510\n");
+        printf("OPTIGA(TM) Trust X; Firmware Version: 1.0.510 (Attention: not all features are supported)\n");
     else if ((UID.st.rgbESWBuild[0] == 0x07) && (UID.st.rgbESWBuild[1] == 0x15))
-        printf("V1.1.715\n");
+        printf("OPTIGA(TM) Trust X; Firmware Version: 1.1.715 (Attention: not all features are supported)\n");
     else if ((UID.st.rgbESWBuild[0] == 0x10) && (UID.st.rgbESWBuild[1] == 0x48))
-        printf("V1.2.1048\n");
+        printf("OPTIGA(TM) Trust X; Firmware Version: 1.2.1048 (Attention: not all features are supported)\n");
     else if ((UID.st.rgbESWBuild[0] == 0x11) && (UID.st.rgbESWBuild[1] == 0x12))
-        printf("V1.30.1112\n");
+        printf("OPTIGA(TM) Trust X; Firmware Version: 1.30.1112 (Attention: not all features are supported)\n");
     else if ((UID.st.rgbESWBuild[0] == 0x11) && (UID.st.rgbESWBuild[1] == 0x18))
-        printf("V1.40.1118\n");
+        printf("OPTIGA(TM) Trust X; Firmware Version: 1.40.1118 (Attention: not all features are supported)\n");
+	else if ((UID.st.rgbESWBuild[0] == 0x08) && (UID.st.rgbESWBuild[1] == 0x09))
+        printf("OPTIGA(TM) Trust M rev.1; Firmware Version: 1.30.809\n");
     else
         printf("Unknown\n");
     printf("===========================================\n");    
