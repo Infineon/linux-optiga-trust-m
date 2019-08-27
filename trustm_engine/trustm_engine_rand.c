@@ -29,24 +29,18 @@
 
 #include "trustm_engine_common.h"
 
-
-#ifdef WORKAROUND
-	extern void pal_os_event_disarm(void);
-	extern void pal_os_event_arm(void);
-#endif
-
 static int trustmEngine_getrandom(unsigned char *buf, int num);
 static int trustmEngine_rand_status(void);
 
 
 // OpenSSL random method define
 static RAND_METHOD rand_methods = {
-    NULL,        			// seed()
+    NULL,                    // seed()
     trustmEngine_getrandom,
-    NULL,        			// cleanup()
-    NULL,        			// add()
-    NULL,				// pseudorand()
-    trustmEngine_rand_status		// status()
+    NULL,                    // cleanup()
+    NULL,                    // add()
+    NULL,                // pseudorand()
+    trustmEngine_rand_status        // status()
 };
 
 /** Return the entropy status of the prng
@@ -65,12 +59,12 @@ static int trustmEngine_rand_status(void)
  */
 uint16_t trustmEngine_init_rand(ENGINE *e)
 {
-	uint16_t ret = TRUSTM_ENGINE_FAIL;
-	TRUSTM_ENGINE_DBGFN(">");
-	
+    uint16_t ret = TRUSTM_ENGINE_FAIL;
+    TRUSTM_ENGINE_DBGFN(">");
+    
     ret = ENGINE_set_RAND(e, &rand_methods);
     
-	TRUSTM_ENGINE_DBGFN("<");
+    TRUSTM_ENGINE_DBGFN("<");
     return ret;
     
 }
@@ -83,119 +77,116 @@ uint16_t trustmEngine_init_rand(ENGINE *e)
  */
 static int trustmEngine_getrandom(unsigned char *buf, int num)
 {
-	#define MAX_RAND_INPUT 256
-	
-	optiga_crypt_t * me = NULL;
-	optiga_lib_status_t return_status;
-	int i,j,k;
-	uint8_t tempbuf[MAX_RAND_INPUT];    
-	int ret = TRUSTM_ENGINE_FAIL;
-	
-	TRUSTM_ENGINE_DBGFN("> num : %d", num);
-	
-	i = num % MAX_RAND_INPUT; // max random number output, find the reminder
-	j = (num - i)/MAX_RAND_INPUT; // Get the count 
+    #define MAX_RAND_INPUT 256
+    
+    optiga_crypt_t * me = NULL;
+    optiga_lib_status_t return_status;
+    int i,j,k;
+    uint8_t tempbuf[MAX_RAND_INPUT];    
+    int ret = TRUSTM_ENGINE_FAIL;
+    
+    TRUSTM_ENGINE_DBGFN("> num : %d", num);
+    
+    i = num % MAX_RAND_INPUT; // max random number output, find the reminder
+    j = (num - i)/MAX_RAND_INPUT; // Get the count 
 
-	do {
-#ifdef WORKAROUND		
-		pal_os_event_arm();
-#endif
-		me = optiga_crypt_create(0, optiga_crypt_callback, NULL);
-		if (NULL == me)
-		{
-		    break;
-		}	    
-	    
-		k = 0;
-		if(i > 0)  
-		{
-			optiga_lib_status = OPTIGA_LIB_BUSY;
-			return_status = optiga_crypt_random(me, 
-							    OPTIGA_RNG_TYPE_TRNG, 
-							    tempbuf,
-							    MAX_RAND_INPUT);
-			if (OPTIGA_LIB_SUCCESS != return_status)
-			{
-			    printf("Get random error1.\n");
-			    break;
-			}
+    do {
+        me = optiga_crypt_create(0, optiga_crypt_callback, NULL);
+        if (NULL == me)
+        {
+            break;
+        }        
+        
+        k = 0;
+        if(i > 0)  
+        {
+            optiga_lib_status = OPTIGA_LIB_BUSY;
+            return_status = optiga_crypt_random(me, 
+                                OPTIGA_RNG_TYPE_TRNG, 
+                                tempbuf,
+                                MAX_RAND_INPUT);
+            if (OPTIGA_LIB_SUCCESS != return_status)
+            {
+                printf("Get random error1.\n");
+                break;
+            }
 
-			while (OPTIGA_LIB_BUSY == optiga_lib_status) 
-			{
-			    //printf(".");
-			    //Wait until the optiga_crypt_random operation is completed
-			}
-			
-			if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
-			{
-			    printf("Get random error2.\n");           
-			    break;
-			}
-			if (return_status != OPTIGA_LIB_SUCCESS)
-			{
-			  TRUSTM_ENGINE_ERRFN("failed to generate random number2");
-			  printf("return error = %x\n",return_status);
-			  break;
-			}
+            while (OPTIGA_LIB_BUSY == optiga_lib_status) 
+            {
+                //printf(".");
+                //Wait until the optiga_crypt_random operation is completed
+            }
+            
+            if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
+            {
+                printf("Get random error2.\n");           
+                break;
+            }
+            if (return_status != OPTIGA_LIB_SUCCESS)
+            {
+              TRUSTM_ENGINE_ERRFN("failed to generate random number2");
+              printf("return error = %x\n",return_status);
+              break;
+            }
 
-			for (k=0;k<i;k++)
-			{
-				*(buf+k) = tempbuf[k]; 
-			}
-		}
+            for (k=0;k<i;k++)
+            {
+                *(buf+k) = tempbuf[k]; 
+            }
+        }
 
-		for(;j>0;j--)  
-		{
-			optiga_lib_status = OPTIGA_LIB_BUSY;
-			return_status = optiga_crypt_random(me, 
-							    OPTIGA_RNG_TYPE_TRNG, 
-							    (buf+k),
-							    MAX_RAND_INPUT);
-			if (OPTIGA_LIB_SUCCESS != return_status)
-			{
-			    printf("Get random error1.\n");
-			    break;
-			}
+        for(;j>0;j--)  
+        {
+            optiga_lib_status = OPTIGA_LIB_BUSY;
+            return_status = optiga_crypt_random(me, 
+                                OPTIGA_RNG_TYPE_TRNG, 
+                                (buf+k),
+                                MAX_RAND_INPUT);
+            if (OPTIGA_LIB_SUCCESS != return_status)
+            {
+                printf("Get random error1.\n");
+                break;
+            }
 
-			while (OPTIGA_LIB_BUSY == optiga_lib_status) 
-			{
-			    //printf(".");
-			    //Wait until the optiga_crypt_random operation is completed
-			}
-			
-			if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
-			{
-			    printf("Get random error2.\n");           
-			    break;
-			}		    
-			if (return_status != OPTIGA_LIB_SUCCESS)
-			{
-			  TRUSTM_ENGINE_ERRFN("failed to generate random number1");
-			  break;
-			}
-			k += (MAX_RAND_INPUT);
-		}
+            while (OPTIGA_LIB_BUSY == optiga_lib_status) 
+            {
+                //printf(".");
+                //Wait until the optiga_crypt_random operation is completed
+            }
+            
+            if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
+            {
+                printf("Get random error2.\n");           
+                break;
+            }            
+            if (return_status != OPTIGA_LIB_SUCCESS)
+            {
+              TRUSTM_ENGINE_ERRFN("failed to generate random number1");
+              break;
+            }
+            k += (MAX_RAND_INPUT);
+        }
 
-		ret = TRUSTM_ENGINE_SUCCESS;
-	}while(FALSE);
-	
-	if (me)
-	{
-	    //Destroy the instance after the completion of usecase if not required.
-	    TRUSTM_ENGINE_DBGFN("optiga_crypt_destory");
-	    return_status = optiga_crypt_destroy(me);
-	}
-	
-	// if fail returns all zero
-	if (ret != TRUSTM_ENGINE_SUCCESS)
-	{
-		for(i=0;i<num;i++)
-		{
-			*(buf+i) = 0;
-		}
-	}
-	
-	TRUSTM_ENGINE_DBGFN("<");	
-	return ret;
-	#undef MAX_RAND_INPUT
+        ret = TRUSTM_ENGINE_SUCCESS;
+    }while(FALSE);
+    
+    if (me)
+    {
+        //Destroy the instance after the completion of usecase if not required.
+        TRUSTM_ENGINE_DBGFN("optiga_crypt_destory");
+        return_status = optiga_crypt_destroy(me);
+    }
+    
+    // if fail returns all zero
+    if (ret != TRUSTM_ENGINE_SUCCESS)
+    {
+        for(i=0;i<num;i++)
+        {
+            *(buf+i) = 0;
+        }
+    }
+    
+    TRUSTM_ENGINE_DBGFN("<");    
+    return ret;
+    #undef MAX_RAND_INPUT
 }

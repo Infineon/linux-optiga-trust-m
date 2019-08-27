@@ -32,136 +32,134 @@
 
 int main (int argc, char **argv)
 {
-	optiga_lib_status_t return_status;
-	uint16_t i, j, k, skip_flag;
-	
-	uint16_t bytes_to_read;
+    optiga_lib_status_t return_status;
+    uint16_t i, j, k, skip_flag;
+    
+    uint16_t bytes_to_read;
     uint16_t optiga_oid;
     uint8_t read_data_buffer[1024];
 
-	return_status = trustm_Open();
-	if (return_status != OPTIGA_LIB_SUCCESS)
-		exit(1);
+    return_status = trustm_Open();
+    if (return_status != OPTIGA_LIB_SUCCESS)
+        exit(1);
 
-	do
-	{
-		printf("===========================================\n");	
-		
+    do
+    {
+        printf("===========================================\n");    
+        
 
 
-		//for (i = 0; i < (0xE140-0xE0E0+1); i++) // Limit to Obj
-		for (i = 0; i < 0xe200; i++) // Limit to Obj
-		{
-			optiga_oid = 0xE0E0;
-			skip_flag = 0;	
-			optiga_oid += i;
-			switch (optiga_oid)
-			{
-				case 0xE0E0:
-					printf("Device Public Key IFX          [0x%.4X] ", optiga_oid);
-					break;
-				case 0xE0E1:
-				case 0xE0E2:
-				case 0xE0E3:
-					printf("Device Public Key              [0x%.4X] ", optiga_oid);
-					break;
-				case 0xE0E8:
-					printf("Root CA Public Key Cert1       [0x%.4X] ", optiga_oid);
-					break;
-				case 0xE0E9:
-					printf("Root CA Public Key Cert2       [0x%.4X] ", optiga_oid);
-					break;
-				case 0xE0EF:
-					printf("Root CA Public Key Cert8       [0x%.4X] ", optiga_oid);
-					break;
-				case 0xE120:
-				case 0xE121:
-				case 0xE122:
-				case 0xE123:
-					printf("Monotonic Counter x            [0x%.4X] ", optiga_oid);
-					break;	
-				case 0xE140:
-					printf("Shared Platform Binding Secret [0x%.4X] ", optiga_oid);
-					break;	
-				case 0xF1D0:
-				case 0xF1D1:
-				case 0xF1D2:
-				case 0xF1D3:
-				case 0xF1D4:
-				case 0xF1D5:
-				case 0xF1D6:
-				case 0xF1D7:
-				case 0xF1D8:
-				case 0xF1D9:
-				case 0xF1DA:
-				case 0xF1DB:
-					printf("App DataStrucObj type 3     [0x%.4X] ", optiga_oid);
-					break;					
-				case 0xF1E0:
-				case 0xF1E1:
-					printf("App DataStrucObj type 2     [0x%.4X] ", optiga_oid);
-					break;	
-				default:
-					skip_flag = 2;
-			}
+        //for (i = 0; i < (0xE140-0xE0E0+1); i++) // Limit to Obj
+        for (i = 0; i < 0xe200; i++) // Limit to Obj
+        {
+            optiga_oid = 0xE0E0;
+            skip_flag = 0;    
+            optiga_oid += i;
+            switch (optiga_oid)
+            {
+                case 0xE0E0:
+                    printf("Device Public Key IFX          [0x%.4X] ", optiga_oid);
+                    break;
+                case 0xE0E1:
+                case 0xE0E2:
+                case 0xE0E3:
+                    printf("Device Public Key              [0x%.4X] ", optiga_oid);
+                    break;
+                case 0xE0E8:
+                    printf("Root CA Public Key Cert1       [0x%.4X] ", optiga_oid);
+                    break;
+                case 0xE0E9:
+                    printf("Root CA Public Key Cert2       [0x%.4X] ", optiga_oid);
+                    break;
+                case 0xE0EF:
+                    printf("Root CA Public Key Cert8       [0x%.4X] ", optiga_oid);
+                    break;
+                case 0xE120:
+                case 0xE121:
+                case 0xE122:
+                case 0xE123:
+                    printf("Monotonic Counter x            [0x%.4X] ", optiga_oid);
+                    break;    
+                case 0xE140:
+                    printf("Shared Platform Binding Secret [0x%.4X] ", optiga_oid);
+                    break;    
+                case 0xF1D0:
+                case 0xF1D1:
+                case 0xF1D2:
+                case 0xF1D3:
+                case 0xF1D4:
+                case 0xF1D5:
+                case 0xF1D6:
+                case 0xF1D7:
+                case 0xF1D8:
+                case 0xF1D9:
+                case 0xF1DA:
+                case 0xF1DB:
+                    printf("App DataStrucObj type 1     [0x%.4X] ", optiga_oid);
+                    break;                    
+                case 0xF1E0:
+                case 0xF1E1:
+                    printf("App DataStrucObj type 2     [0x%.4X] ", optiga_oid);
+                    break;    
+                default:
+                    skip_flag = 2;
+            }
 
-			if(skip_flag == 0 || skip_flag == 1)
-			{
-				bytes_to_read = sizeof(read_data_buffer);
-				optiga_lib_status = OPTIGA_LIB_BUSY;
-				return_status = optiga_util_read_metadata(me_util,
-															optiga_oid,
-															read_data_buffer,
-															&bytes_to_read);
-				if (OPTIGA_LIB_SUCCESS != return_status)
-				{
-					break;
-				}
+            if(skip_flag == 0 || skip_flag == 1)
+            {
+                bytes_to_read = sizeof(read_data_buffer);
+                optiga_lib_status = OPTIGA_LIB_BUSY;
+                return_status = optiga_util_read_metadata(me_util,
+                                                            optiga_oid,
+                                                            read_data_buffer,
+                                                            &bytes_to_read);
+                if (OPTIGA_LIB_SUCCESS != return_status)
+                {
+                    break;
+                }
 
-				while (OPTIGA_LIB_BUSY == optiga_lib_status) 
-				{
-					//Wait until the optiga_util_read_metadata operation is completed
-				}
+                while (OPTIGA_LIB_BUSY == optiga_lib_status) 
+                {
+                    //Wait until the optiga_util_read_metadata operation is completed
+                }
 
-				if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
-				{
-					//Reading metadata data object failed.
-					break;
-				}
-				if (return_status != OPTIGA_LIB_SUCCESS)
-				{
-					printf("Error!!! [0x%.8X]\n", return_status);
-				}
-				else
-				{
-					k=0;
-					printf("[Size %.4d] :", bytes_to_read);
-					
-					for (j=0;j<bytes_to_read;j++)
-					{
-						if (k==0)
-							printf("\n  ");
+                if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
+                {
+                    //Reading metadata data object failed.
+                    break;
+                }
+                if (return_status != OPTIGA_LIB_SUCCESS)
+                {
+                    printf("Error!!! [0x%.8X]\n", return_status);
+                }
+                else
+                {
+                    k=0;
+                    printf("[Size %.4d] : \n\t", bytes_to_read);
+                    
+                    for (j=0;j<bytes_to_read;j++)
+                    {
+                        printf("%.2X ", read_data_buffer[j]);
+                        if(k < 40)
+                        {
+                            k++;
+                        }    
+                        else
+                        {
+                            printf("\n\t");
+                            k=0;
+                        }
+                    }
+                    printf("\n\t");
+                    trustmdecodeMetaData(read_data_buffer);
+                    printf("\n");
+                }
+            }
+        }
+    }while(FALSE);
 
-						printf("%.2X ", read_data_buffer[j]);
-						if(k < 20)
-						{
-							k++;
-						}	
-						else
-						{
-							k=0;
-						}				
-					}
-					printf("\n  ");
-					trustmdecodeMetaData(read_data_buffer);
-					printf("\n");
-				}
-			}
-		}
-	}while(FALSE);
+    printf("===========================================\n");    
 
-	printf("===========================================\n");	
-
-	trustm_Close();
-	return 0;
+    trustm_Close();
+    return 0;
 }

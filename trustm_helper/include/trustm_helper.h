@@ -23,7 +23,7 @@
 
 */
 #ifndef _TRUSTM_HELPER_H_
-#define _TRUSTM_HELPER_H_
+#define _TRUSTX_HELPER_H_
 
 #include <stdio.h>
 #include <stdlib.h>
