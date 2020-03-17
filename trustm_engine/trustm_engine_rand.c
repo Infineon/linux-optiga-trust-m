@@ -29,6 +29,11 @@
 
 #include "trustm_engine_common.h"
 
+#ifdef WORKAROUND
+	extern void pal_os_event_disarm(void);
+	extern void pal_os_event_arm(void);
+#endif
+
 static int trustmEngine_getrandom(unsigned char *buf, int num);
 static int trustmEngine_rand_status(void);
 
@@ -91,6 +96,11 @@ static int trustmEngine_getrandom(unsigned char *buf, int num)
     j = (num - i)/MAX_RAND_INPUT; // Get the count 
 
     do {
+
+#ifdef WORKAROUND		
+		pal_os_event_arm();
+#endif        
+        
         me = optiga_crypt_create(0, optiga_crypt_callback, NULL);
         if (NULL == me)
         {
@@ -180,11 +190,19 @@ static int trustmEngine_getrandom(unsigned char *buf, int num)
     // if fail returns all zero
     if (ret != TRUSTM_ENGINE_SUCCESS)
     {
+        TRUSTM_ENGINE_DBGFN("error ret 0!!!\n");
         for(i=0;i<num;i++)
         {
             *(buf+i) = 0;
         }
     }
+    
+    TRUSTM_ENGINE_DBGFN("length : %d\n",num);
+    trustmHexDump(buf,num);    
+    
+#ifdef WORKAROUND    
+	pal_os_event_disarm();	
+#endif    
     
     TRUSTM_ENGINE_DBGFN("<");    
     return ret;

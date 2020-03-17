@@ -29,7 +29,15 @@
 
 #include "trustm_engine_common.h"
 
+#ifdef WORKAROUND
+	extern void pal_os_event_disarm(void);
+	extern void pal_os_event_arm(void);
+	extern void pal_os_event_destroy1(void);
+#endif
+
 trustm_ctx_t trustm_ctx;
+
+extern void pal_os_event_disarm(void);
 
 static const char *engine_id   = "trustm_engine";
 static const char *engine_name = "Infineon OPTIGA TrustM Engine";
@@ -181,9 +189,18 @@ static int engine_destroy(ENGINE *e)
     {
         trustm_ctx.pubkey[i] = 0x00;
     }
-    
-    trustm_Close();
 
+#ifdef WORKAROUND
+	pal_os_event_arm();
+#endif
+
+    trustm_Close();
+    
+#ifdef WORKAROUND	
+	pal_os_event_disarm();
+	pal_os_event_destroy1();
+#endif
+    
     TRUSTM_ENGINE_DBGFN("<");
     return TRUSTM_ENGINE_SUCCESS;
 }
@@ -248,6 +265,10 @@ static EVP_PKEY * engine_load_privkey(ENGINE *e, const char *key_id, UI_METHOD *
         }
         
     }while(FALSE);
+    
+#ifdef WORKAROUND	
+	pal_os_event_disarm();
+#endif
 
     TRUSTM_ENGINE_DBGFN("<");
     return key;
@@ -312,6 +333,10 @@ static EVP_PKEY * engine_load_pubkey(ENGINE *e, const char *key_id, UI_METHOD *u
         
     }while(FALSE);
 
+#ifdef WORKAROUND	
+	pal_os_event_disarm();
+#endif
+
     TRUSTM_ENGINE_DBGFN("<");
     return key;
 }
@@ -362,7 +387,7 @@ static int engine_init(ENGINE *e)
         //Init TrustM context
         trustm_ctx.key_oid = 0x0000;
         trustm_ctx.rsa_key_type = OPTIGA_RSA_KEY_2048_BIT_EXPONENTIAL;
-        trustm_ctx.rsa_key_usage = OPTIGA_KEY_USAGE_AUTHENTICATION;
+        trustm_ctx.rsa_key_usage = OPTIGA_KEY_USAGE_AUTHENTICATION | OPTIGA_KEY_USAGE_ENCRYPTION;
         trustm_ctx.rsa_key_enc_scheme = OPTIGA_RSAES_PKCS1_V15;
         trustm_ctx.rsa_key_sig_scheme = OPTIGA_RSASSA_PKCS1_V15_SHA256;
         trustm_ctx.rsa_flag = TRUSTM_ENGINE_FLAG_NONE;
@@ -374,11 +399,13 @@ static int engine_init(ENGINE *e)
         trustm_ctx.pubkeylen = 0;
 
         // Init Random Method
+
         ret = trustmEngine_init_rand(e);
         if (ret != TRUSTM_ENGINE_SUCCESS) {
             TRUSTM_ENGINE_ERRFN("Init Rand Fail!!");
             break;
         }
+
 
         // Init RSA Method
         ret = trustmEngine_init_rsa(e);
