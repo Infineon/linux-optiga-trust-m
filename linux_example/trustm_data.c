@@ -276,6 +276,10 @@ int main (int argc, char **argv)
 
     do
     {
+        // OPTIGA Comms Shielded connection settings to enable the protection
+        OPTIGA_UTIL_SET_COMMS_PROTOCOL_VERSION(me_util, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
+        OPTIGA_UTIL_SET_COMMS_PROTECTION_LEVEL(me_util, OPTIGA_COMMS_RESPONSE_PROTECTION);        
+        
         if(uOptFlag.flags.read == 1)
         {
             bytes_to_read = sizeof(read_data_buffer);
@@ -298,11 +302,12 @@ int main (int argc, char **argv)
             if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
             {
                 //Reading metadata data object failed.
+                printf("Error!!! optiga_lib_status [0x%.8X]\n",optiga_lib_status);
                 break;
             }
             if (return_status != OPTIGA_LIB_SUCCESS)
             {
-                printf("Error!!! [0x%.8X]\n",return_status);
+                printf("Error!!! return_status [0x%.8X]\n",return_status);
             }
             else
             {
