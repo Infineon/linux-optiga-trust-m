@@ -44,6 +44,7 @@
 *  Global
 *************************************************************************/
 optiga_util_t * me_util;
+optiga_crypt_t * me_crypt;
 optiga_lib_status_t optiga_lib_status;
 uint16_t trustm_open_flag = 0;
 /*************************************************************************
@@ -627,6 +628,16 @@ optiga_lib_status_t trustm_Open(void)
             TRUSTM_HELPER_ERRFN("Fail : optiga_util_create\n");
             break;
         }
+        TRUSTM_HELPER_DBGFN("TrustM util instance created. \n");
+
+        me_crypt = optiga_crypt_create(0, optiga_crypt_callback, NULL);
+        if (NULL == me_crypt)
+        {
+            TRUSTM_HELPER_ERRFN("Fail : optiga_crypt_create\n");
+            break;
+        }
+        TRUSTM_HELPER_DBGFN("TrustM crypt instance created. \n");
+
         TRUSTM_HELPER_DBGFN("TrustM Open. \n");
 
         /**
@@ -691,9 +702,15 @@ optiga_lib_status_t trustm_Close(void)
         }
         
         optiga_lib_status = OPTIGA_LIB_BUSY;
-        //++ty++ OPTIGA_COMMS_PROTECTION_MANAGE_CONTEXT(me_util, OPTIGA_COMMS_SESSION_CONTEXT_NONE);
-        return_status = optiga_util_close_application(me_util, 0);
+        return_status = optiga_crypt_destroy(me_crypt);
+        if(OPTIGA_LIB_SUCCESS != return_status)
+        {
+            TRUSTM_HELPER_ERRFN("Fail : optiga_crypt_destroy \n");
+            break;
+        }
         
+        optiga_lib_status = OPTIGA_LIB_BUSY;
+        return_status = optiga_util_close_application(me_util, 0);
         if (OPTIGA_LIB_SUCCESS != return_status)
         {
             TRUSTM_HELPER_ERRFN("Fail : optiga_util_close_application \n");

@@ -85,6 +85,7 @@ typedef enum _tag_trustm_LifeCycStatus {
 
 // *********** Extern
 extern optiga_util_t * me_util;
+extern optiga_crypt_t * me_crypt;
 extern optiga_lib_status_t optiga_lib_status;
 
 // Function Prototype
