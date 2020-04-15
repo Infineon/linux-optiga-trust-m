@@ -449,10 +449,12 @@ uint16_t trustmReadPEM(uint8_t *buf, uint32_t *len, const char *filename, char *
     
     dataLen = 0;
     PEM_read(fp, &tempName,&header,&data,&dataLen);
-    memcpy(buf,data,dataLen);
+    if (dataLen != 0)
+    {
+        memcpy(buf,data,dataLen);    
+        strcpy(name,tempName);
+    }
     *len = dataLen;
-    
-    strcpy(name,tempName);
     
     fclose(fp);
     return 0;

@@ -142,7 +142,7 @@ static uint16_t _readFrom(uint8_t *data, uint8_t *filename)
 	datafile = fopen((const char *)filename,"rb");
 	if (!datafile)
 	{
-		return 1;
+		return 0;
 	}
 
 	//Read file
