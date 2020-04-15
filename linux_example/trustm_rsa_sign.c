@@ -68,9 +68,9 @@ union _uOptFlag {
 
 void _helpmenu(void)
 {
-	printf("\nHelp menu: trustm_ecc_sign <option> ...<option>\n");
+	printf("\nHelp menu: trustm_rsa_sign <option> ...<option>\n");
 	printf("option:- \n");
-	printf("-k <OID Key>  : Select ECC key for signing OID (0xE0F0-0xE0F3) \n");
+	printf("-k <OID Key>  : Select RSA key for signing OID (0xE0FC-0xE0FD) \n");
 	printf("-o <filename> : Output to file \n");
 	printf("-i <filename> : Input Data file\n");
 	printf("-H            : Hash before sign\n");
@@ -168,7 +168,7 @@ int main (int argc, char **argv)
 	hash_data_from_host_t hash_data_host;
 	uint8_t hash_context_buffer[2048];
 	
-	uint8_t signature [100];     //To store the signture generated
+	uint8_t signature [500];     //To store the signture generated
     uint16_t signature_length = sizeof(signature);
     uint8_t digest[32];
     uint16_t digestLen = 0;
@@ -360,6 +360,9 @@ int main (int argc, char **argv)
 				
 			} else
 			{
+				for(digestLen=0;digestLen< sizeof(digest);digestLen++)
+					digest[digestLen] = 0x00;
+					
 				digestLen = _readFrom(digest, (uint8_t *) inFile);
 				if (digestLen == 0)
 				{
@@ -372,18 +375,21 @@ int main (int argc, char **argv)
 					break;				
 				} else
 				{
+					digestLen = sizeof(digest);
 					printf("Input data[%d] : \n", digestLen);
 					_hexdump(digest,digestLen);
 				}					
 			}
 
 			optiga_lib_status = OPTIGA_LIB_BUSY;
-			return_status = optiga_crypt_ecdsa_sign(me_crypt,
-													digest,
-													digestLen,
-													optiga_key_id,
-													signature,
-													&signature_length);
+			return_status = optiga_crypt_rsa_sign(me_crypt,
+												OPTIGA_RSASSA_PKCS1_V15_SHA256,
+												digest,
+												digestLen,
+												optiga_key_id,
+												signature,
+												&signature_length,
+												0x0000);
 
 			if (OPTIGA_LIB_SUCCESS != return_status)
 			{
