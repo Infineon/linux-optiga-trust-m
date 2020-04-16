@@ -401,7 +401,7 @@ uint16_t trustmWritePEM(uint8_t *buf, uint32_t len, const char *filename, char *
     fp = fopen(filename,"wb");
     if (!fp)
     {
-        printf("error creating file!!\n");
+        TRUSTM_HELPER_ERRFN("error creating file!!\n");
         return 1;
     }
 
@@ -420,7 +420,7 @@ uint16_t trustmWriteDER(uint8_t *buf, uint32_t len, const char *filename)
     fp = fopen(filename,"wb");
     if (!fp)
     {
-        printf("error creating file!!\n");
+        TRUSTM_HELPER_ERRFN("error creating file!!\n");
         return 1;
     }
 
@@ -432,7 +432,7 @@ uint16_t trustmWriteDER(uint8_t *buf, uint32_t len, const char *filename)
     return 0;
 }
 
-uint16_t trustmReadPEM(uint8_t *buf, uint32_t *len, const char *filename, char *name)
+uint16_t trustmReadPEM(uint8_t *buf, uint32_t *len, const char *filename, char *name, uint16_t *keySize, uint16_t *keyType)
 {
     FILE *fp;
     char *tempName;
@@ -440,22 +440,65 @@ uint16_t trustmReadPEM(uint8_t *buf, uint32_t *len, const char *filename, char *
     uint8_t *data;
     long int dataLen;
 
+    EVP_PKEY *pkey;
+    RSA *rsa_key;
+    EC_KEY *ec_key;
+    EC_GROUP *ec_group;
+    int i,j;
+
     fp = fopen(filename,"r");
     if (!fp)
     {
-        printf("failed to open file %s\n",filename);
+        TRUSTM_HELPER_ERRFN("failed to open file %s\n",filename);
         return 1;
     }
     
+    pkey = PEM_read_PUBKEY(fp,NULL,NULL,NULL);
+    i = EVP_PKEY_id(pkey);
+    *keyType = (uint16_t) i;
+    TRUSTM_HELPER_DBGFN("pkey id : %d [%X]\n",i,i);
+    
+    if((i == EVP_PKEY_RSA) ||(i == EVP_PKEY_RSA2) )
+    {
+        rsa_key = EVP_PKEY_get1_RSA(pkey);
+        i = RSA_size(rsa_key) * 8;
+        TRUSTM_HELPER_DBGFN("rsa len id : %d [%X]\n",i,i);
+        
+    } else if (i == EVP_PKEY_EC)
+    {
+        ec_key = EVP_PKEY_get1_EC_KEY(pkey);
+        ec_group = EC_KEY_get0_group(ec_key);
+        i = EC_GROUP_order_bits(ec_group);
+        TRUSTM_HELPER_DBGFN("ec len id : %d [%X]\n",i,i);
+    }
+    *keySize = (uint16_t) i;
+    
+    rewind(fp);
     dataLen = 0;
     PEM_read(fp, &tempName,&header,&data,&dataLen);
     if (dataLen != 0)
     {
-        memcpy(buf,data,dataLen);    
+        // Detecting Header
+        i = 0;
+        if (data[0] == 0x30) // First SEQUENCE
+        {
+            if (data[1] < 0x80) // Short Len
+            {
+                if(data[2] == 0x30) // Second SEQUENCE
+                    i = data[3] + 4;
+            } else // Long Len
+            {
+                j = (data[1] & 0x7f)+2;
+                if(data[j] == 0x30) // Second SEQUENCE
+                    i = data[j+1]+j+2;
+            }
+        }
+        
+        memcpy(buf,data+i,dataLen-i);    
         strcpy(name,tempName);
     }
-    *len = dataLen;
-    
+    *len = dataLen-i;
+   
     fclose(fp);
     return 0;
 }
@@ -500,7 +543,7 @@ uint16_t trustmWriteX509PEM(X509 *x509, const char *filename)
     x509file = fopen(filename,"wb");
     if (!x509file)
     {
-        printf("error creating x509 file!!\n");
+        TRUSTM_HELPER_ERRFN("error creating x509 file!!\n");
         return 1;
     }
 
@@ -509,7 +552,7 @@ uint16_t trustmWriteX509PEM(X509 *x509, const char *filename)
     fclose(x509file);
     if (!ret)
     {
-        printf("Unable Cert to write to file!!\n");
+        TRUSTM_HELPER_ERRFN("Unable Cert to write to file!!\n");
         return 1;
     }
 
@@ -525,7 +568,7 @@ uint16_t trustmReadX509PEM(X509 **x509, const char *filename)
     x509file = fopen(filename,"rb");
     if (!x509file)
     {
-        printf("error reading x509 file!!\n");
+        TRUSTM_HELPER_ERRFN("error reading x509 file!!\n");
         return 1;
     }
 
@@ -534,7 +577,7 @@ uint16_t trustmReadX509PEM(X509 **x509, const char *filename)
     fclose(x509file);
     if (x509 == NULL)
     {
-        printf("Unable read cert from file!!\n");
+        TRUSTM_HELPER_ERRFN("Unable read cert from file!!\n");
         return 1;
     }
 

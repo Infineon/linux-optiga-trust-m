@@ -96,11 +96,15 @@ void optiga_crypt_callback(void * context, optiga_lib_status_t return_status);
 void trustmHexDump(uint8_t *pdata, uint32_t len);
 uint16_t trustmWritePEM(uint8_t *buf, uint32_t len, const char *filename, char *name);
 uint16_t trustmWriteDER(uint8_t *buf, uint32_t len, const char *filename);
-uint16_t trustmReadPEM(uint8_t *buf, uint32_t *len, const char *filename, char *name);
+
+//uint16_t trustmReadPEM(uint8_t *buf, uint32_t *len, const char *filename, char *name);
+uint16_t trustmReadPEM(uint8_t *buf, uint32_t *len, const char *filename, char *name, uint16_t *keySize, uint16_t *keyType);
 uint16_t trustmReadDER(uint8_t *buf, uint32_t *len, const char *filename);
+
 void trustmdecodeMetaData(uint8_t * metaData);
 uint16_t trustmWriteX509PEM(X509 *x509, const char *filename);
 uint16_t trustmReadX509PEM(X509 **x509, const char *filename);
+
 
 optiga_lib_status_t trustm_readUID(utrustm_UID_t *UID);
 

@@ -63,9 +63,9 @@ union _uOptFlag {
 
 void _helpmenu(void)
 {
-	printf("\nHelp menu: trustm_ecc_verify <option> ...<option>\n");
+	printf("\nHelp menu: trustm_rsa_verify <option> ...<option>\n");
 	printf("option:- \n");
-	printf("-k <OID Key>   : Use Certificate from OID [0xE0E1-E0E3]\n");
+	printf("-k <OID Key>   : Use Certificate from Data OID \n");
 	printf("-p <pubkey>    : Use Pubkey file\n");
 	printf("-i <filename>  : Input Data file\n");
 	printf("-s <signature> : Signature file\n");
@@ -165,7 +165,7 @@ int main (int argc, char **argv)
 	uint8_t hash_context_buffer[2048];
 	
 	uint16_t optiga_oid;
-	uint8_t signature [100];     //To store the signture generated
+	uint8_t signature [500];     //To store the signture generated
     uint16_t signatureLen = sizeof(signature);
     uint8_t digest[32];
     uint16_t digestLen = 0;
@@ -173,7 +173,7 @@ int main (int argc, char **argv)
     uint32_t pubkeyLen;
 	uint16_t pubkeySize;
 	uint16_t pubkeyType;
-    
+	
     uint8_t data[2048];
     uint16_t dataLen = 0;
 
@@ -183,6 +183,8 @@ int main (int argc, char **argv)
     char name[100];
     FILE *fp = NULL;
 	uint16_t filesize;
+	
+
 	
 	int option = 0;                    // Command line option.
 
@@ -369,12 +371,16 @@ int main (int argc, char **argv)
 			
 		} else	
 		{
+			for(digestLen=0;digestLen< sizeof(digest);digestLen++)
+				digest[digestLen] = 0x00;
+			
 			digestLen = _readFrom(digest, (uint8_t *) inFile);
 			if (digestLen == 0)
 			{
 				printf("Error reading input file!!!\n");
 				break;				
 			}
+			digestLen = sizeof(digest);
 		}	
 				
 		if(uOptFlag.flags.verify == 1)
@@ -393,13 +399,15 @@ int main (int argc, char **argv)
 			_hexdump(signature,signatureLen);					
 
 			optiga_lib_status = OPTIGA_LIB_BUSY;
-			return_status = optiga_crypt_ecdsa_verify (me_crypt,
-													   digest,
-													   digestLen,
-													   signature,
-													   signatureLen,
-													   OPTIGA_CRYPT_OID_DATA,
-													   &optiga_oid);
+			return_status = optiga_crypt_rsa_verify (me_crypt,
+													 OPTIGA_RSASSA_PKCS1_V15_SHA256,
+													 digest,
+													 digestLen,
+													 signature,
+													 signatureLen,
+													 OPTIGA_CRYPT_OID_DATA,
+													 &optiga_oid,
+													 0x0000);
 
 			if (OPTIGA_LIB_SUCCESS != return_status)
 			{
@@ -447,12 +455,13 @@ int main (int argc, char **argv)
 				printf("Invalid Public Key File!!!\n");
 				break;
 			}
-			if (pubkeyType != EVP_PKEY_EC)
+			if ((pubkeyType != EVP_PKEY_RSA) && (pubkeyType != EVP_PKEY_RSA2))
 			{
 				printf("Wrong Key Type!!!\n");
 				break;
 			}
-						
+
+					
 			if(uOptFlag.flags.hash == 1)
 				printf("Hash Digest : \n");
 			else
@@ -465,25 +474,27 @@ int main (int argc, char **argv)
 			printf("Pub key : [%d]\n",pubkeySize);
 			_hexdump((pubkey),pubkeyLen);	
 
-			if(pubkeySize == 256)
-				pubkeySize = OPTIGA_ECC_CURVE_NIST_P_256;
+			if(pubkeySize == 1024)
+				pubkeySize = OPTIGA_RSA_KEY_1024_BIT_EXPONENTIAL;
 			else
-				pubkeySize = OPTIGA_ECC_CURVE_NIST_P_384;
+				pubkeySize = OPTIGA_RSA_KEY_2048_BIT_EXPONENTIAL;
 
 			public_key_from_host_t public_key_details = {
-														 pubkey,
+														 (pubkey),
 														 pubkeyLen,
 														 pubkeySize
 														};
 
 			optiga_lib_status = OPTIGA_LIB_BUSY;
-			return_status = optiga_crypt_ecdsa_verify (me_crypt,
-													   digest,
-													   digestLen,
-													   signature,
-													   signatureLen,
-													   OPTIGA_CRYPT_HOST_DATA,
-													   &public_key_details);
+			return_status = optiga_crypt_rsa_verify (me_crypt,
+													 OPTIGA_RSASSA_PKCS1_V15_SHA256,
+													 digest,
+													 digestLen,
+													 signature,
+													 signatureLen,
+													 OPTIGA_CRYPT_HOST_DATA,
+													 &public_key_details,
+													 0x0000);
 
 			if (OPTIGA_LIB_SUCCESS != return_status)
 			{
