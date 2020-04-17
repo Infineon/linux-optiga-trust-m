@@ -792,3 +792,8 @@ optiga_lib_status_t trustm_Close(void)
     TRUSTM_HELPER_DBGFN("<");
     return return_status;
 }
+
+void trustmPrintErrorCode(uint16_t errcode)
+{
+    
+}

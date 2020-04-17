@@ -1,7 +1,7 @@
 /**
 * MIT License
 *
-* Copyright (c) 2018 Infineon Technologies AG
+* Copyright (c) 2020 Infineon Technologies AG
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -36,11 +36,11 @@ BIO	*outbio = NULL;
 #define MAX_OID_PUB_CERT_SIZE	1728
 
 typedef struct _OPTFLAG {
-	uint16_t	enc			: 1;
+	uint16_t	dec			: 1;
 	uint16_t	input		: 1;
 	uint16_t	output		: 1;
 	uint16_t	hash		: 1;
-	uint16_t	dummy4		: 1;
+	uint16_t	pubkey		: 1;
 	uint16_t	dummy5		: 1;
 	uint16_t	dummy6		: 1;
 	uint16_t	dummy7		: 1;
@@ -61,9 +61,9 @@ union _uOptFlag {
 
 void _helpmenu(void)
 {
-	printf("\nHelp menu: trustm_enc <option> ...<option>\n");
+	printf("\nHelp menu: trustm_rsa_dec <option> ...<option>\n");
 	printf("option:- \n");
-	printf("-k <OID Key>  : Select key for encrypt OID 0xNNNN \n");
+	printf("-k <OID Key>  : Select key to decrypt OID 0xNNNN \n");
 	printf("-o <filename> : Output to file \n");
 	printf("-i <filename> : Input Data file\n");
 	printf("-h            : Print this help \n");
@@ -156,14 +156,16 @@ int main (int argc, char **argv)
 	optiga_lib_status_t return_status;
 
 	optiga_key_id_t optiga_key_id;
-	uint8_t message[256];     //To store the signture generated
+	uint8_t message[2048];     //To store the signture generated
     uint16_t messagelen = sizeof(message);
-    uint8_t encyptdata[256];
-    uint16_t encyptdatalen;
-
+    uint8_t encyptdata[2048];
+    uint16_t encyptdatalen = sizeof(encyptdata);
+    
     char *outFile = NULL;
     char *inFile = NULL;
-    
+
+    optiga_rsa_encryption_scheme_t encryption_scheme;
+            
 	int option = 0;                    // Command line option.
 
 
@@ -191,7 +193,7 @@ int main (int argc, char **argv)
 			switch (option)
             {
 				case 'k': // OID Key
-					uOptFlag.flags.enc = 1;
+					uOptFlag.flags.dec = 1;
 					optiga_key_id = _ParseHexorDec(optarg);			 	
 					break;
 				case 'o': // Output
@@ -223,7 +225,7 @@ int main (int argc, char **argv)
 
 	do
 	{
-		if(uOptFlag.flags.enc == 1)
+		if(uOptFlag.flags.dec == 1)
 		{
 			if(uOptFlag.flags.output != 1)
 			{
@@ -236,50 +238,64 @@ int main (int argc, char **argv)
 				printf("Input filename missing!!!\n");
 				break;
 			}
-
-			printf("OID Key 0x%.4X\n",optiga_key_id);
+			
+			printf("OID Key          : 0x%.4X \n",optiga_key_id);
 			printf("Output File Name : %s \n", outFile);
-			printf("Input File Name : %s \n", inFile);
+			printf("Input File Name  : %s \n", inFile);
 
-			messagelen = _readFrom(message, (uint8_t *) inFile);
-			if (messagelen == 0)
+			encyptdatalen = _readFrom(encyptdata, (uint8_t *) inFile);
+			if (encyptdatalen == 0)
 			{
 				printf("Error reading file!!!\n");
 				break;				
 			}
 			
 			printf("Input data : \n");
-			_hexdump(message,messagelen);	
+			_hexdump(encyptdata,encyptdatalen);	
 
-				optiga_lib_status = OPTIGA_LIB_BUSY;
-				
-/*
-				return_status = optiga_util_read_data(me_util,
-													optiga_oid,
-													offset,
-													read_data_buffer,
-													(uint16_t *)&bytes_to_read);
+			// OPTIGA Comms Shielded connection settings to enable the protection
+			OPTIGA_CRYPT_SET_COMMS_PROTOCOL_VERSION(me_crypt, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
+			OPTIGA_CRYPT_SET_COMMS_PROTECTION_LEVEL(me_crypt, OPTIGA_COMMS_RESPONSE_PROTECTION);
 
- 
-				if (OPTIGA_LIB_SUCCESS != return_status)
-				{
-					printf("Error!!! [0x%.8X]\n",return_status);
-				}
+			optiga_lib_status = OPTIGA_LIB_BUSY;
+			encryption_scheme = OPTIGA_RSAES_PKCS1_V15;
+			return_status = optiga_crypt_rsa_decrypt_and_export(me_crypt,
+																encryption_scheme,
+																encyptdata,
+																encyptdatalen,
+																NULL,
+																0,
+																optiga_key_id,
+																message,
+																&messagelen);
 
-				while (OPTIGA_LIB_BUSY == optiga_lib_status) 
-				{
-					//Wait until the optiga_util_read_metadata operation is completed
-				}
+			if (OPTIGA_LIB_SUCCESS != return_status)
+			{
+				break;
+			}
 
-				if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
-				{
-					//Reading metadata data object failed.
-					//printf("\nError!!! [0x%.8X]\n",optiga_lib_status);
-					//break;					
-					return_status = optiga_lib_status;
-				}				
-*/
-		} // End of for loop
+			while (OPTIGA_LIB_BUSY == optiga_lib_status)
+			{
+				//Wait until the optiga_crypt_ecdsa_sign operation is completed
+			}
+
+			if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
+			{
+				return_status = optiga_lib_status;
+				printf("optiga_lib_status Error!!! [0x%.8X]\n",return_status);				
+				break;
+			}
+			
+			if (return_status != OPTIGA_LIB_SUCCESS)
+			{
+				printf("return_status Error!!! [0x%.8X]\n",return_status);
+			}
+			else
+			{
+				_writeTo(message, messagelen, outFile);
+				printf("Success\n");
+			}
+		}
 	}while(FALSE);
 
 	printf("===========================================\n");	

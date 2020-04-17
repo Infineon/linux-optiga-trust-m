@@ -465,7 +465,7 @@ int main (int argc, char **argv)
 			if(uOptFlag.flags.hash == 1)
 				printf("Hash Digest : \n");
 			else
-				printf("Input data : \n");
+				printf("Input data  : \n");
 			_hexdump(digest,digestLen);	
 
 			printf("Signature : \n");

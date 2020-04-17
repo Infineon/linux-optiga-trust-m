@@ -25,17 +25,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <stdint.h>
-
 #include "optiga/ifx_i2c/ifx_i2c_config.h"
 #include "optiga/optiga_util.h"
 
 #include "trustm_helper.h"
-
-#include <openssl/x509.h>
-#include <openssl/x509v3.h>
-#include <openssl/bio.h>
-#include <openssl/pem.h>
 
 BIO	*reqbio = NULL;
 BIO	*outbio = NULL;
@@ -43,11 +36,11 @@ BIO	*outbio = NULL;
 #define MAX_OID_PUB_CERT_SIZE	1728
 
 typedef struct _OPTFLAG {
-	uint16_t	sign		: 1;
+	uint16_t	enc			: 1;
 	uint16_t	input		: 1;
 	uint16_t	output		: 1;
 	uint16_t	hash		: 1;
-	uint16_t	dummy4		: 1;
+	uint16_t	pubkey		: 1;
 	uint16_t	dummy5		: 1;
 	uint16_t	dummy6		: 1;
 	uint16_t	dummy7		: 1;
@@ -68,12 +61,12 @@ union _uOptFlag {
 
 void _helpmenu(void)
 {
-	printf("\nHelp menu: trustm_ecc_sign <option> ...<option>\n");
+	printf("\nHelp menu: trustm_rsa_enc <option> ...<option>\n");
 	printf("option:- \n");
-	printf("-k <OID Key>  : Select ECC key for signing OID (0xE0F0-0xE0F3) \n");
+	printf("-k <OID Key>  : Select key for encrypt OID 0xNNNN \n");
+	printf("-p <pubkey>   : Use Pubkey file\n");
 	printf("-o <filename> : Output to file \n");
 	printf("-i <filename> : Input Data file\n");
-	printf("-H            : Hash before sign\n");
 	printf("-h            : Print this help \n");
 }
 
@@ -142,7 +135,7 @@ static uint16_t _readFrom(uint8_t *data, uint8_t *filename)
 	datafile = fopen((const char *)filename,"rb");
 	if (!datafile)
 	{
-		return 0;
+		return 1;
 	}
 
 	//Read file
@@ -164,22 +157,24 @@ int main (int argc, char **argv)
 	optiga_lib_status_t return_status;
 
 	optiga_key_id_t optiga_key_id;
-	optiga_hash_context_t hash_context;
-	hash_data_from_host_t hash_data_host;
-	uint8_t hash_context_buffer[2048];
-	
-	uint8_t signature [110];     //To store the signture generated
-    uint16_t signature_length = sizeof(signature);
-    uint8_t digest[32];
-    uint16_t digestLen = 0;
-    uint8_t data[2048];
-    uint16_t dataLen = 0;
+	uint8_t message[2048];     //To store the signture generated
+    uint16_t messagelen = sizeof(message);
+    uint8_t encyptdata[2048];
+    uint16_t encyptdatalen = sizeof(encyptdata);
+    
+    uint8_t pubkey[2048];
+    uint32_t pubkeyLen;
+	uint16_t pubkeySize;
+	uint16_t pubkeyType;
 
     char *outFile = NULL;
     char *inFile = NULL;
-	FILE *fp = NULL;
-	uint16_t filesize;
-    
+	char *pubkeyFile = NULL;
+    char name[100];
+
+    public_key_from_host_t public_key_from_host;
+    optiga_rsa_encryption_scheme_t encryption_scheme;
+            
 	int option = 0;                    // Command line option.
 
 
@@ -202,12 +197,12 @@ int main (int argc, char **argv)
         opterr = 0; // Disable getopt error messages in case of unknown parameters
 
         // Loop through parameters with getopt.
-        while (-1 != (option = getopt(argc, argv, "k:o:i:Hh")))
+        while (-1 != (option = getopt(argc, argv, "k:o:i:p:h")))
         {
 			switch (option)
             {
 				case 'k': // OID Key
-					uOptFlag.flags.sign = 1;
+					uOptFlag.flags.enc = 1;
 					optiga_key_id = _ParseHexorDec(optarg);			 	
 					break;
 				case 'o': // Output
@@ -218,8 +213,9 @@ int main (int argc, char **argv)
 					uOptFlag.flags.input = 1;
 					inFile = optarg;			 	
 					break;
-				case 'H': // Input
-					uOptFlag.flags.hash = 1;		 	
+				case 'p': // Host Pubkey
+					uOptFlag.flags.pubkey = 1;
+					pubkeyFile = optarg;			 	
 					break;
 				case 'h': // Print Help Menu
 				default:  // Any other command Print Help Menu
@@ -237,12 +233,12 @@ int main (int argc, char **argv)
 	return_status = trustm_Open();
 	if (return_status != OPTIGA_LIB_SUCCESS)
 		exit(1);
-		
+	
 	printf("========================================================\n");	
 
 	do
 	{
-		if(uOptFlag.flags.sign == 1)
+		if(uOptFlag.flags.enc == 1)
 		{
 			if(uOptFlag.flags.output != 1)
 			{
@@ -255,135 +251,33 @@ int main (int argc, char **argv)
 				printf("Input filename missing!!!\n");
 				break;
 			}
-
-			printf("OID Key          : 0x%.4X\n",optiga_key_id);
+			
+			printf("OID Key          : 0x%.4X \n",optiga_key_id);
 			printf("Output File Name : %s \n", outFile);
 			printf("Input File Name  : %s \n", inFile);
 
-			if(uOptFlag.flags.hash == 1)
+			messagelen = _readFrom(message, (uint8_t *) inFile);
+			if (messagelen == 0)
 			{
-				//open 
-				fp = fopen((const char *)inFile,"rb");
-				if (!fp)
-				{
-					printf("error opening file : %s\n",inFile);
-					exit(1);
-				}
-				
-				hash_context.context_buffer = hash_context_buffer;
-				hash_context.context_buffer_length = sizeof(hash_context_buffer);
-				hash_context.hash_algo = (uint8_t)OPTIGA_HASH_TYPE_SHA_256;  			
-				filesize = 0;
-				
-				optiga_lib_status = OPTIGA_LIB_BUSY;
-				return_status = optiga_crypt_hash_start(me_crypt, &hash_context);
-				if (OPTIGA_LIB_SUCCESS != return_status)
-				{
-					break;
-				}
-
-				while (OPTIGA_LIB_BUSY == optiga_lib_status)
-				{
-					//Wait until the optiga_crypt_hash_start operation is completed
-				}
-
-				if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
-				{
-					return_status = optiga_lib_status;
-					printf("hash start : optiga_lib_status Error!!! [0x%.8X]\n",return_status);
-					break;
-				}
-					
-				while((dataLen = fread(data,1,sizeof(data),fp)) > 0)
-				{
-			        hash_data_host.buffer = data;
-					hash_data_host.length = dataLen;
-
-					optiga_lib_status = OPTIGA_LIB_BUSY;
-					return_status = optiga_crypt_hash_update(me_crypt,
-															 &hash_context,
-															 OPTIGA_CRYPT_HOST_DATA,
-															 &hash_data_host);
-					if (OPTIGA_LIB_SUCCESS != return_status)
-					{
-						break;
-					}
-
-					while (OPTIGA_LIB_BUSY == optiga_lib_status)
-					{
-						//Wait until the optiga_crypt_hash_update operation is completed
-					}
-
-					if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
-					{
-						return_status = optiga_lib_status;
-						printf("hash update : optiga_lib_status Error!!! [0x%.8X]\n",return_status);
-						break;
-					}
-					filesize += dataLen;
-				}
-				
-				optiga_lib_status = OPTIGA_LIB_BUSY;
-				return_status = optiga_crypt_hash_finalize(me_crypt,
-														   &hash_context,
-														   digest);
-
-				if (OPTIGA_LIB_SUCCESS != return_status)
-				{
-					break;
-				}
-
-				while (OPTIGA_LIB_BUSY == optiga_lib_status)
-				{
-					//Wait until the optiga_crypt_hash_finalize operation is completed
-				}
-
-				if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
-				{
-					return_status = optiga_lib_status;
-					printf("hash finalize : optiga_lib_status Error!!! [0x%.8X]\n",return_status);
-					break;
-				}
-
-				if (return_status != OPTIGA_LIB_SUCCESS)
-				{
-					printf("hash finalize : return_status Error!!! [0x%.8X]\n",return_status);
-				}
-				else
-				{
-					digestLen = sizeof(digest);
-					printf("Hash Success : SHA256\n");
-					_hexdump(digest,digestLen);
-				}
-
-				printf("filesize: %d\n",filesize);
-				
-			} else
-			{
-				digestLen = _readFrom(digest, (uint8_t *) inFile);
-				if (digestLen == 0)
-				{
-					printf("Error reading file!!!\n");
-					break;				
-				}
-				if (digestLen > sizeof(digest))
-				{
-					printf("Error : File too big try using option -H \n");	
-					break;				
-				} else
-				{
-					printf("Input data[%d] : \n", digestLen);
-					_hexdump(digest,digestLen);
-				}					
+				printf("Error reading file!!!\n");
+				break;				
 			}
+			
+			printf("Input data : \n");
+			_hexdump(message,messagelen);	
 
+			encryption_scheme = OPTIGA_RSAES_PKCS1_V15;
 			optiga_lib_status = OPTIGA_LIB_BUSY;
-			return_status = optiga_crypt_ecdsa_sign(me_crypt,
-													digest,
-													digestLen,
-													optiga_key_id,
-													signature,
-													&signature_length);
+			return_status = optiga_crypt_rsa_encrypt_message(me_crypt,
+																encryption_scheme,
+																message,
+																messagelen,
+																NULL,
+																0,
+																OPTIGA_CRYPT_OID_DATA,
+																&optiga_key_id,
+																encyptdata,
+																&encyptdatalen);
 
 			if (OPTIGA_LIB_SUCCESS != return_status)
 			{
@@ -408,14 +302,108 @@ int main (int argc, char **argv)
 			}
 			else
 			{
-				_writeTo(signature, signature_length, outFile);
+				_writeTo(encyptdata, encyptdatalen, outFile);
 				printf("Success\n");
 			}
 		}
+		
+		if(uOptFlag.flags.pubkey == 1)
+		{
+			if(uOptFlag.flags.output != 1)
+			{
+				printf("Output filename missing!!!\n");
+				break;
+			}
 
+			if(uOptFlag.flags.input != 1)
+			{
+				printf("Input filename missing!!!\n");
+				break;
+			}
+			
+			trustmReadPEM(pubkey, &pubkeyLen, pubkeyFile, name, &pubkeySize, &pubkeyType);
+			if (pubkeyLen == 0)
+			{
+		        printf("Invalid Pubkey file \n");
+				break;
+			}				
+			if (strcmp(name, "PUBLIC KEY"))
+            {
+				printf("Invalid Public Key File!!!\n");
+				break;
+			}
+			if ((pubkeyType != EVP_PKEY_RSA) && (pubkeyType != EVP_PKEY_RSA2))
+			{
+				printf("Wrong Key Type!!!\n");
+				break;
+			}
+
+			//printf("OID Key          : 0x%.4X \n",optiga_key_id);
+			printf("Pubkey file      : %s \n",pubkeyFile);
+			printf("Output File Name : %s \n", outFile);
+			printf("Input File Name  : %s \n", inFile);
+
+			messagelen = _readFrom(message, (uint8_t *) inFile);
+			if (messagelen == 0)
+			{
+				printf("Error reading file!!!\n");
+				break;				
+			}
+			
+			printf("Input data : \n");
+			_hexdump(message,messagelen);	
+
+			encryption_scheme = OPTIGA_RSAES_PKCS1_V15;
+			public_key_from_host.public_key = pubkey;
+			public_key_from_host.length = pubkeyLen;
+			
+			if(pubkeySize == 1024)
+				public_key_from_host.key_type = (uint8_t)OPTIGA_RSA_KEY_1024_BIT_EXPONENTIAL;
+			else
+				public_key_from_host.key_type = (uint8_t)OPTIGA_RSA_KEY_2048_BIT_EXPONENTIAL;
+			
+			optiga_lib_status = OPTIGA_LIB_BUSY;
+			return_status = optiga_crypt_rsa_encrypt_message(me_crypt,
+																encryption_scheme,
+																message,
+																messagelen,
+																NULL,
+																0,
+																OPTIGA_CRYPT_HOST_DATA,
+																&public_key_from_host,
+																encyptdata,
+																&encyptdatalen);
+
+			if (OPTIGA_LIB_SUCCESS != return_status)
+			{
+				break;
+			}
+
+			while (OPTIGA_LIB_BUSY == optiga_lib_status)
+			{
+				//Wait until the optiga_crypt_ecdsa_sign operation is completed
+			}
+
+			if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
+			{
+				return_status = optiga_lib_status;
+				printf("optiga_lib_status Error!!! [0x%.8X]\n",return_status);				
+				break;
+			}
+			
+			if (return_status != OPTIGA_LIB_SUCCESS)
+			{
+				printf("return_status Error!!! [0x%.8X]\n",return_status);
+			}
+			else
+			{
+				_writeTo(encyptdata, encyptdatalen, outFile);
+				printf("Success\n");
+			}
+		}
 	}while(FALSE);
-	printf("========================================================\n");	
-	
+
+	printf("===========================================\n");	
 	trustm_Close();
 
 	return 0;
