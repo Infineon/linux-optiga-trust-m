@@ -85,7 +85,7 @@ int main (int argc, char **argv)
 					skip_flag = 1;
 					break;
 				case 0xE140:
-					printf("Shared Platform Binding Secert. [0x%.4x] ", optiga_oid);
+					printf("Shared Platform Binding Secret. [0x%.4x] ", optiga_oid);
 					skip_flag = 1;
 					break;	
 				case 0xF1D0:
