@@ -37,9 +37,6 @@
 #include <openssl/bio.h>
 #include <openssl/pem.h>
 
-BIO	*reqbio = NULL;
-BIO	*outbio = NULL;
-
 #define MAX_OID_PUB_CERT_SIZE	1728
 
 typedef struct _OPTFLAG {
@@ -75,88 +72,6 @@ void _helpmenu(void)
 	printf("-i <filename> : Input Data file\n");
 	printf("-H            : Hash before sign\n");
 	printf("-h            : Print this help \n");
-}
-
-static uint32_t _ParseHexorDec(const char *aArg)
-{
-	uint32_t value;
-
-	if ((strncmp(aArg, "0x",2) == 0) ||(strncmp(aArg, "0X",2) == 0))
-		sscanf(aArg,"%x",&value);
-	else
-		sscanf(aArg,"%d",&value);
-
-	return value;
-}
-
-void _hexdump(uint8_t *data, uint16_t len)
-{
-	uint16_t j,k;
-
-	printf("\t");
-	k=0;
-	for (j=0;j<len;j++)
-	{
-		printf("%.2X ", data[j]);
-		if(k < 15)
-		{
-			k++;
-		}	
-		else
-		{
-			printf("\n\t");
-			k=0;
-		}
-	}
-	printf("\n");
-}
-
-uint16_t _writeTo(uint8_t *buf, uint32_t len, const char *filename)
-{
-	FILE *datafile;
-
-	//create 
-	datafile = fopen(filename,"wb");
-	if (!datafile)
-	{
-		return 1;
-	}
-
-	//Write to file
-	fwrite(buf, 1, len, datafile);
-	fclose(datafile);
-
-	return 0;
-
-}
-
-static uint16_t _readFrom(uint8_t *data, uint8_t *filename)
-{
-	
-	FILE *datafile;
-	uint16_t len;
-	uint8_t buf[2048];
-	uint16_t ret;
-
-	//open 
-	datafile = fopen((const char *)filename,"rb");
-	if (!datafile)
-	{
-		return 0;
-	}
-
-	//Read file
-	len = fread(buf, 1, sizeof(buf), datafile); 
-	if (len > 0)
-	{
-		ret = len;
-		memcpy(data,buf,len);
-	}
-
-	fclose(datafile);
-
-	return ret;
-
 }
 
 int main (int argc, char **argv)
@@ -208,7 +123,7 @@ int main (int argc, char **argv)
             {
 				case 'k': // OID Key
 					uOptFlag.flags.sign = 1;
-					optiga_key_id = _ParseHexorDec(optarg);			 	
+					optiga_key_id = trustmHexorDec(optarg);			 	
 					break;
 				case 'o': // Output
 					uOptFlag.flags.output = 1;
@@ -278,21 +193,12 @@ int main (int argc, char **argv)
 				optiga_lib_status = OPTIGA_LIB_BUSY;
 				return_status = optiga_crypt_hash_start(me_crypt, &hash_context);
 				if (OPTIGA_LIB_SUCCESS != return_status)
-				{
+					break;			
+				//Wait until the optiga_util_read_metadata operation is completed
+				while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+				return_status = optiga_lib_status;
+				if (return_status != OPTIGA_LIB_SUCCESS)
 					break;
-				}
-
-				while (OPTIGA_LIB_BUSY == optiga_lib_status)
-				{
-					//Wait until the optiga_crypt_hash_start operation is completed
-				}
-
-				if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
-				{
-					return_status = optiga_lib_status;
-					printf("hash start : optiga_lib_status Error!!! [0x%.8X]\n",return_status);
-					break;
-				}
 					
 				while((dataLen = fread(data,1,sizeof(data),fp)) > 0)
 				{
@@ -305,55 +211,38 @@ int main (int argc, char **argv)
 															 OPTIGA_CRYPT_HOST_DATA,
 															 &hash_data_host);
 					if (OPTIGA_LIB_SUCCESS != return_status)
-					{
+						break;			
+					//Wait until the optiga_util_read_metadata operation is completed
+					while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+					return_status = optiga_lib_status;
+					if (return_status != OPTIGA_LIB_SUCCESS)
 						break;
-					}
-
-					while (OPTIGA_LIB_BUSY == optiga_lib_status)
-					{
-						//Wait until the optiga_crypt_hash_update operation is completed
-					}
-
-					if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
-					{
-						return_status = optiga_lib_status;
-						printf("hash update : optiga_lib_status Error!!! [0x%.8X]\n",return_status);
-						break;
-					}
 					filesize += dataLen;
+				}
+				
+				// Capture OPTIGA Trust M error
+				if (return_status != OPTIGA_LIB_SUCCESS)
+				{
+					trustmPrintErrorCode(return_status);
+					break;
 				}
 				
 				optiga_lib_status = OPTIGA_LIB_BUSY;
 				return_status = optiga_crypt_hash_finalize(me_crypt,
 														   &hash_context,
 														   digest);
-
 				if (OPTIGA_LIB_SUCCESS != return_status)
-				{
-					break;
-				}
-
-				while (OPTIGA_LIB_BUSY == optiga_lib_status)
-				{
-					//Wait until the optiga_crypt_hash_finalize operation is completed
-				}
-
-				if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
-				{
-					return_status = optiga_lib_status;
-					printf("hash finalize : optiga_lib_status Error!!! [0x%.8X]\n",return_status);
-					break;
-				}
-
+					break;			
+				//Wait until the optiga_util_read_metadata operation is completed
+				while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+				return_status = optiga_lib_status;
 				if (return_status != OPTIGA_LIB_SUCCESS)
-				{
-					printf("hash finalize : return_status Error!!! [0x%.8X]\n",return_status);
-				}
+					break;
 				else
 				{
 					digestLen = sizeof(digest);
 					printf("Hash Success : SHA256\n");
-					_hexdump(digest,digestLen);
+					trustmhexdump(digest,digestLen);
 				}
 
 				printf("filesize: %d\n",filesize);
@@ -363,7 +252,7 @@ int main (int argc, char **argv)
 				for(digestLen=0;digestLen< sizeof(digest);digestLen++)
 					digest[digestLen] = 0x00;
 					
-				digestLen = _readFrom(digest, (uint8_t *) inFile);
+				digestLen = trustmreadFrom(digest, (uint8_t *) inFile);
 				if (digestLen == 0)
 				{
 					printf("Error reading file!!!\n");
@@ -377,7 +266,7 @@ int main (int argc, char **argv)
 				{
 					digestLen = sizeof(digest);
 					printf("Input data[%d] : \n", digestLen);
-					_hexdump(digest,digestLen);
+					trustmhexdump(digest,digestLen);
 				}					
 			}
 
@@ -390,36 +279,26 @@ int main (int argc, char **argv)
 												signature,
 												&signature_length,
 												0x0000);
-
 			if (OPTIGA_LIB_SUCCESS != return_status)
-			{
-				break;
-			}
-
-			while (OPTIGA_LIB_BUSY == optiga_lib_status)
-			{
-				//Wait until the optiga_crypt_ecdsa_sign operation is completed
-			}
-
-			if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
-			{
-				return_status = optiga_lib_status;
-				printf("optiga_lib_status Error!!! [0x%.8X]\n",return_status);				
-				break;
-			}
-			
+				break;			
+			//Wait until the optiga_util_read_metadata operation is completed
+			while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+			return_status = optiga_lib_status;
 			if (return_status != OPTIGA_LIB_SUCCESS)
-			{
-				printf("return_status Error!!! [0x%.8X]\n",return_status);
-			}
+				break;
 			else
 			{
-				_writeTo(signature, signature_length, outFile);
+				trustmwriteTo(signature, signature_length, outFile);
 				printf("Success\n");
 			}
 		}
 
 	}while(FALSE);
+	
+    // Capture OPTIGA Trust M error
+	if (return_status != OPTIGA_LIB_SUCCESS)
+        trustmPrintErrorCode(return_status);
+        	
 	printf("========================================================\n");	
 	
 	trustm_Close();

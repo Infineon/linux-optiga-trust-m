@@ -443,7 +443,7 @@ uint16_t trustmReadPEM(uint8_t *buf, uint32_t *len, const char *filename, char *
     EVP_PKEY *pkey;
     RSA *rsa_key;
     EC_KEY *ec_key;
-    EC_GROUP *ec_group;
+    const EC_GROUP *ec_group;
     int i,j;
 
     fp = fopen(filename,"r");
@@ -715,7 +715,7 @@ optiga_lib_status_t trustm_Open(void)
         {
             //optiga util open application failed
             TRUSTM_HELPER_ERRFN("Fail : optiga_util_open_application \n");
-            TRUSTM_HELPER_ERRFN("optiga_lib_status: %x\n",optiga_lib_status);
+            trustmPrintErrorCode(optiga_lib_status);
             return_status = optiga_lib_status;
             break;
         }
@@ -784,6 +784,9 @@ optiga_lib_status_t trustm_Close(void)
 
     }while(FALSE);
 
+    if (return_status != OPTIGA_LIB_SUCCESS)
+        trustmPrintErrorCode(return_status);
+
     // destroy util and crypt instances
     if (me_util != NULL)
         optiga_util_destroy(me_util);    
@@ -793,7 +796,253 @@ optiga_lib_status_t trustm_Close(void)
     return return_status;
 }
 
+uint32_t trustmHexorDec(const char *aArg)
+{
+	uint32_t value;
+
+	if ((strncmp(aArg, "0x",2) == 0) ||(strncmp(aArg, "0X",2) == 0))
+		sscanf(aArg,"%x",&value);
+	else
+		sscanf(aArg,"%d",&value);
+
+	return value;
+}
+
+void trustmhexdump(uint8_t *data, uint16_t len)
+{
+	uint16_t j,k;
+
+	printf("\t");
+	k=0;
+	for (j=0;j<len;j++)
+	{
+		printf("%.2X ", data[j]);
+		if(k < 15)
+		{
+			k++;
+		}	
+		else
+		{
+			printf("\n\t");
+			k=0;
+		}
+	}
+	printf("\n");
+}
+
+uint16_t trustmwriteTo(uint8_t *buf, uint32_t len, const char *filename)
+{
+	FILE *datafile;
+
+	//create 
+	datafile = fopen(filename,"wb");
+	if (!datafile)
+	{
+		return 1;
+	}
+
+	//Write to file
+	fwrite(buf, 1, len, datafile);
+	fclose(datafile);
+
+	return 0;
+
+}
+
+uint16_t trustmreadFrom(uint8_t *data, uint8_t *filename)
+{
+	
+	FILE *datafile;
+	uint16_t len;
+	uint8_t buf[2048];
+	uint16_t ret;
+
+	//open 
+	datafile = fopen((const char *)filename,"rb");
+	if (!datafile)
+	{
+		printf("File open error!!!\n");
+		return 0;
+	}
+
+	//Read file
+	len = fread(buf, 1, sizeof(buf), datafile); 
+	if (len > 0)
+	{
+		ret = len;
+		memcpy(data,buf,len);
+	}
+
+	fclose(datafile);
+
+	return ret;
+
+}
+
 void trustmPrintErrorCode(uint16_t errcode)
 {
-    
+    switch (errcode)
+    {
+        // OPTIGA comms
+        case OPTIGA_LIB_BUSY: // OPTIGA host library in busy state
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA host library in busy state");
+            break;
+        case OPTIGA_COMMS_ERROR: //OPTIGA comms API failed
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA comms API failed");
+            break;
+        case OPTIGA_COMMS_ERROR_INVALID_INPUT: //OPTIGA comms API called with invalid inputs
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA comms API called with invalid inputs");
+            break;
+        case OPTIGA_COMMS_ERROR_MEMORY_INSUFFICIENT: //OPTIGA comms API called with insufficient memory buffer
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA comms API called with insufficient memory buffer");
+            break;
+        case OPTIGA_COMMS_ERROR_STACK_MEMORY: //OPTIGA comms Protocol stack memory insufficient
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA comms Protocol stack memory insufficient");
+            break;
+        case OPTIGA_COMMS_ERROR_FATAL: //OPTIGA comms Protocol fatal error
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA comms Protocol fatal error");
+            break;           
+        case OPTIGA_COMMS_ERROR_HANDSHAKE: //OPTIGA comms Presentation layer handshake error
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA comms Presentation layer handshake error");
+            break;  
+        case OPTIGA_COMMS_ERROR_SESSION: //OPTIGA comms Presentation layer session error
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA comms Presentation layer session error");
+            break;
+            
+        // OPTIGA command
+        case OPTIGA_CMD_ERROR: //OPTIGA command API failed
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA command API failed");
+            break; 
+        case OPTIGA_CMD_ERROR_INVALID_INPUT: //OPTIGA command API called with invalid inputs
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA command API called with invalid inputs");
+            break; 
+        case OPTIGA_CMD_ERROR_MEMORY_INSUFFICIENT: //OPTIGA command API called with insufficient memory buffer
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA command API called with insufficient memory buffer");
+            break; 
+            
+        // OPTIGA util
+        case OPTIGA_UTIL_ERROR: //OPTIGA util API failed
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA util API failed");
+            break;         
+        case OPTIGA_UTIL_ERROR_INVALID_INPUT: //OPTIGA util API called with invalid inputs
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA util API called with invalid inputs");
+            break; 
+        case OPTIGA_UTIL_ERROR_MEMORY_INSUFFICIENT: //OPTIGA util API called with insufficient memory buffer
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA util API called with insufficient memory buffer");
+            break; 
+        case OPTIGA_UTIL_ERROR_INSTANCE_IN_USE: //OPTIGA util API called when, a request of same instance is already in service
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA util API called when, a request of same instance is already in service");
+            break;
+            
+        // OPTIGA crypt
+        case OPTIGA_CRYPT_ERROR: //OPTIGA crypt API failed
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA crypt API failed");
+            break;        
+        case OPTIGA_CRYPT_ERROR_INVALID_INPUT: //OPTIGA crypt API called with invalid inputs
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA crypt API called with invalid inputs");
+            break; 
+        case OPTIGA_CRYPT_ERROR_MEMORY_INSUFFICIENT: //OPTIGA crypt API called with insufficient memory buffer
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA crypt API called with insufficient memory buffer");
+            break; 
+        case OPTIGA_CRYPT_ERROR_INSTANCE_IN_USE: //OPTIGA crypt API called when, a request of same instance is already in service
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA crypt API called when, a request of same instance is already in service");
+            break; 
+            
+        // OPTIGA_DEVICE_ERROR (0x8000)
+        case 0x8001: // OPTIGA device Invalid OID
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA device Invalid OID");
+            break; 
+        case 0x8002: // OPTIGA device Invalid Password
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA device Invalid Password");
+            break; 
+        case 0x8003: // OPTIGA device Invalid Param Field
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA device Invalid Param Field");
+            break; 
+        case 0x8004: // OPTIGA device Invalid Length Field
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA device Invalid Length Field");
+            break; 
+        case 0x8005: // OPTIGA device Invalid Parameter In Data Field
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA device Invalid Parameter In Data Field");
+            break; 
+        case 0x8006: // OPTIGA device Internal Process Error
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA device Internal Process Error");
+            break; 
+        case 0x8007: // OPTIGA device Access Condition Not Satisfied
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA device Access Condition Not Satisfied");
+            break; 
+        case 0x8008: // OPTIGA device Data Object Boundary Exceeded
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA device Data Object Boundary Exceeded");
+            break; 
+        case 0x8009: // OPTIGA device Metadata Truncation Error
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA device Metadata Truncation Error");
+            break; 
+        case 0x800A: // OPTIGA device Invalid Command Field
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA device Invalid Command Field");
+            break; 
+        case 0x800B: // OPTIGA device Command Out Of Sequence
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA device Command Out Of Sequence");
+            break; 
+        case 0x800C: // OPTIGA device Command Not Available
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA device Command Not Available");
+            break; 
+        case 0x800D: // OPTIGA device Insufficient Buffer/Memory
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA device Insufficient Buffer/Memory");
+            break; 
+        case 0x800E: // OPTIGA device Counter Threshold Limit Exceeded
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA device Threshold Limit Exceeded");
+            break; 
+        case 0x800F: // OPTIGA device Invalid Manifest
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA device Invalid Manifest");
+            break; 
+        case 0x8010: // OPTIGA device Invalid/Wrong Payload Version
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA device Invalid/Wrong Payload Version");
+            break; 
+        case 0x8021: // OPTIGA device Invalid Handshake Message
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA device Invalid Handshake Message");
+            break; 
+        case 0x8022: // OPTIGA device Version Mismatch
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA device Version Mismatch");
+            break; 
+        case 0x8023: // OPTIGA device Insufficient/Unsupported Cipher Suite
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA device Insufficient/Unsupported Cipher Suite");
+            break; 
+        case 0x8024: // OPTIGA device Unsupported Extension/Identifer
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA device Unsupported Extension/Identifer");
+            break; 
+        case 0x8026: // OPTIGA device Invalid Trust Anchor
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA device Invalid Trust Anchor");
+            break; 
+        case 0x8027: // OPTIGA device Trust Anchor Expired
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA device Trust Anchor Expired");
+            break; 
+        case 0x8028: // OPTIGA device Unsupported Trust Anchor
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA device Unsupported Trust Anchor");
+            break; 
+        case 0x8029: // OPTIGA device Invalid Certificate Format
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA device Invalid Certificate Format");
+            break; 
+        case 0x802A: // OPTIGA device Unsupported Certificate Algorithm
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA device Unsupported Certificate Algorithm");
+            break; 
+        case 0x802B: // OPTIGA device Cerificate Expired
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA device Cerificate Expired");
+            break; 
+        case 0x802C: // OPTIGA device Signature Verification Failure
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA device Signature Verification Failure");
+            break; 
+        case 0x802D: // OPTIGA device Integrity Validation Failure
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA device Integrity Validation Failure");
+            break; 
+        case 0x802E: // OPTIGA device Decryption Failure
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA device Decryption Failure");
+            break; 
+        case 0x80FF: // OPTIGA device General Error
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA device General Error");
+            break; 
+            
+        // Unknown error
+        //default: // OPTIGA device Unknown Error
+        //    TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA Unknown Error");
+        //    break; 
+    }   
 }

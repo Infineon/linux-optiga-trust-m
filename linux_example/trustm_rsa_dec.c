@@ -30,9 +30,6 @@
 
 #include "trustm_helper.h"
 
-BIO	*reqbio = NULL;
-BIO	*outbio = NULL;
-
 #define MAX_OID_PUB_CERT_SIZE	1728
 
 typedef struct _OPTFLAG {
@@ -67,88 +64,6 @@ void _helpmenu(void)
 	printf("-o <filename> : Output to file \n");
 	printf("-i <filename> : Input Data file\n");
 	printf("-h            : Print this help \n");
-}
-
-static uint32_t _ParseHexorDec(const char *aArg)
-{
-	uint32_t value;
-
-	if ((strncmp(aArg, "0x",2) == 0) ||(strncmp(aArg, "0X",2) == 0))
-		sscanf(aArg,"%x",&value);
-	else
-		sscanf(aArg,"%d",&value);
-
-	return value;
-}
-
-void _hexdump(uint8_t *data, uint16_t len)
-{
-	uint16_t j,k;
-
-	printf("\t");
-	k=0;
-	for (j=0;j<len;j++)
-	{
-		printf("%.2X ", data[j]);
-		if(k < 15)
-		{
-			k++;
-		}	
-		else
-		{
-			printf("\n\t");
-			k=0;
-		}
-	}
-	printf("\n");
-}
-
-uint16_t _writeTo(uint8_t *buf, uint32_t len, const char *filename)
-{
-	FILE *datafile;
-
-	//create 
-	datafile = fopen(filename,"wb");
-	if (!datafile)
-	{
-		return 1;
-	}
-
-	//Write to file
-	fwrite(buf, 1, len, datafile);
-	fclose(datafile);
-
-	return 0;
-
-}
-
-static uint16_t _readFrom(uint8_t *data, uint8_t *filename)
-{
-	
-	FILE *datafile;
-	uint16_t len;
-	uint8_t buf[2048];
-	uint16_t ret;
-
-	//open 
-	datafile = fopen((const char *)filename,"rb");
-	if (!datafile)
-	{
-		return 1;
-	}
-
-	//Read file
-	len = fread(buf, 1, sizeof(buf), datafile); 
-	if (len > 0)
-	{
-		ret = len;
-		memcpy(data,buf,len);
-	}
-
-	fclose(datafile);
-
-	return ret;
-
 }
 
 int main (int argc, char **argv)
@@ -194,7 +109,7 @@ int main (int argc, char **argv)
             {
 				case 'k': // OID Key
 					uOptFlag.flags.dec = 1;
-					optiga_key_id = _ParseHexorDec(optarg);			 	
+					optiga_key_id = trustmHexorDec(optarg);			 	
 					break;
 				case 'o': // Output
 					uOptFlag.flags.output = 1;
@@ -243,7 +158,7 @@ int main (int argc, char **argv)
 			printf("Output File Name : %s \n", outFile);
 			printf("Input File Name  : %s \n", inFile);
 
-			encyptdatalen = _readFrom(encyptdata, (uint8_t *) inFile);
+			encyptdatalen = trustmreadFrom(encyptdata, (uint8_t *) inFile);
 			if (encyptdatalen == 0)
 			{
 				printf("Error reading file!!!\n");
@@ -251,7 +166,7 @@ int main (int argc, char **argv)
 			}
 			
 			printf("Input data : \n");
-			_hexdump(encyptdata,encyptdatalen);	
+			trustmhexdump(encyptdata,encyptdatalen);	
 
 			// OPTIGA Comms Shielded connection settings to enable the protection
 			OPTIGA_CRYPT_SET_COMMS_PROTOCOL_VERSION(me_crypt, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
@@ -268,37 +183,27 @@ int main (int argc, char **argv)
 																optiga_key_id,
 																message,
 																&messagelen);
-
 			if (OPTIGA_LIB_SUCCESS != return_status)
-			{
-				break;
-			}
-
-			while (OPTIGA_LIB_BUSY == optiga_lib_status)
-			{
-				//Wait until the optiga_crypt_ecdsa_sign operation is completed
-			}
-
-			if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
-			{
-				return_status = optiga_lib_status;
-				printf("optiga_lib_status Error!!! [0x%.8X]\n",return_status);				
-				break;
-			}
-			
+				break;			
+			//Wait until the optiga_util_read_metadata operation is completed
+			while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+			return_status = optiga_lib_status;
 			if (return_status != OPTIGA_LIB_SUCCESS)
-			{
-				printf("return_status Error!!! [0x%.8X]\n",return_status);
-			}
+				break;
 			else
 			{
-				_writeTo(message, messagelen, outFile);
+				trustmwriteTo(message, messagelen, outFile);
 				printf("Success\n");
 			}
 		}
 	}while(FALSE);
-
-	printf("===========================================\n");	
+    
+    // Capture OPTIGA Trust M error
+	if (return_status != OPTIGA_LIB_SUCCESS)
+        trustmPrintErrorCode(return_status);
+        
+    printf("========================================================\n");  
+    	
 	trustm_Close();
 
 	return 0;

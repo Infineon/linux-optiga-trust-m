@@ -1,7 +1,7 @@
 /**
 * MIT License
 *
-* Copyright (c) 2019 Infineon Technologies AG
+* Copyright (c) 2020 Infineon Technologies AG
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -76,18 +76,6 @@ void helpmenu(void)
 	printf("-h              : Print this help \n");
 }
 
-static uint32_t _ParseHexorDec(const char *aArg)
-{
-	uint32_t value;
-
-	if (strncmp(aArg, "0x",2) == 0)
-		sscanf(aArg,"%x",&value);
-	else
-		sscanf(aArg,"%d",&value);
-
-	return value;
-}
-
 int main (int argc, char **argv)
 {
 	optiga_lib_status_t return_status;
@@ -129,11 +117,11 @@ int main (int argc, char **argv)
             {
 				case 'r': // Read Cert
 					uOptFlag.flags.read = 1;
-					optiga_oid = _ParseHexorDec(optarg);			 	
+					optiga_oid = trustmHexorDec(optarg);			 	
 					break;
 				case 'w': // Write Cert
 					uOptFlag.flags.write = 1;	
-					optiga_oid = _ParseHexorDec(optarg);								 	
+					optiga_oid = trustmHexorDec(optarg);								 	
 					break;
 				case 'o': // Output
 					uOptFlag.flags.output = 1;
@@ -149,7 +137,7 @@ int main (int argc, char **argv)
 					break;
 				case 'c': // Clean OID Cert
 					uOptFlag.flags.clear = 1;	
-					optiga_oid = _ParseHexorDec(optarg);							 	
+					optiga_oid = trustmHexorDec(optarg);							 	
 					break;
 				case 'h': // Print Help Menu
 				default:  // Any other command Print Help Menu
@@ -164,7 +152,8 @@ int main (int argc, char **argv)
 	if (return_status != OPTIGA_LIB_SUCCESS)
 		exit(1);
 		
-	printf("===========================================\n");	
+	printf("========================================================\n");    
+	
 
 	do
 	{
@@ -176,7 +165,7 @@ int main (int argc, char **argv)
 				break;
 			}
 
-			printf("Reading OID 0x%.4X\n",optiga_oid);
+			printf("OID              : 0x%.4X \n",optiga_oid);
 			printf("Output File Name : %s \n", outFile);
 			offset = 0x00;
 			bytes_to_read = sizeof(read_data_buffer);
@@ -188,27 +177,12 @@ int main (int argc, char **argv)
 												read_data_buffer,
 												(uint16_t *)&bytes_to_read);
 			if (OPTIGA_LIB_SUCCESS != return_status)
-			{
-				printf("Error!!! [0x%.8X]\n",return_status);
 				break;
-			}
-
-			while (OPTIGA_LIB_BUSY == optiga_lib_status) 
-			{
-				//Wait until the optiga_util_read_metadata operation is completed
-			}
-/*			
-			return_status = optiga_util_read_data(optiga_oid,
-												offset,
-												read_data_buffer,
-												&bytes_to_read);
-*/
+			//Wait until the optiga_util_read_metadata operation is completed
+			while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+			return_status = optiga_lib_status;
 			if (return_status != OPTIGA_LIB_SUCCESS)
-			{
-				printf("Error!!! [0x%.8X]\n",return_status);
 				break;
-			}
-
 			else
 			{
 				switch (read_data_buffer[0])
@@ -233,8 +207,7 @@ int main (int argc, char **argv)
 					x509Cert = d2i_X509(NULL, (const uint8_t **)&pCert, certLen);
 					if(!x509Cert)
 					{
-						printf("Unable to parse cert in OID Ox%.4X\n",optiga_oid);
-						
+						printf("Unable to parse cert in OID Ox%.4X\n",optiga_oid);	
 					}
 					else
 					{
@@ -274,27 +247,12 @@ int main (int argc, char **argv)
 															pCert, 
 															certLen);
 					if (OPTIGA_LIB_SUCCESS != return_status)
-					{
-						printf("Error!!! [0x%.8X]\n",return_status);
-						break;
-					}
-
-					while (OPTIGA_LIB_BUSY == optiga_lib_status) 
-					{
-						//Wait until the optiga_util_read_metadata operation is completed
-					}					
-
-/*
-					return_status = optiga_util_write_data(optiga_oid,
-										   OPTIGA_UTIL_ERASE_AND_WRITE,
-										   offset,
-										   pCert, 
-										   certLen);
-*/
+						break;			
+					//Wait until the optiga_util_read_metadata operation is completed
+					while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+					return_status = optiga_lib_status;
 					if (return_status != OPTIGA_LIB_SUCCESS)
-					{
-						printf("Error!!! [0x%.8X]\n",return_status);
-					}
+						break;
 					else
 						printf("Success!!!\n");
 				}
@@ -323,33 +281,23 @@ int main (int argc, char **argv)
 													read_data_buffer, 
 													bytes_to_read);
 			if (OPTIGA_LIB_SUCCESS != return_status)
-			{
-				printf("Error!!! [0x%.8X]\n",return_status);
-				break;
-			}
-
-			while (OPTIGA_LIB_BUSY == optiga_lib_status) 
-			{
-				//Wait until the optiga_util_read_metadata operation is completed
-			}
-/*			
-			return_status = optiga_util_write_data(optiga_oid,
-												   OPTIGA_UTIL_ERASE_AND_WRITE,
-												   offset,
-												   read_data_buffer, 
-												   bytes_to_read);
-*/
+				break;			
+			//Wait until the optiga_util_read_metadata operation is completed
+			while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+			return_status = optiga_lib_status;
 			if (return_status != OPTIGA_LIB_SUCCESS)
-			{
-				printf("Error!!! [0x%.8X]\n",return_status);
-			}
+				break;
 			else
-			{
 				printf("Cleared.\n");
-			}
 		}
-	}while(0);
+	}while(FALSE);
 	
+	// Capture OPTIGA Error
+	if (return_status != OPTIGA_LIB_SUCCESS)
+		trustmPrintErrorCode(return_status);
+
+	printf("========================================================\n");    
+		
 	trustm_Close();
 	return 0;
 }

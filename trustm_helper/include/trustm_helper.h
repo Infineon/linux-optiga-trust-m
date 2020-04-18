@@ -1,7 +1,7 @@
 /**
 * MIT License
 *
-* Copyright (c) 2019 Infineon Technologies AG
+* Copyright (c) 2020 Infineon Technologies AG
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -46,15 +46,13 @@
 
 #define TRUSTM_HELPER_DBG(x, ...)      fprintf(stderr, x,##__VA_ARGS__)
 #define TRUSTM_HELPER_DBGFN(x, ...)    fprintf(stderr, "%s:%d %s: " x "\n", __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
-#define TRUSTM_HELPER_ERRFN(x, ...)    fprintf(stderr, "Error in %s:%d %s: " x "\n", __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
-
 #else
-
 #define TRUSTM_HELPER_DBG(x, ...)
 #define TRUSTM_HELPER_DBGFN(x, ...)
-#define TRUSTM_HELPER_ERRFN(x, ...)    fprintf(stderr, "Error in %s:%d %s: " x "\n", __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
-
 #endif
+
+#define TRUSTM_HELPER_ERRFN(x, ...)    fprintf(stderr, "Error in %s:%d %s: " x "\n", __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
+#define TRUSTM_HELPER_RETCODEFN(y, x, ...)	   fprintf(stdout, "\nError [0x%.4X] : " x "\n", y, ##__VA_ARGS__)
 
 // ********** typedef
 typedef struct _tag_trustm_UID {
@@ -108,5 +106,10 @@ uint16_t trustmReadX509PEM(X509 **x509, const char *filename);
 void trustmPrintErrorCode(uint16_t errcode);
 
 optiga_lib_status_t trustm_readUID(utrustm_UID_t *UID);
+
+uint32_t trustmHexorDec(const char *aArg);
+void trustmhexdump(uint8_t *data, uint16_t len);
+uint16_t trustmwriteTo(uint8_t *buf, uint32_t len, const char *filename);
+uint16_t trustmreadFrom(uint8_t *data, uint8_t *filename);
 
 #endif	// _TRUSTM_HELPER_H_

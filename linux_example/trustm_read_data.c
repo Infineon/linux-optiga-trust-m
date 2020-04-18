@@ -1,7 +1,7 @@
 /**
 * MIT License
 *
-* Copyright (c) 2019 Infineon Technologies AG
+* Copyright (c) 2020 Infineon Technologies AG
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -33,7 +33,7 @@
 int main (int argc, char **argv)
 {
 	optiga_lib_status_t return_status;
-	uint16_t i, j, k, skip_flag;
+	uint16_t i, skip_flag;
 	
 	uint16_t offset, bytes_to_read;
     uint16_t optiga_oid;
@@ -43,10 +43,9 @@ int main (int argc, char **argv)
 	if (return_status != OPTIGA_LIB_SUCCESS)
 		exit(1);
 
-
 	do
 	{
-		printf("===========================================\n");	
+		printf("========================================================\n"); 	
 
 		for (i = 0; i < (0xF200-0xE0C0-1); i++) 
 		{
@@ -56,30 +55,6 @@ int main (int argc, char **argv)
 			optiga_oid += i;
 			switch (optiga_oid)
 			{
-				/*
-				case 0xE0C0:
-					printf("Global Life Cycle Status    [0x%.4X] ", optiga_oid);
-					break;
-				case 0xE0C1:
-					printf("Global Security Status      [0x%.4X] ", optiga_oid);
-					break;
-				case 0xE0C2:
-					printf("UID                         [0x%.4X] ", optiga_oid);
-					skip_flag = 1;
-					break;
-				case 0xE0C3:
-					printf("Sleep Mode Activation Delay [0x%.4X] ", optiga_oid);
-					break;
-				case 0xE0C4:
-					printf("Current Limitation          [0x%.4X] ", optiga_oid);
-					break;
-				case 0xE0C5:
-					printf("Security Event Counter      [0x%.4X] ", optiga_oid);
-					break;
-				case 0xE0C6:
-					printf("Max Com Buffer Size         [0x%.4X] ", optiga_oid);
-					break;
-					*/ 
 				case 0xE0E0:
 					printf("Device Public Key IFX       [0x%.4X] ", optiga_oid);
 					skip_flag = 1;
@@ -101,27 +76,7 @@ int main (int argc, char **argv)
 				case 0xE0EF:
 					printf("Root CA Public Key Cert8    [0x%.4X] ", optiga_oid);
 					skip_flag = 1;
-					break;
-					/*
-				case 0xE0F0:
-					printf("Device EC Privte Key 1         [0x%.4X] ", optiga_oid);
-					break;
-				case 0xE0F1:
-				case 0xE0F2:
-				case 0xE0F3:
-					printf("Device EC Privte Key x         [0x%.4X] ", optiga_oid);
-					break;
-				case 0xE0FC:
-				case 0xE0FD:
-					printf("Device RSA Privte Key x         [0x%.4X] ", optiga_oid);
-					break;			
-				case 0xE100:
-				case 0xE101:
-				case 0xE102:
-				case 0xE103:
-					printf("Session Context x           [0x%.4X] ", optiga_oid);
-					break;		
-					*/			
+					break;	
 				case 0xE120:
 				case 0xE121:
 				case 0xE122:
@@ -132,18 +87,7 @@ int main (int argc, char **argv)
 				case 0xE140:
 					printf("Shared Platform Binding Secert. [0x%.4x] ", optiga_oid);
 					skip_flag = 1;
-					break;
-				/*	
-				case 0xF1C0:
-					printf("Application Life Cycle Sts  [0x%.4X] ", optiga_oid);
-					break;					
-				case 0xF1C1:
-					printf("Application Security Sts    [0x%.4X] ", optiga_oid);
-					break;					
-				case 0xF1C2:
-					printf("Application Error Codes     [0x%.4X] ", optiga_oid);
-					break;
-				*/					
+					break;	
 				case 0xF1D0:
 				case 0xF1D1:
 				case 0xF1D2:
@@ -179,64 +123,26 @@ int main (int argc, char **argv)
 													read_data_buffer,
 													(uint16_t *)&bytes_to_read);
 				if (OPTIGA_LIB_SUCCESS != return_status)
-				{
-					printf("Error!!! [0x%.8X]\n",return_status);
-					//break;
-				}
-
-				while (OPTIGA_LIB_BUSY == optiga_lib_status) 
-				{
-					//Wait until the optiga_util_read_metadata operation is completed
-				}
-
-				if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
-				{
-					//Reading metadata data object failed.
-					//printf("\nError!!! [0x%.8X]\n",optiga_lib_status);
-					//break;					
-					return_status = optiga_lib_status;
-				}				
-				/*
-				return_status = optiga_util_read_data(optiga_oid,
-													offset,
-													read_data_buffer,
-													&bytes_to_read);
-				*/
+					break;			
+				//Wait until the optiga_util_read_metadata operation is completed
+				while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+				return_status = optiga_lib_status;
 				if (return_status != OPTIGA_LIB_SUCCESS)
-				{
-					printf("\n  Error!!! [0x%.8X]\n\n",return_status);
-				}
+					break;
 				else
 				{
-					k=0;
-					printf("[Size %.4d] : ", bytes_to_read);
-					
-					if (skip_flag == 1)
-						printf("\n  ");
-						
-					for (j=0;j<bytes_to_read;j++)
-					{
-						printf("%.2X ", read_data_buffer[j]);
-						if(k < 15)
-						{
-							k++;
-						}	
-						else
-						{
-							printf("\n  ");
-							k=0;
-						}
-					}
-					printf("\n");
-					if (k!=0)
-						printf("\n");
-					
+					printf("[Size %.4d] : \n", bytes_to_read);
+					trustmHexDump(read_data_buffer,bytes_to_read);
 				} // End of if
 			} // End of if
 		} // End of for loop
 	}while(FALSE);
-
-	printf("===========================================\n");	
+	
+    // Capture OPTIGA Trust M error
+	if (return_status != OPTIGA_LIB_SUCCESS)
+        trustmPrintErrorCode(return_status);
+        
+    printf("========================================================\n"); 	
 	trustm_Close();
 
 	return 0;

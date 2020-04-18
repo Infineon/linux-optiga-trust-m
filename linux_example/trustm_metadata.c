@@ -1,7 +1,7 @@
 /**
 * MIT License
 *
-* Copyright (c) 2019 Infineon Technologies AG
+* Copyright (c) 2020 Infineon Technologies AG
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -83,70 +83,6 @@ static void _helpmenu(void)
 	printf("-h        : Print this help \n");
 }
 
-static uint32_t _ParseHexorDec(const char *aArg)
-{
-	uint32_t value;
-
-	if ((strncmp(aArg, "0x",2) == 0) ||(strncmp(aArg, "0X",2) == 0))
-		sscanf(aArg,"%x",&value);
-	else
-		sscanf(aArg,"%d",&value);
-
-	return value;
-}
-
-void _hexdump(uint8_t *data, uint16_t len)
-{
-	uint16_t j,k;
-
-	printf("\t");
-	k=0;
-	for (j=0;j<len;j++)
-	{
-		printf("%.2X ", data[j]);
-		if(k < 15)
-		{
-			k++;
-		}	
-		else
-		{
-			printf("\n\t");
-			k=0;
-		}
-	}
-	printf("\n");
-}
-
-static uint16_t _readFrom(uint8_t *data, uint8_t *filename)
-{
-	
-	FILE *datafile;
-	uint16_t len;
-	uint8_t buf[2048];
-	uint16_t ret;
-
-	//open 
-	datafile = fopen((const char *)filename,"rb");
-	if (!datafile)
-	{
-		printf("File open error!!!\n");
-		return 1;
-	}
-
-	//Read file
-	len = fread(buf, 1, sizeof(buf), datafile); 
-	if (len > 0)
-	{
-		ret = len;
-		memcpy(data,buf,len);
-	}
-
-	fclose(datafile);
-
-	return ret;
-
-}
-
 int main (int argc, char **argv)
 {
 	optiga_lib_status_t return_status;
@@ -155,7 +91,6 @@ int main (int argc, char **argv)
     uint8_t read_data_buffer[2048];
     uint8_t mode[200];
     uint16_t modeLen;
-    uint16_t j,k;
     uint8_t *lcsChange = NULL;
     uint8_t *lcsRead = NULL;
     uint8_t *lcsExecute = NULL;
@@ -188,11 +123,11 @@ int main (int argc, char **argv)
             {
 				case 'r': // Read
 					uOptFlag.flags.read = 1;
-					optiga_oid = _ParseHexorDec(optarg);			 	
+					optiga_oid = trustmHexorDec(optarg);			 	
 					break;
 				case 'w': // Write
 					uOptFlag.flags.write = 1;	
-					optiga_oid = _ParseHexorDec(optarg);								 	
+					optiga_oid = trustmHexorDec(optarg);								 	
 					break;
 				case 'C': // Change setting
 					uOptFlag.flags.lcschange = 1;
@@ -360,50 +295,17 @@ int main (int argc, char **argv)
 														read_data_buffer,
 														&bytes_to_read);
 			if (OPTIGA_LIB_SUCCESS != return_status)
-			{
-				break;
-			}
-
-			while (OPTIGA_LIB_BUSY == optiga_lib_status) 
-			{
-				//Wait until the optiga_util_read_metadata operation is completed
-			}
-
-			if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
-			{
-				//Reading metadata data object failed.
-				break;
-			}			
-/*
-			return_status = optiga_util_read_metadata(optiga_oid,
-														read_data_buffer,
-														&bytes_to_read);
-*/
+				break;			
+			//Wait until the optiga_util_read_metadata operation is completed
+			while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+			return_status = optiga_lib_status;
 			if (return_status != OPTIGA_LIB_SUCCESS)
-			{
-				printf("Error!!! [0x%.8X]\n",return_status);
-			}
+				break;
 			else
 			{
-				k=0;
-				printf("[Size %.4d] : ", bytes_to_read);
-				
-				printf("\n\t");
-					
-				for (j=0;j<bytes_to_read;j++)
-				{
-					printf("%.2X ", read_data_buffer[j]);
-					if(k < 15)
-					{
-						k++;
-					}	
-					else
-					{
-						printf("\n\t");
-						k=0;
-					}
-				}
-				printf("\n\t");
+				printf("[Size %.4d] : \n", bytes_to_read);
+				trustmHexDump(read_data_buffer,bytes_to_read);
+				printf("\t");
 				trustmdecodeMetaData(read_data_buffer);
 				printf("\n");
 			}	
@@ -455,7 +357,7 @@ int main (int argc, char **argv)
 					case 'f':
 						if (lcsChange[1] == ':')
 						{
-							_readFrom(tempData, (lcsChange+2));
+							trustmreadFrom(tempData, (lcsChange+2));
 							if((tempData[0]+1) < 0x0b)
 							{
 								memcpy((mode+modeLen),tempData,(tempData[0]+1));
@@ -492,7 +394,7 @@ int main (int argc, char **argv)
 					case 'f':
 						if (lcsRead[1] == ':')
 						{
-							_readFrom(tempData, (lcsRead+2));
+							trustmreadFrom(tempData, (lcsRead+2));
 							if((tempData[0]+1) < 0x0b)
 							{
 								memcpy((mode+modeLen),tempData,(tempData[0]+1));
@@ -533,7 +435,7 @@ int main (int argc, char **argv)
 					case 'f':
 						if (lcsExecute[1] == ':')
 						{
-							_readFrom(tempData, (lcsExecute+2));
+							trustmreadFrom(tempData, (lcsExecute+2));
 							if((tempData[0]+1) < 0x0b)
 							{
 								memcpy((mode+modeLen),tempData,(tempData[0]+1));
@@ -557,7 +459,7 @@ int main (int argc, char **argv)
 
 			mode[1] = modeLen-2;
 			printf("\n");
-			_hexdump(mode,modeLen);
+			trustmhexdump(mode,modeLen);
 			printf("\t");
 			trustmdecodeMetaData(mode);
 
@@ -567,36 +469,21 @@ int main (int argc, char **argv)
 														mode,
 														modeLen);
 			if (OPTIGA_LIB_SUCCESS != return_status)
-			{
-				break;
-			}
-
-			while (OPTIGA_LIB_BUSY == optiga_lib_status) 
-			{
-				//Wait until the optiga_util_read_metadata operation is completed
-			}
-
-			if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
-			{
-				//Reading metadata data object failed.
-				break;
-			}	
-
-/*
-			return_status = optiga_util_write_metadata(optiga_oid,
-													   mode,
-													   modeLen);
-*/
+				break;			
+			//Wait until the optiga_util_read_metadata operation is completed
+			while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+			return_status = optiga_lib_status;
 			if (return_status != OPTIGA_LIB_SUCCESS)
-			{
-				printf("Error!!! [0x%.8X]\n",return_status);
-			}
+				break;
 			else
-			{
-				printf("Write Success.\n");
-			}				
+				printf("Write Success.\n");				
 		}
-	} while(0);
+	} while(FALSE);
+	
+    // Capture OPTIGA Trust M error
+	if (return_status != OPTIGA_LIB_SUCCESS)
+        trustmPrintErrorCode(return_status);	
+	
 	printf("========================================================\n");	
 	
 	trustm_Close();

@@ -79,18 +79,6 @@ void helpmenu(void)
 	printf("-h              : Print this help \n");
 }
 
-static uint32_t _ParseHexorDec(const char *aArg)
-{
-	uint32_t value;
-
-	if (strncmp(aArg, "0x",2) == 0)
-		sscanf(aArg,"%x",&value);
-	else
-		sscanf(aArg,"%d",&value);
-
-	return value;
-}
-
 int main (int argc, char **argv)
 {
     optiga_lib_status_t return_status;
@@ -138,7 +126,7 @@ int main (int argc, char **argv)
             {
 				case 'g': // Generate Key ECC key E0F1-E0F3
 					uOptFlag.flags.read = 1;
-					optiga_key_id = _ParseHexorDec(optarg);
+					optiga_key_id = trustmHexorDec(optarg);
 					if((optiga_key_id < 0xE0FC) || (optiga_key_id > 0xE0FD))
 					{
 						printf("Invalid RSA key OID!!!\n");
@@ -147,7 +135,7 @@ int main (int argc, char **argv)
 					break;
 				case 't': // Key Type
 					uOptFlag.flags.type = 1;	
-					keyType = _ParseHexorDec(optarg);
+					keyType = trustmHexorDec(optarg);
 					if ((keyType == 0x00) || (keyType & 0xc0))
 					{
 						printf("Key Type Error!!!\n");
@@ -156,7 +144,7 @@ int main (int argc, char **argv)
 					break;
 				case 'k': // Key Size
 					uOptFlag.flags.type = 1;	
-					keySize = _ParseHexorDec(optarg);
+					keySize = trustmHexorDec(optarg);
 					if ((keySize != 0x41) && (keySize != 0x42))
 					{
 						printf("Key Size Error!!!\n");
@@ -183,7 +171,7 @@ int main (int argc, char **argv)
 	if (return_status != OPTIGA_LIB_SUCCESS)
 		exit(1);
 		
-	printf("===========================================\n");	
+    printf("========================================================\n");    	
 
 	do
 	{
@@ -221,28 +209,13 @@ int main (int argc, char **argv)
 										&optiga_key_id,
 										(pubKey+i),
 										&pubKeyLen);	
-
 			if (OPTIGA_LIB_SUCCESS != return_status)
-			{
-				break;
-			}
-
-			while (OPTIGA_LIB_BUSY == optiga_lib_status)
-			{
-				//Wait until the optiga_crypt_ecc_generate_keypair operation is completed
-			}
-
-			if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
-			{
-				//Key pair generation failed
-				return_status = optiga_lib_status;
-				break;
-			}
-
+				break;			
+			//Wait until the optiga_util_read_metadata operation is completed
+			while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+			return_status = optiga_lib_status;
 			if (return_status != OPTIGA_LIB_SUCCESS)
-			{
-				printf("Error!!! [0x%.8X]\n", return_status);
-			}
+				break;
 			else
 			{
 				printf("Pubkey :\n");
@@ -266,33 +239,25 @@ int main (int argc, char **argv)
 							    0,
 							    (pubKey+i), 
 							    pubKeyLen);
-		    if (OPTIGA_LIB_SUCCESS != return_status)
-		    {
-			break;
-		    }
-
-		    while (OPTIGA_LIB_BUSY == optiga_lib_status) 
-		    {
+			if (OPTIGA_LIB_SUCCESS != return_status)
+				break;			
 			//Wait until the optiga_util_read_metadata operation is completed
-		    }
-
-		    if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
-		    {
-			//Reading metadata data object failed.
-			break;
-		    }
-		    if (return_status != OPTIGA_LIB_SUCCESS)
-		    {
-			printf("Error!!! [0x%.8X]\n",return_status);
-		    }
+			while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+			return_status = optiga_lib_status;
+			if (return_status != OPTIGA_LIB_SUCCESS)
+				break;
 		    else
-		    {
-			printf("Write Success to OID: 0x%.4X.\n",(optiga_key_id+0x10E4));
-		    } 
+				printf("Write Success to OID: 0x%.4X.\n",(optiga_key_id+0x10E4));
 		}
 		
 	}while(FALSE);
-	
+    
+    // Capture OPTIGA Trust M error
+	if (return_status != OPTIGA_LIB_SUCCESS)
+        trustmPrintErrorCode(return_status);
+        
+    printf("========================================================\n"); 
+    	
 	trustm_Close();
 	return 0;
 }

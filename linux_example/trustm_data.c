@@ -1,7 +1,7 @@
 /**
 * MIT License
 *
-* Copyright (c) 2019 Infineon Technologies AG
+* Copyright (c) 2020 Infineon Technologies AG
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -38,28 +38,27 @@
 
 typedef struct _OPTFLAG {
     uint16_t    read        : 1;
-    uint16_t    write        : 1;
-    uint16_t    infile        : 1;
-    uint16_t    outfile        : 1;
-    uint16_t    offset        : 1;
-    uint16_t    erase        : 1;
-    uint16_t    dummy6        : 1;
-    uint16_t    dummy7        : 1;
-    uint16_t    dummy8        : 1;
-    uint16_t    dummy9        : 1;
-    uint16_t    dummy10        : 1;
-    uint16_t    dummy11        : 1;
-    uint16_t    dummy12        : 1;
-    uint16_t    dummy13        : 1;
-    uint16_t    dummy14        : 1;
-    uint16_t    dummy15        : 1;
+    uint16_t    write       : 1;
+    uint16_t    infile      : 1;
+    uint16_t    outfile     : 1;
+    uint16_t    offset      : 1;
+    uint16_t    erase       : 1;
+    uint16_t    dummy6      : 1;
+    uint16_t    dummy7      : 1;
+    uint16_t    dummy8      : 1;
+    uint16_t    dummy9      : 1;
+    uint16_t    dummy10     : 1;
+    uint16_t    dummy11     : 1;
+    uint16_t    dummy12     : 1;
+    uint16_t    dummy13     : 1;
+    uint16_t    dummy14     : 1;
+    uint16_t    dummy15     : 1;
 }OPTFLAG;
 
 union _uOptFlag {
     OPTFLAG    flags;
     uint16_t    all;
 } uOptFlag;
-
 
 static void _helpmenu(void)
 {
@@ -72,18 +71,6 @@ static void _helpmenu(void)
     printf("-p <offset>   : Offset position \n");
     printf("-e            : Erase and wirte \n");
     printf("-h            : Print this help \n");
-}
-
-static uint32_t _ParseHexorDec(const char *aArg)
-{
-    uint32_t value;
-
-    if ((strncmp(aArg, "0x",2) == 0) ||(strncmp(aArg, "0X",2) == 0))
-        sscanf(aArg,"%x",&value);
-    else
-        sscanf(aArg,"%d",&value);
-
-    return value;
 }
 
 int main (int argc, char **argv)
@@ -99,7 +86,7 @@ int main (int argc, char **argv)
     char *outFile = NULL;
     char *inFile = NULL;
  
-     int option = 0;                    // Command line option.
+    int option = 0;                    // Command line option.
 
 /***************************************************************
  * Getting Input from CLI
@@ -126,11 +113,11 @@ int main (int argc, char **argv)
             {
                 case 'r': // Read Cert
                     uOptFlag.flags.read = 1;
-                    optiga_oid = _ParseHexorDec(optarg);                 
+                    optiga_oid = trustmHexorDec(optarg);                 
                     break;
                 case 'w': // Write Cert
                     uOptFlag.flags.write = 1;    
-                    optiga_oid = _ParseHexorDec(optarg);                                     
+                    optiga_oid = trustmHexorDec(optarg);                                     
                     break;
                 case 'i': // Input filename
                     uOptFlag.flags.infile = 1;
@@ -142,7 +129,7 @@ int main (int argc, char **argv)
                     break;                    
                 case 'p': // offset position
                     uOptFlag.flags.offset = 1;
-                    offset = _ParseHexorDec(optarg);
+                    offset = trustmHexorDec(optarg);
                     break;                    
                 case 'e': // erase
                     uOptFlag.flags.erase = 1;
@@ -289,35 +276,18 @@ int main (int argc, char **argv)
                                                 offset,
                                                 read_data_buffer,
                                                 (uint16_t *)&bytes_to_read);
-            if (OPTIGA_LIB_SUCCESS != return_status)
-            {
-                break;
-            }
-
-            while (OPTIGA_LIB_BUSY == optiga_lib_status) 
-            {
-                //Wait until the optiga_util_read_metadata operation is completed
-            }
-
-            if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
-            {
-                //Reading metadata data object failed.
-                printf("Error!!! optiga_lib_status [0x%.8X]\n",optiga_lib_status);
-                break;
-            }
-            if (return_status != OPTIGA_LIB_SUCCESS)
-            {
-                printf("Error!!! return_status [0x%.8X]\n",return_status);
-            }
+			if (OPTIGA_LIB_SUCCESS != return_status)
+				break;			
+			//Wait until the optiga_util_read_metadata operation is completed
+			while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+			return_status = optiga_lib_status;
+			if (return_status != OPTIGA_LIB_SUCCESS)
+				break;
             else
             {
                 printf("[Size %.4d] : ", bytes_to_read);
-                
                 if (skip_flag == 1)
-                {
                     printf("\n");
-                }
-                
                 trustmHexDump(read_data_buffer, bytes_to_read);    
                 
                 if(uOptFlag.flags.outfile == 1)
@@ -356,31 +326,22 @@ int main (int argc, char **argv)
                                                     offset,
                                                     read_data_buffer, 
                                                     bytes_to_read);
-            if (OPTIGA_LIB_SUCCESS != return_status)
-            {
-                break;
-            }
-
-            while (OPTIGA_LIB_BUSY == optiga_lib_status) 
-            {
-                //Wait until the optiga_util_read_metadata operation is completed
-            }
-
-            if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
-            {
-                //Reading metadata data object failed.
-                break;
-            }
-            if (return_status != OPTIGA_LIB_SUCCESS)
-            {
-                printf("Error!!! [0x%.8X]\n",return_status);
-            }
+			if (OPTIGA_LIB_SUCCESS != return_status)
+				break;			
+			//Wait until the optiga_util_read_metadata operation is completed
+			while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+			return_status = optiga_lib_status;
+			if (return_status != OPTIGA_LIB_SUCCESS)
+				break;
             else
-            {
-                printf("Write Success.\n");
-            }                
+                printf("Write Success.\n");            
         }
-    } while(0);
+    } while(FALSE);
+    
+    // Capture OPTIGA Trust M error
+	if (return_status != OPTIGA_LIB_SUCCESS)
+        trustmPrintErrorCode(return_status);
+        
     printf("========================================================\n");    
     
     trustm_Close();
