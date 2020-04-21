@@ -52,9 +52,9 @@ Tested platforms:
 ### <a name="contents_of_package"></a>Contents of Package
 
 This tools consists of the following files & directory:
-```formated
+```console
         .
-	├── bin                         /* all executable amd .so file is store here	 */
+	├── bin                        /* all executable amd .so file is store here	 */
 	├── LICENSE                    // MIT license file
 	├── linux_example                     /* Source code for executable file */
 	│   ├── trustm_cert.c                 // read and store x.509 certificate in OPTIGA™ Trust M
