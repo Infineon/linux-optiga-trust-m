@@ -54,7 +54,7 @@ Tested platforms:
 This tools consists of the following files & directory:
 ```formated
         .
-	├── bin                         /* all executable amd .so file is store here	 */
+	├── bin                        /* all executable amd .so file is store here	 */
 	├── LICENSE                    // MIT license file
 	├── linux_example                     /* Source code for executable file */
 	│   ├── trustm_cert.c                 // read and store x.509 certificate in OPTIGA™ Trust M
