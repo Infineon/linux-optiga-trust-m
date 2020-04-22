@@ -15,6 +15,7 @@
     * [trustm_ecc_verify](#trustm_ecc_verify)
     * [trustm_errorcode](#trustm_errorcode)
     * [trustm_metadata](#metadata)
+    * [trustm_monotonic_counter](#trustm_monotonic_counter)
     * [trustm_readmetadata_data](#trustm_readmetadata_data)
     * [trustm_readmetadata_private](#trustm_readmetadata_private)
     * [trustm_readmetadata_status](#trustm_readmetadata_status)
@@ -52,7 +53,7 @@ Tested platforms:
 ### <a name="contents_of_package"></a>Contents of Package
 
 This tools consists of the following files & directory:
-```console
+```formated
         .
 	├── bin                        /* all executable amd .so file is store here	 */
 	├── LICENSE                    // MIT license file
