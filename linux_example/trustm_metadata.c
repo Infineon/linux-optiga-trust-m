@@ -45,7 +45,7 @@ typedef struct _OPTFLAG {
 	uint16_t	lcslock		: 1;
 	uint16_t	lcsterminate: 1;
 	uint16_t	lcsexecute	: 1;
-	uint16_t	complex		: 1;
+	uint16_t	custom		: 1;
 	uint16_t	dummy8		: 1;
 	uint16_t	dummy9		: 1;
 	uint16_t	dummy10		: 1;
@@ -78,7 +78,7 @@ static void _helpmenu(void)
 	printf("                             n:disable execute,\n"); 
 	printf("                             t:disable execute on termination,\n");
 	printf("                             f:<input file for complex setting>)\n");
-	printf("-F <file> : Full Complex setting input\n"); 
+	printf("-F <file> : Custom input\n"); 
 	printf("          : (Need to input the full Metadata to be written)\n"); 
 	printf("-L        : Lock OID metadata \n");
 	printf("-T        : TERMINATE OID \n");	
@@ -96,7 +96,7 @@ int main (int argc, char **argv)
     uint8_t *lcsChange = NULL;
     uint8_t *lcsRead = NULL;
     uint8_t *lcsExecute = NULL;
-    uint8_t *complexSetting = NULL;
+    uint8_t *customSetting = NULL;
     uint8_t tempData[20];
      
  	int option = 0;                    // Command line option.
@@ -168,9 +168,9 @@ int main (int argc, char **argv)
 				case 'T': // Terminate
 					uOptFlag.flags.lcsterminate = 1;
 					break;					
-				case 'F': // Complex Setting
-					uOptFlag.flags.complex = 1;
-					complexSetting = (uint8_t *)optarg;
+				case 'F': // Custom Setting
+					uOptFlag.flags.custom = 1;
+					customSetting = (uint8_t *)optarg;
 					break;					
 					
 				case 'h': // Print Help Menu
@@ -327,10 +327,10 @@ int main (int argc, char **argv)
 				exit(1);
 			}
 			
-			if (uOptFlag.flags.complex == 1)
+			if (uOptFlag.flags.custom == 1)
 			{
 				modeLen=0;
-				modeLen = trustmreadFrom(tempData, complexSetting);
+				modeLen = trustmreadFrom(tempData, customSetting);
 				memcpy(mode,tempData,modeLen);							
 			}
 			else
