@@ -45,7 +45,7 @@ typedef struct _OPTFLAG {
 	uint16_t	lcslock		: 1;
 	uint16_t	lcsterminate: 1;
 	uint16_t	lcsexecute	: 1;
-	uint16_t	dummy7		: 1;
+	uint16_t	complex		: 1;
 	uint16_t	dummy8		: 1;
 	uint16_t	dummy9		: 1;
 	uint16_t	dummy10		: 1;
@@ -78,6 +78,8 @@ static void _helpmenu(void)
 	printf("                             n:disable execute,\n"); 
 	printf("                             t:disable execute on termination,\n");
 	printf("                             f:<input file for complex setting>)\n");
+	printf("-F <file> : Full Complex setting input\n"); 
+	printf("          : (Need to input the full Metadata to be written)\n"); 
 	printf("-L        : Lock OID metadata \n");
 	printf("-T        : TERMINATE OID \n");	
 	printf("-h        : Print this help \n");
@@ -94,6 +96,7 @@ int main (int argc, char **argv)
     uint8_t *lcsChange = NULL;
     uint8_t *lcsRead = NULL;
     uint8_t *lcsExecute = NULL;
+    uint8_t *complexSetting = NULL;
     uint8_t tempData[20];
      
  	int option = 0;                    // Command line option.
@@ -117,7 +120,7 @@ int main (int argc, char **argv)
         opterr = 0; // Disable getopt error messages in case of unknown parameters
 
         // Loop through parameters with getopt.
-        while (-1 != (option = getopt(argc, argv, "r:w:C:R:E:LTh")))
+        while (-1 != (option = getopt(argc, argv, "r:w:C:R:E:LTF:h")))
         {
 			switch (option)
             {
@@ -165,6 +168,11 @@ int main (int argc, char **argv)
 				case 'T': // Terminate
 					uOptFlag.flags.lcsterminate = 1;
 					break;					
+				case 'F': // Complex Setting
+					uOptFlag.flags.complex = 1;
+					complexSetting = (uint8_t *)optarg;
+					break;					
+					
 				case 'h': // Print Help Menu
 				default:  // Any other command Print Help Menu
 					_helpmenu();
@@ -313,151 +321,159 @@ int main (int argc, char **argv)
 
 		if(uOptFlag.flags.write == 1)
 		{
-			if (!(uOptFlag.all & 0x007C))
+			if (!(uOptFlag.all & 0x008C))
 			{
-				printf ("\nMust at least input -L,-T,-C,-R or -E!!! \n");
+				printf ("\nMust at least input -F -L,-T,-C,-R or -E!!! \n");
 				exit(1);
 			}
 			
-			modeLen=0;
-			mode[modeLen++] = 0x20;
-			modeLen++; // skip the len input first
-			if ((uOptFlag.flags.lcslock == 1) || (uOptFlag.flags.lcsterminate == 1))
+			if (uOptFlag.flags.complex == 1)
 			{
-				mode[modeLen++] = 0xC0; // LcsO
-				if(uOptFlag.flags.lcsterminate == 1)
-				{
-					memcpy((mode+modeLen),__bTERMINATE,sizeof(__bTERMINATE));
-					modeLen += sizeof(__bTERMINATE);
-				}
-				else
-				{
-					memcpy((mode+modeLen),__bLOCK,sizeof(__bLOCK));
-					modeLen += sizeof(__bLOCK); 
-				}	 
+				modeLen=0;
+				modeLen = trustmreadFrom(tempData, complexSetting);
+				memcpy(mode,tempData,modeLen);							
 			}
-			
-			if (uOptFlag.flags.lcschange == 1)
+			else
 			{
-				mode[modeLen++] = 0xD0; // Change Access Condition
-				switch(lcsChange[0])
+				modeLen=0;
+				mode[modeLen++] = 0x20;
+				modeLen++; // skip the len input first
+				if ((uOptFlag.flags.lcslock == 1) || (uOptFlag.flags.lcsterminate == 1))
 				{
-					case 'a':
-						memcpy((mode+modeLen),__bALW,sizeof(__bALW));
-						modeLen += sizeof(__bALW);
-						break;
-					case 'n':
-						memcpy((mode+modeLen),__bNEV,sizeof(__bNEV));
-						modeLen += sizeof(__bNEV); 
-						break;
-					case 't':
-						memcpy((mode+modeLen),__bON_TERMINATE,sizeof(__bON_TERMINATE));
-						modeLen += sizeof(__bON_TERMINATE); 
-						break;
-					case 'f':
-						if (lcsChange[1] == ':')
-						{
-							trustmreadFrom(tempData, (lcsChange+2));
-							if((tempData[0]+1) < 0x0b)
+					mode[modeLen++] = 0xC0; // LcsO
+					if(uOptFlag.flags.lcsterminate == 1)
+					{
+						memcpy((mode+modeLen),__bTERMINATE,sizeof(__bTERMINATE));
+						modeLen += sizeof(__bTERMINATE);
+					}
+					else
+					{
+						memcpy((mode+modeLen),__bLOCK,sizeof(__bLOCK));
+						modeLen += sizeof(__bLOCK); 
+					}	 
+				}
+				
+				if (uOptFlag.flags.lcschange == 1)
+				{
+					mode[modeLen++] = 0xD0; // Change Access Condition
+					switch(lcsChange[0])
+					{
+						case 'a':
+							memcpy((mode+modeLen),__bALW,sizeof(__bALW));
+							modeLen += sizeof(__bALW);
+							break;
+						case 'n':
+							memcpy((mode+modeLen),__bNEV,sizeof(__bNEV));
+							modeLen += sizeof(__bNEV); 
+							break;
+						case 't':
+							memcpy((mode+modeLen),__bON_TERMINATE,sizeof(__bON_TERMINATE));
+							modeLen += sizeof(__bON_TERMINATE); 
+							break;
+						case 'f':
+							if (lcsChange[1] == ':')
 							{
-								memcpy((mode+modeLen),tempData,(tempData[0]+1));
-								modeLen += (tempData[0]+1);							
+								trustmreadFrom(tempData, (lcsChange+2));
+								if((tempData[0]+1) < 0x0b)
+								{
+									memcpy((mode+modeLen),tempData,(tempData[0]+1));
+									modeLen += (tempData[0]+1);							
+								}
+								else
+								{
+									printf ("\nInvalid input!!! \n");
+									exit(1);														
+								}
 							}
 							else
 							{
-								printf ("\nInvalid input!!! \n");
-								exit(1);														
+								printf ("\nInvalid f parameter input!!! \n");
+								exit(1);							
 							}
-						}
-						else
-						{
-							printf ("\nInvalid f parameter input!!! \n");
-							exit(1);							
-						}
-						break;
+							break;
+					}
 				}
-			}
 
-			if (uOptFlag.flags.lcsread == 1)
-			{
-				mode[modeLen++] = 0xD1; // Read Access Condition
-				switch(lcsRead[0])
+				if (uOptFlag.flags.lcsread == 1)
 				{
-					case 'a':
-						memcpy((mode+modeLen),__bALW,sizeof(__bALW));
-						modeLen += sizeof(__bALW); 
-						break;
-					case 't':
-						memcpy((mode+modeLen),__bON_TERMINATE,sizeof(__bON_TERMINATE));
-						modeLen += sizeof(__bON_TERMINATE); 
-						break;
-					case 'f':
-						if (lcsRead[1] == ':')
-						{
-							trustmreadFrom(tempData, (lcsRead+2));
-							if((tempData[0]+1) < 0x0b)
+					mode[modeLen++] = 0xD1; // Read Access Condition
+					switch(lcsRead[0])
+					{
+						case 'a':
+							memcpy((mode+modeLen),__bALW,sizeof(__bALW));
+							modeLen += sizeof(__bALW); 
+							break;
+						case 't':
+							memcpy((mode+modeLen),__bON_TERMINATE,sizeof(__bON_TERMINATE));
+							modeLen += sizeof(__bON_TERMINATE); 
+							break;
+						case 'f':
+							if (lcsRead[1] == ':')
 							{
-								memcpy((mode+modeLen),tempData,(tempData[0]+1));
-								modeLen += (tempData[0]+1);							
+								trustmreadFrom(tempData, (lcsRead+2));
+								if((tempData[0]+1) < 0x0b)
+								{
+									memcpy((mode+modeLen),tempData,(tempData[0]+1));
+									modeLen += (tempData[0]+1);							
+								}
+								else
+								{
+									printf ("\nInvalid input!!! \n");
+									exit(1);														
+								}
 							}
 							else
 							{
-								printf ("\nInvalid input!!! \n");
-								exit(1);														
+								printf ("\nInvalid f parameter input!!! \n");
+								exit(1);							
 							}
-						}
-						else
-						{
-							printf ("\nInvalid f parameter input!!! \n");
-							exit(1);							
-						}
-						break;
+							break;
+					}
 				}
-			}
 
-			if (uOptFlag.flags.lcsexecute == 1)
-			{
-				mode[modeLen++] = 0xD3; // Execute Access Condition
-				switch(lcsExecute[0])
+				if (uOptFlag.flags.lcsexecute == 1)
 				{
-					case 'a':
-						memcpy((mode+modeLen),__bALW,sizeof(__bALW));
-						modeLen += sizeof(__bALW);
-						break;
-					case 'n':
-						memcpy((mode+modeLen),__bNEV,sizeof(__bNEV));
-						modeLen += sizeof(__bNEV); 
-						break;
-					case 't':
-						memcpy((mode+modeLen),__bON_TERMINATE,sizeof(__bON_TERMINATE));
-						modeLen += sizeof(__bON_TERMINATE); 
-						break;
-					case 'f':
-						if (lcsExecute[1] == ':')
-						{
-							trustmreadFrom(tempData, (lcsExecute+2));
-							if((tempData[0]+1) < 0x0b)
+					mode[modeLen++] = 0xD3; // Execute Access Condition
+					switch(lcsExecute[0])
+					{
+						case 'a':
+							memcpy((mode+modeLen),__bALW,sizeof(__bALW));
+							modeLen += sizeof(__bALW);
+							break;
+						case 'n':
+							memcpy((mode+modeLen),__bNEV,sizeof(__bNEV));
+							modeLen += sizeof(__bNEV); 
+							break;
+						case 't':
+							memcpy((mode+modeLen),__bON_TERMINATE,sizeof(__bON_TERMINATE));
+							modeLen += sizeof(__bON_TERMINATE); 
+							break;
+						case 'f':
+							if (lcsExecute[1] == ':')
 							{
-								memcpy((mode+modeLen),tempData,(tempData[0]+1));
-								modeLen += (tempData[0]+1);							
+								trustmreadFrom(tempData, (lcsExecute+2));
+								if((tempData[0]+1) < 0x0b)
+								{
+									memcpy((mode+modeLen),tempData,(tempData[0]+1));
+									modeLen += (tempData[0]+1);							
+								}
+								else
+								{
+									printf ("\nInvalid input!!! \n");
+									exit(1);														
+								}
 							}
 							else
 							{
-								printf ("\nInvalid input!!! \n");
-								exit(1);														
+								printf ("\nInvalid f parameter input!!! \n");
+								exit(1);							
 							}
-						}
-						else
-						{
-							printf ("\nInvalid f parameter input!!! \n");
-							exit(1);							
-						}
-						break;
+							break;
+					}
 				}
+				mode[1] = modeLen-2;
 			}
 
-
-			mode[1] = modeLen-2;
 			printf("\n");
 			trustmhexdump(mode,modeLen);
 			printf("\t");
@@ -478,6 +494,7 @@ int main (int argc, char **argv)
 			else
 				printf("Write Success.\n");				
 		}
+
 	} while(FALSE);
 	
     // Capture OPTIGA Trust M error

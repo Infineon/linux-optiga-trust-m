@@ -226,6 +226,7 @@ int main (int argc, char **argv)
             break;
         case 0xE140:
             printf("Shared Platform Binding Secret. [0x%.4x] ", optiga_oid);
+            skip_flag = 1;
             break;
         case 0xF1C0:
             printf("Application Life Cycle Sts  [0x%.4X] ", optiga_oid);
