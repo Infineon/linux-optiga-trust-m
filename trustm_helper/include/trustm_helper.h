@@ -80,6 +80,24 @@ typedef enum _tag_trustm_LifeCycStatus {
 	TERMINATION	= 0x0f
 } trustm_eLifeCycStatus_t;
 
+typedef struct trustm_metadata_str
+{
+  uint8_t metadataLen;
+  uint8_t C0_lsc0;
+  uint8_t C1_verion[2];
+  uint16_t C4_maxSize;
+  uint16_t C5_used;
+  uint8_t D0_change[10];
+  uint8_t D0_changeLen;
+  uint8_t D1_read[10];
+  uint8_t D1_readLen;
+  uint8_t D3_execute[10];
+  uint8_t D3_executeLen;
+  uint8_t E0_algo;
+  uint8_t E1_keyUsage;
+  uint8_t E8_dataObjType;  
+} trustm_metadata_t;
+
 
 // *********** Extern
 extern optiga_util_t * me_util;
@@ -95,7 +113,6 @@ void trustmHexDump(uint8_t *pdata, uint32_t len);
 uint16_t trustmWritePEM(uint8_t *buf, uint32_t len, const char *filename, char *name);
 uint16_t trustmWriteDER(uint8_t *buf, uint32_t len, const char *filename);
 
-//uint16_t trustmReadPEM(uint8_t *buf, uint32_t *len, const char *filename, char *name);
 uint16_t trustmReadPEM(uint8_t *buf, uint32_t *len, const char *filename, char *name, uint16_t *keySize, uint16_t *keyType);
 uint16_t trustmReadDER(uint8_t *buf, uint32_t *len, const char *filename);
 
@@ -106,6 +123,7 @@ uint16_t trustmReadX509PEM(X509 **x509, const char *filename);
 void trustmPrintErrorCode(uint16_t errcode);
 
 optiga_lib_status_t trustm_readUID(utrustm_UID_t *UID);
+optiga_lib_status_t trustmReadMetadata(uint16_t optiga_oid, trustm_metadata_t *oidMetadata);
 
 uint32_t trustmHexorDec(const char *aArg);
 uint16_t trustmwriteTo(uint8_t *buf, uint32_t len, const char *filename);

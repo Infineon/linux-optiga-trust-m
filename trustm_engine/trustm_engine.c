@@ -42,109 +42,6 @@ extern void pal_os_event_disarm(void);
 static const char *engine_id   = "trustm_engine";
 static const char *engine_name = "Infineon OPTIGA TrustM Engine";
 
-static optiga_lib_status_t readmetadata(uint16_t optiga_oid, trustm_metadata_t *oidMetadata)
-{
-	optiga_lib_status_t return_status;
-	uint16_t bytes_to_read;
-    uint8_t read_data_buffer[2048];
-    uint16_t i,j;
-
-    oidMetadata->metadataLen = 0;
-    oidMetadata->D0_changeLen = 0;
-    oidMetadata->D1_readLen = 0;
-    oidMetadata->D3_executeLen = 0;
-    oidMetadata->C4_maxSize = 0;
-    oidMetadata->C5_used = 0;
-        
-    do
-    {
-        bytes_to_read = sizeof(read_data_buffer);
-        optiga_lib_status = OPTIGA_LIB_BUSY;
-        return_status = optiga_util_read_metadata(me_util,
-                                                    optiga_oid,
-                                                    read_data_buffer,
-                                                    &bytes_to_read);
-        if (OPTIGA_LIB_SUCCESS != return_status)
-            break;			
-        //Wait until the optiga_util_read_metadata operation is completed
-        while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
-        return_status = optiga_lib_status;
-        if (return_status != OPTIGA_LIB_SUCCESS)
-            break;
-        else
-        {
-            //printf("[Size %.4d] : \n", bytes_to_read);
-            //trustmHexDump(read_data_buffer,bytes_to_read);
-            //printf("\t");
-            //trustmdecodeMetaData(read_data_buffer);
-            //printf("\n");
-
-            if(read_data_buffer[0] == 0x20)
-            {
-                oidMetadata->metadataLen = read_data_buffer[1];
-                for(i = 2; i < read_data_buffer[1];i += read_data_buffer[i+1]+2)
-                {
-                    switch(read_data_buffer[i])
-                    {
-                        case 0xC0:
-                            oidMetadata->C0_lsc0 = read_data_buffer[i+2];
-                            break;
-                        case 0xC1:
-                            oidMetadata->C1_verion[0] = read_data_buffer[i+1];
-                            oidMetadata->C1_verion[1] = read_data_buffer[i+2];                    
-                            break;
-                        case 0xC4:
-                            if (read_data_buffer[i+1] == 2)
-                                oidMetadata->C4_maxSize = (uint16_t)((read_data_buffer[i+2] << 8)+read_data_buffer[i+3]);
-                            else
-                                oidMetadata->C4_maxSize = (uint16_t) read_data_buffer[i+2];                              
-                            break;
-                        case 0xC5:
-                            if (read_data_buffer[i+1] == 2)
-                                oidMetadata->C5_used = (uint16_t)((read_data_buffer[i+2] << 8)+read_data_buffer[i+3]);
-                            else
-                                oidMetadata->C5_used = (uint16_t) read_data_buffer[i+2]; 
-                            break;
-                        case 0xD0:
-                            oidMetadata->D0_changeLen = read_data_buffer[i+1];
-                            for(j=0;j<read_data_buffer[i+1];j++)
-                                oidMetadata->D0_change[j] = read_data_buffer[i+2+j];                            
-                            break;
-                        case 0xD1:
-                            oidMetadata->D1_readLen = read_data_buffer[i+1];
-                            for(j=0;j<read_data_buffer[i+1];j++)
-                                oidMetadata->D1_read[j] = read_data_buffer[i+2+j];                        
-                            break;
-                        case 0xD3:
-                            oidMetadata->D3_executeLen = read_data_buffer[i+1];
-                            for(j=0;j<read_data_buffer[i+1];j++)
-                                oidMetadata->D3_execute[j] = read_data_buffer[i+2+j];
-                            break;
-                        case 0xE0:
-                            oidMetadata->E0_algo = read_data_buffer[i+2];                        
-                            break;
-                        case 0xE1:
-                            oidMetadata->E1_keyUsage = read_data_buffer[i+2];
-                            break;
-                        case 0xE8:
-                            oidMetadata->E8_dataObjType = read_data_buffer[i+2];
-                            break;
-                        default:
-                            i = bytes_to_read;
-                            oidMetadata->metadataLen = 0;
-                    }
-                }
-            }
-        }        
-    }while(FALSE);
-
-    // Capture OPTIGA Trust M error
-	if (return_status != OPTIGA_LIB_SUCCESS)
-        trustmPrintErrorCode(return_status);
-        
-    return return_status;
-}
-
 static uint32_t parseKeyParams(const char *aArg)
 {
     uint32_t ret;
@@ -212,7 +109,7 @@ static uint32_t parseKeyParams(const char *aArg)
         else
         {
             trustm_ctx.key_oid = value;
-            readmetadata(value, &oidMetadata);
+            trustmReadMetadata(value, &oidMetadata);
             if ((oidMetadata.E0_algo == OPTIGA_ECC_CURVE_NIST_P_256) ||
                 (oidMetadata.E0_algo == OPTIGA_ECC_CURVE_NIST_P_384))
             {
