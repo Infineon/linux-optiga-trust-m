@@ -1,7 +1,7 @@
 /**
 * MIT License
 *
-* Copyright (c) 2019 Infineon Technologies AG
+* Copyright (c) 2020 Infineon Technologies AG
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -55,6 +55,7 @@ static uint8_t dummy_public_key_2048[] = {
 0x27,0x02,0x03,0x01,0x00,0x01
 };
 
+/*
 static uint8_t dummy_public_key_1024[] = {
 0x30,0x81,0x9F,0x30,0x0D,0x06,0x09,0x2A,0x86,0x48,0x86,0xF7,0x0D,0x01,0x01,0x01,
 0x05,0x00,0x03,0x81,0x8D,0x00,0x30,0x81,0x89,0x02,0x81,0x81,0x00,0xE1,0x15,0xA1,
@@ -68,6 +69,7 @@ static uint8_t dummy_public_key_1024[] = {
 0x2C,0x7D,0x29,0x0C,0x87,0x34,0x2C,0x45,0xF8,0x4B,0xDF,0x48,0x89,0x02,0x03,0x01,
 0x00,0x01
 };
+*/
 
 const RSA_METHOD *default_rsa = NULL;
 RSA_METHOD *rsa_methods = NULL;
@@ -91,12 +93,12 @@ static EVP_PKEY *trustm_rsa_generatekey(void)
 				0x30,0x0d,
 				0x06,0x09,
 				0x2a,0x86,0x48,0x86,0xf7,0x0d,0x01,0x01,0x01,0x05,0x00};
-
+/*
     uint8_t rsaheader1024[] = {0x30,0x81,0x9F,
 				0x30,0x0D,
 				0x06,0x09,
 				0x2A,0x86,0x48,0x86,0xF7,0x0D,0x01,0x01,0x01,0x05,0x00};
-
+*/
     TRUSTM_ENGINE_DBGFN(">");
     do
     {
@@ -255,7 +257,7 @@ static int trustmEngine_rsa_priv_enc(int flen,
     int ret = TRUSTM_ENGINE_FAIL;
     optiga_crypt_t * me = NULL;
     optiga_lib_status_t return_status;
-    uint16_t key_oid;
+//    uint16_t key_oid;
     uint16_t templen = 500;
 
 	TRUSTM_ENGINE_DBGFN(">");
@@ -268,7 +270,7 @@ static int trustmEngine_rsa_priv_enc(int flen,
 	do {
 		//Implement code here;
 	
-		key_oid = trustm_ctx.key_oid;
+		//key_oid = trustm_ctx.key_oid;
 #ifdef WORKAROUND		
 		pal_os_event_arm();
 #endif		
@@ -554,7 +556,7 @@ static int trustmEngine_rsa_pub_enc(int flen,
  * @retval 0 on failure
  * @retval size Size of the returned signature
  */
-static int trustmEngine_rsa_pub_dec(int flen,	
+int trustmEngine_rsa_pub_dec(int flen,	
 				const unsigned char *from, 
 				unsigned char *to, 
 				RSA * rsa,
@@ -653,7 +655,7 @@ static int trustmEngine_rsa_sign(int type,
 	return ret;	
 }
 
-static int trustmEngine_rsa_verify(int dtype,
+int trustmEngine_rsa_verify(int dtype,
 				const unsigned char *m,
 				unsigned int m_length,
 				const unsigned char *sigbuf,
@@ -778,7 +780,7 @@ static int trustmEngine_rsa_keygen(RSA *rsa,
 	return ret;	
 }
 	
-static int trustmEngine_rsa_init(RSA *rsa)
+int trustmEngine_rsa_init(RSA *rsa)
 {
 	int ret = TRUSTM_ENGINE_FAIL;
 	TRUSTM_ENGINE_DBGFN(">");

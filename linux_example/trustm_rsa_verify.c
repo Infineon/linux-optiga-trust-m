@@ -277,10 +277,10 @@ int main (int argc, char **argv)
 				printf("Hash Digest : \n");
 			else
 				printf("Input data : \n");
-			trustmhexdump(digest,digestLen);
+			trustmHexDump(digest,digestLen);
 			
 			printf("Signature : \n");
-			trustmhexdump(signature,signatureLen);					
+			trustmHexDump(signature,signatureLen);					
 
 			optiga_lib_status = OPTIGA_LIB_BUSY;
 			return_status = optiga_crypt_rsa_verify (me_crypt,
@@ -333,13 +333,13 @@ int main (int argc, char **argv)
 				printf("Hash Digest : \n");
 			else
 				printf("Input data  : \n");
-			trustmhexdump(digest,digestLen);	
+			trustmHexDump(digest,digestLen);	
 
 			printf("Signature : \n");
-			trustmhexdump(signature,signatureLen);	
+			trustmHexDump(signature,signatureLen);	
 
 			printf("Pub key : [%d]\n",pubkeySize);
-			trustmhexdump((pubkey),pubkeyLen);	
+			trustmHexDump((pubkey),pubkeyLen);	
 
 			if(pubkeySize == 1024)
 				pubkeySize = OPTIGA_RSA_KEY_1024_BIT_EXPONENTIAL;

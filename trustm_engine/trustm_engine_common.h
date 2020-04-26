@@ -1,7 +1,7 @@
 /**
 * MIT License
 *
-* Copyright (c) 2019 Infineon Technologies AG
+* Copyright (c) 2020 Infineon Technologies AG
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -86,6 +86,7 @@ typedef enum trustmEngine_flag
 {
     TRUSTM_ENGINE_FLAG_NONE = 0x00,
     TRUSTM_ENGINE_FLAG_NEW = 0x01,
+    TRUSTM_ENGINE_FLAG_SAVEPUBKEY = 0x02,
     TRUSTM_ENGINE_FLAG_LOCK = 0x80
 } trustmEngine_flag_t;
 
@@ -100,6 +101,8 @@ typedef struct trustm_ctx_str
   trustmEngine_flag_t rsa_flag;
   optiga_key_usage_t  ec_key_usage;
   optiga_ecc_curve_t  ec_key_curve;
+  const EC_KEY_METHOD *default_ec;
+  EC_KEY_METHOD     *ec_key_method;
   trustmEngine_flag_t ec_flag;
   char			pubkeyfilename[PUBKEYFILE_SIZE];
   uint8_t   pubkey[PUBKEY_SIZE];
@@ -116,6 +119,10 @@ void trustmEngine_close(void);
 
 uint16_t trustmEngine_init_rand(ENGINE *e);
 uint16_t trustmEngine_init_rsa(ENGINE *e);
+uint16_t trustmEngine_init_ec(ENGINE *e);
+
 EVP_PKEY *trustm_rsa_loadkey(void);
+EVP_PKEY *trustm_ec_loadkey(void);
+EVP_PKEY *trustm_ec_loadkeyE0E0(void);
 
 #endif // _TRUSTM_ENGINE_COMMON_H_

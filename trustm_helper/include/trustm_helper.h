@@ -108,7 +108,6 @@ void trustmPrintErrorCode(uint16_t errcode);
 optiga_lib_status_t trustm_readUID(utrustm_UID_t *UID);
 
 uint32_t trustmHexorDec(const char *aArg);
-void trustmhexdump(uint8_t *data, uint16_t len);
 uint16_t trustmwriteTo(uint8_t *buf, uint32_t len, const char *filename);
 uint16_t trustmreadFrom(uint8_t *data, uint8_t *filename);
 

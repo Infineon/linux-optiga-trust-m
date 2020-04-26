@@ -179,7 +179,7 @@ int main (int argc, char **argv)
 			}
 			
 			printf("Input data : \n");
-			trustmhexdump(message,messagelen);	
+			trustmHexDump(message,messagelen);	
 
 			encryption_scheme = OPTIGA_RSAES_PKCS1_V15;
 			optiga_lib_status = OPTIGA_LIB_BUSY;
@@ -250,7 +250,7 @@ int main (int argc, char **argv)
 			}
 			
 			printf("Input data : \n");
-			trustmhexdump(message,messagelen);	
+			trustmHexDump(message,messagelen);	
 
 			encryption_scheme = OPTIGA_RSAES_PKCS1_V15;
 			public_key_from_host.public_key = pubkey;

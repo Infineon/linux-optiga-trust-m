@@ -379,7 +379,7 @@ void trustmHexDump(uint8_t *pdata, uint32_t len)
     j=0;
     for (i=0; i < len; i++)
     {
-        printf("%.2x ",*(pdata+i));
+        printf("%.2X ",*(pdata+i));
         if (j < 15)    
         {
             j++;
@@ -806,28 +806,6 @@ uint32_t trustmHexorDec(const char *aArg)
 		sscanf(aArg,"%d",&value);
 
 	return value;
-}
-
-void trustmhexdump(uint8_t *data, uint16_t len)
-{
-	uint16_t j,k;
-
-	printf("\t");
-	k=0;
-	for (j=0;j<len;j++)
-	{
-		printf("%.2X ", data[j]);
-		if(k < 15)
-		{
-			k++;
-		}	
-		else
-		{
-			printf("\n\t");
-			k=0;
-		}
-	}
-	printf("\n");
 }
 
 uint16_t trustmwriteTo(uint8_t *buf, uint32_t len, const char *filename)

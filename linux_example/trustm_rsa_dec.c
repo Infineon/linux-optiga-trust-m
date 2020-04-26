@@ -166,7 +166,7 @@ int main (int argc, char **argv)
 			}
 			
 			printf("Input data : \n");
-			trustmhexdump(encyptdata,encyptdatalen);	
+			trustmHexDump(encyptdata,encyptdatalen);	
 
 			// OPTIGA Comms Shielded connection settings to enable the protection
 			OPTIGA_CRYPT_SET_COMMS_PROTOCOL_VERSION(me_crypt, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);

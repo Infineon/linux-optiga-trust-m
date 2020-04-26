@@ -243,7 +243,7 @@ int main (int argc, char **argv)
 				{
 					digestLen = sizeof(digest);
 					printf("Hash Success : SHA256\n");
-					trustmhexdump(digest,digestLen);
+					trustmHexDump(digest,digestLen);
 				}
 
 				printf("filesize: %d\n",filesize);
@@ -263,7 +263,7 @@ int main (int argc, char **argv)
 				} else
 				{
 					printf("Input data[%d] : \n", digestLen);
-					trustmhexdump(digest,digestLen);
+					trustmHexDump(digest,digestLen);
 				}					
 			}
 

@@ -475,7 +475,7 @@ int main (int argc, char **argv)
 			}
 
 			printf("\n");
-			trustmhexdump(mode,modeLen);
+			trustmHexDump(mode,modeLen);
 			printf("\t");
 			trustmdecodeMetaData(mode);
 

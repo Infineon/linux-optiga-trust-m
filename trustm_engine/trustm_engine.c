@@ -1,7 +1,7 @@
 /**
 * MIT License
 *
-* Copyright (c) 2019 Infineon Technologies AG
+* Copyright (c) 2020 Infineon Technologies AG
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -176,7 +176,10 @@ static int engine_destroy(ENGINE *e)
     trustm_ctx.rsa_key_enc_scheme = 0;
     trustm_ctx.rsa_key_sig_scheme = 0;
     trustm_ctx.rsa_flag = 0;
-        
+    
+    trustm_ctx.ec_key_curve = 0;
+    trustm_ctx.ec_key_usage = 0;   
+    trustm_ctx.ec_key_method = NULL; 
     trustm_ctx.ec_flag = 0;
     
     trustm_ctx.pubkeylen = 0;
@@ -242,12 +245,14 @@ static EVP_PKEY * engine_load_privkey(ENGINE *e, const char *key_id, UI_METHOD *
         switch(trustm_ctx.key_oid)
         {
             case 0xE0F0:
-                TRUSTM_ENGINE_MSGFN("Function Not implemented.");
+                TRUSTM_ENGINE_MSGFN("EC Private Key. [0x%.4X]", trustm_ctx.key_oid);
+                key = trustm_ec_loadkeyE0E0();
                 break;
             case 0xE0F1:
             case 0xE0F2:
             case 0xE0F3:
-                TRUSTM_ENGINE_MSGFN("Function Not implemented.");
+                TRUSTM_ENGINE_MSGFN("EC Private Key");
+                key = trustm_ec_loadkey();
                 break;
             case 0xE0FC:
             case 0xE0FD:
@@ -392,8 +397,10 @@ static int engine_init(ENGINE *e)
         trustm_ctx.rsa_key_sig_scheme = OPTIGA_RSASSA_PKCS1_V15_SHA256;
         trustm_ctx.rsa_flag = TRUSTM_ENGINE_FLAG_NONE;
         
+        trustm_ctx.ec_key_curve = OPTIGA_ECC_CURVE_NIST_P_256;
+        trustm_ctx.ec_key_usage = OPTIGA_KEY_USAGE_AUTHENTICATION;
         trustm_ctx.ec_flag = TRUSTM_ENGINE_FLAG_NONE;
-        
+                
         trustm_ctx.pubkeyfilename[0] = '\0';
         trustm_ctx.pubkey[0] = '\0';
         trustm_ctx.pubkeylen = 0;
@@ -406,12 +413,18 @@ static int engine_init(ENGINE *e)
             break;
         }
 
-
         // Init RSA Method
         ret = trustmEngine_init_rsa(e);
         if (ret != TRUSTM_ENGINE_SUCCESS) {
             TRUSTM_ENGINE_ERRFN("Init RSA Fail!!");
             break;
+        }
+
+        //Init EC Method
+        ret = trustmEngine_init_ec(e);
+        if (ret != TRUSTM_ENGINE_SUCCESS) {
+        TRUSTM_ENGINE_ERRFN("Init EC Fail!!");
+        break;
         }
 
         initialized = 1;
