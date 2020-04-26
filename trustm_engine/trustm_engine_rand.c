@@ -84,7 +84,6 @@ static int trustmEngine_getrandom(unsigned char *buf, int num)
 {
     #define MAX_RAND_INPUT 256
     
-    optiga_crypt_t * me = NULL;
     optiga_lib_status_t return_status;
     int i,j,k;
     uint8_t tempbuf[MAX_RAND_INPUT];    
@@ -95,49 +94,27 @@ static int trustmEngine_getrandom(unsigned char *buf, int num)
     i = num % MAX_RAND_INPUT; // max random number output, find the reminder
     j = (num - i)/MAX_RAND_INPUT; // Get the count 
 
-    do {
-
 #ifdef WORKAROUND		
-		pal_os_event_arm();
-#endif        
-        
-        me = optiga_crypt_create(0, optiga_crypt_callback, NULL);
-        if (NULL == me)
-        {
-            break;
-        }        
-        
+    pal_os_event_arm();
+#endif
+  
+    do 
+    {    
         k = 0;
         if(i > 0)  
         {
             optiga_lib_status = OPTIGA_LIB_BUSY;
-            return_status = optiga_crypt_random(me, 
+            return_status = optiga_crypt_random(me_crypt, 
                                 OPTIGA_RNG_TYPE_TRNG, 
                                 tempbuf,
                                 MAX_RAND_INPUT);
             if (OPTIGA_LIB_SUCCESS != return_status)
-            {
-                printf("Get random error1.\n");
-                break;
-            }
-
-            while (OPTIGA_LIB_BUSY == optiga_lib_status) 
-            {
-                //printf(".");
-                //Wait until the optiga_crypt_random operation is completed
-            }
-            
-            if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
-            {
-                printf("Get random error2.\n");           
-                break;
-            }
+                break;			
+            //Wait until the optiga_util_read_metadata operation is completed
+            while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+            return_status = optiga_lib_status;
             if (return_status != OPTIGA_LIB_SUCCESS)
-            {
-              TRUSTM_ENGINE_ERRFN("failed to generate random number2");
-              printf("return error = %x\n",return_status);
-              break;
-            }
+                break;
 
             for (k=0;k<i;k++)
             {
@@ -148,45 +125,27 @@ static int trustmEngine_getrandom(unsigned char *buf, int num)
         for(;j>0;j--)  
         {
             optiga_lib_status = OPTIGA_LIB_BUSY;
-            return_status = optiga_crypt_random(me, 
+            return_status = optiga_crypt_random(me_crypt, 
                                 OPTIGA_RNG_TYPE_TRNG, 
                                 (buf+k),
                                 MAX_RAND_INPUT);
             if (OPTIGA_LIB_SUCCESS != return_status)
-            {
-                printf("Get random error1.\n");
-                break;
-            }
-
-            while (OPTIGA_LIB_BUSY == optiga_lib_status) 
-            {
-                //printf(".");
-                //Wait until the optiga_crypt_random operation is completed
-            }
-            
-            if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
-            {
-                printf("Get random error2.\n");           
-                break;
-            }            
+                break;			
+            //Wait until the optiga_util_read_metadata operation is completed
+            while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+            return_status = optiga_lib_status;
             if (return_status != OPTIGA_LIB_SUCCESS)
-            {
-              TRUSTM_ENGINE_ERRFN("failed to generate random number1");
-              break;
-            }
+                break;
             k += (MAX_RAND_INPUT);
         }
 
         ret = TRUSTM_ENGINE_SUCCESS;
     }while(FALSE);
-    
-    if (me)
-    {
-        //Destroy the instance after the completion of usecase if not required.
-        TRUSTM_ENGINE_DBGFN("optiga_crypt_destory");
-        return_status = optiga_crypt_destroy(me);
-    }
-    
+
+	// Capture OPTIGA Error
+	if (return_status != OPTIGA_LIB_SUCCESS)
+		trustmPrintErrorCode(return_status);
+  
     // if fail returns all zero
     if (ret != TRUSTM_ENGINE_SUCCESS)
     {

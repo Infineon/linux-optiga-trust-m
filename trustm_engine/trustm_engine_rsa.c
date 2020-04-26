@@ -29,8 +29,8 @@
 #include "trustm_helper.h"
 
 #ifdef WORKAROUND
-	extern void pal_os_event_disarm(void);
-	extern void pal_os_event_arm(void);
+    extern void pal_os_event_disarm(void);
+    extern void pal_os_event_arm(void);
 #endif
 
 static uint8_t dummy_public_key_2048[] = {
@@ -87,8 +87,6 @@ static EVP_PKEY *trustm_rsa_generatekey(void)
     uint16_t i,j;
     uint8_t *data;
 
-    optiga_crypt_t * me = NULL;
-
     uint8_t rsaheader2048[] = {0x30,0x82,0x01,0x22,
 				0x30,0x0d,
 				0x06,0x09,
@@ -102,13 +100,6 @@ static EVP_PKEY *trustm_rsa_generatekey(void)
     TRUSTM_ENGINE_DBGFN(">");
     do
     {
-        me = optiga_crypt_create(0, optiga_crypt_callback, NULL);
-        if (NULL == me)
-        {
-	    TRUSTM_ENGINE_ERRFN("optiga_crypt_create fail!!");
-            break;
-        }
-
 	for (i=0; i < sizeof(rsaheader2048);i++)
 	{
 	    public_key[i] = rsaheader2048[i];
@@ -116,32 +107,22 @@ static EVP_PKEY *trustm_rsa_generatekey(void)
 
         optiga_lib_status = OPTIGA_LIB_BUSY;
         optiga_key_id = trustm_ctx.key_oid;
-        return_status = optiga_crypt_rsa_generate_keypair(me,
+        return_status = optiga_crypt_rsa_generate_keypair(me_crypt,
                                                           trustm_ctx.rsa_key_type,
                                                           trustm_ctx.rsa_key_usage,
                                                           FALSE,
                                                           &optiga_key_id,
                                                           (public_key+i),
                                                           &public_key_length);
-        if (OPTIGA_LIB_SUCCESS != return_status)
-        {
-		TRUSTM_ENGINE_ERRFN("optiga_crypt_rsa_generate_keypair fail-1!!");
-            break;
-        }
-
+	if (OPTIGA_LIB_SUCCESS != return_status)
+	    break;			
+	//Wait until the optiga_util_read_metadata operation is completed
 	printf("Please wait generating RSA key .......\n");
-        while (OPTIGA_LIB_BUSY == optiga_lib_status) 
-        {
-		//Wait until the optiga_crypt_rsa_generate_keypair operation is completed
-        }
+	while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+	return_status = optiga_lib_status;
+	if (return_status != OPTIGA_LIB_SUCCESS)
+	    break;
 
-        if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
-        {
-		//RSA Key pair generation failed
-		TRUSTM_ENGINE_ERRFN("optiga_crypt_rsa_generate_keypair fail-2!!");
-		break;
-        }
-        
         //printf("length : %d\n",public_key_length+i);
         //trustmHexDump(public_key,public_key_length+i);
         //trustmWriteDER(public_key, public_key_length+i, "myTest.key");
@@ -151,18 +132,16 @@ static EVP_PKEY *trustm_rsa_generatekey(void)
 	trustm_ctx.pubkeylen = public_key_length+i;
 	for(j=0;j<trustm_ctx.pubkeylen;j++)
 	{
-		trustm_ctx.pubkey[j] = *(data+j);
+	    trustm_ctx.pubkey[j] = *(data+j);
 	}
 	
         key = d2i_PUBKEY(NULL,(const unsigned char **)&data,public_key_length+i);
     } while (FALSE);
 
-    if (me)
-    {
-        //Destroy the instance after the completion of usecase if not required.
-        return_status = optiga_crypt_destroy(me);
-    }
-
+    // Capture OPTIGA Error
+    if (return_status != OPTIGA_LIB_SUCCESS)
+	trustmPrintErrorCode(return_status);
+		
     TRUSTM_ENGINE_DBGFN("<");	
     return key;
 }
@@ -185,52 +164,52 @@ EVP_PKEY *trustm_rsa_loadkey(void)
     {
 	// New key request
 	if (trustm_ctx.rsa_flag == (0x01 & TRUSTM_ENGINE_FLAG_NEW))
-		key = trustm_rsa_generatekey();
+	    key = trustm_rsa_generatekey();
 	else // Load Pubkey
 	{
-		TRUSTM_ENGINE_DBGFN("no new key request\n");
-		if (trustm_ctx.pubkeyfilename[0] != '\0')
+	    TRUSTM_ENGINE_DBGFN("no new key request\n");
+	    if (trustm_ctx.pubkeyfilename[0] != '\0')
+	    {
+		TRUSTM_ENGINE_DBGFN("filename : %s\n",trustm_ctx.pubkeyfilename);
+		//open 
+		fp = fopen((const char *)trustm_ctx.pubkeyfilename,"r");
+		if (!fp)
 		{
-			TRUSTM_ENGINE_DBGFN("filename : %s\n",trustm_ctx.pubkeyfilename);
-			//open 
-			fp = fopen((const char *)trustm_ctx.pubkeyfilename,"r");
-			if (!fp)
-			{
-				TRUSTM_ENGINE_ERRFN("failed to open file %s\n",trustm_ctx.pubkeyfilename);
-				break;
-			}
-			PEM_read(fp, &name,&header,&data,(long int *)&len);
-			//TRUSTM_ENGINE_DBGFN("name   : %s\n",name);
-			//TRUSTM_ENGINE_DBGFN("len : %d\n",len);
-			//trustmHexDump(data,len);
-			if (!(strcmp(name,"PUBLIC KEY")))
-			{
-				trustm_ctx.pubkeylen = (uint16_t)len;
-				for(i=0;i<len;i++)
-				{
-					trustm_ctx.pubkey[i] = *(data+i);
-					//printf("%.x ",trustm_ctx.pubkey[i]);
-				}
-				key = d2i_PUBKEY(NULL,(const unsigned char **)&data,len);
+		    TRUSTM_ENGINE_ERRFN("failed to open file %s\n",trustm_ctx.pubkeyfilename);
+		    break;
+		}
+		PEM_read(fp, &name,&header,&data,(long int *)&len);
+		//TRUSTM_ENGINE_DBGFN("name   : %s\n",name);
+		//TRUSTM_ENGINE_DBGFN("len : %d\n",len);
+		//trustmHexDump(data,len);
+		if (!(strcmp(name,"PUBLIC KEY")))
+		{
+		    trustm_ctx.pubkeylen = (uint16_t)len;
+		    for(i=0;i<len;i++)
+		    {
+			trustm_ctx.pubkey[i] = *(data+i);
+			//printf("%.x ",trustm_ctx.pubkey[i]);
+		    }
+		    key = d2i_PUBKEY(NULL,(const unsigned char **)&data,len);
 
-				//trustmHexDump(trustm_ctx.pubkey,trustm_ctx.pubkeylen);
-			}
-			else
-			{
-				TRUSTM_ENGINE_ERRFN("Error : No Plubic Key found!!");
-				key = NULL;
-			}
+		    //trustmHexDump(trustm_ctx.pubkey,trustm_ctx.pubkeylen);
 		}
 		else
 		{
-			TRUSTM_ENGINE_DBGFN("No plubic Key found, Register Private Key only");
-			//key = NULL;
-			//load dummy public key
-			data = dummy_public_key_2048;
-			len = sizeof(dummy_public_key_2048);
-			key = d2i_PUBKEY(NULL,(const unsigned char **)&data,len);
-			trustm_ctx.pubkeylen = 0;
+		    TRUSTM_ENGINE_ERRFN("Error : No Plubic Key found!!");
+		    key = NULL;
 		}
+	    }
+	    else
+	    {
+		TRUSTM_ENGINE_DBGFN("No plubic Key found, Register Private Key only");
+		//key = NULL;
+		//load dummy public key
+		data = dummy_public_key_2048;
+		len = sizeof(dummy_public_key_2048);
+		key = d2i_PUBKEY(NULL,(const unsigned char **)&data,len);
+		trustm_ctx.pubkeylen = 0;
+	    }
 	}
     } while (FALSE);
 
@@ -255,91 +234,62 @@ static int trustmEngine_rsa_priv_enc(int flen,
 				int padding)
 {
     int ret = TRUSTM_ENGINE_FAIL;
-    optiga_crypt_t * me = NULL;
     optiga_lib_status_t return_status;
-//    uint16_t key_oid;
     uint16_t templen = 500;
 
-	TRUSTM_ENGINE_DBGFN(">");
+    TRUSTM_ENGINE_DBGFN(">");
 
-	TRUSTM_ENGINE_DBGFN("flen : %d",flen);
-	TRUSTM_ENGINE_DBGFN("padding : %d", padding);
-	TRUSTM_ENGINE_DBGFN("oid : 0x%X\n",trustm_ctx.key_oid);
-	trustmHexDump((uint8_t *)from,flen);
-	
-	do {
-		//Implement code here;
-	
-		//key_oid = trustm_ctx.key_oid;
+    TRUSTM_ENGINE_DBGFN("flen : %d",flen);
+    TRUSTM_ENGINE_DBGFN("padding : %d", padding);
+    TRUSTM_ENGINE_DBGFN("oid : 0x%X\n",trustm_ctx.key_oid);
+    trustmHexDump((uint8_t *)from,flen);
+
 #ifdef WORKAROUND		
-		pal_os_event_arm();
+    pal_os_event_arm();
 #endif		
-
-        me = optiga_crypt_create(0, optiga_crypt_callback, NULL);
-        if (NULL == me)
-        {
-			TRUSTM_ENGINE_MSGFN("optiga_crypt_create fail.");
-            break;
-        }
-
-        // OPTIGA Comms Shielded connection settings to enable the protection
-        OPTIGA_CRYPT_SET_COMMS_PROTOCOL_VERSION(me, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
-        OPTIGA_CRYPT_SET_COMMS_PROTECTION_LEVEL(me, OPTIGA_COMMS_RESPONSE_PROTECTION);
-
-        //trustm_ctx.rsa_key_enc_scheme = OPTIGA_RSAES_PKCS1_V15;
-        optiga_lib_status = OPTIGA_LIB_BUSY;
-
-        return_status = optiga_crypt_rsa_decrypt_and_export(me,
-                                                            trustm_ctx.rsa_key_enc_scheme,
-                                                            (uint8_t *)from,
-                                                            flen,
-                                                            NULL,
-                                                            0,
-                                                            trustm_ctx.key_oid,
-                                                            to,
-                                                            &templen);
-
-						 
-        if (OPTIGA_LIB_SUCCESS != return_status)
-        {
-			TRUSTM_ENGINE_MSGFN("optiga_crypt_rsa_enc fail_1");
-            break;
-        }
-
-        while (OPTIGA_LIB_BUSY == optiga_lib_status) 
-        {
-            //Wait until the optiga_crypt_rsa_sign operation is completed
-        }
-
-        if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
-        {
-             //RSA Signature generation failed.
-			TRUSTM_ENGINE_MSGFN("optiga_crypt_rsa_enc fail_2");
-			TRUSTM_ENGINE_MSGFN("optiga_lib_status: 0x%X", optiga_lib_status);
-			TRUSTM_ENGINE_MSGFN("return_status: 0x%X", return_status);
-			TRUSTM_ENGINE_MSGFN("ret len : %d", templen);
-			
-
-			
-            break;
-        }
-		
-		TRUSTM_ENGINE_DBGFN("to len : %d",templen);
-		ret = templen;
-	}while(FALSE);
-
-    if (me)
+    
+    do 
     {
-        //Destroy the instance after the completion of usecase if not required.
-        return_status = optiga_crypt_destroy(me);
-    }
+	//Implement code here;
+
+	//key_oid = trustm_ctx.key_oid;
+	// OPTIGA Comms Shielded connection settings to enable the protection
+	OPTIGA_CRYPT_SET_COMMS_PROTOCOL_VERSION(me, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
+	OPTIGA_CRYPT_SET_COMMS_PROTECTION_LEVEL(me, OPTIGA_COMMS_RESPONSE_PROTECTION);
+
+	//trustm_ctx.rsa_key_enc_scheme = OPTIGA_RSAES_PKCS1_V15;
+	optiga_lib_status = OPTIGA_LIB_BUSY;
+	return_status = optiga_crypt_rsa_decrypt_and_export(me_crypt,
+							    trustm_ctx.rsa_key_enc_scheme,
+							    (uint8_t *)from,
+							    flen,
+							    NULL,
+							    0,
+							    trustm_ctx.key_oid,
+							    to,
+							    &templen);
+	if (OPTIGA_LIB_SUCCESS != return_status)
+	    break;			
+	//Wait until the optiga_util_read_metadata operation is completed
+	while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+	return_status = optiga_lib_status;
+	if (return_status != OPTIGA_LIB_SUCCESS)
+	    break;
+		
+	TRUSTM_ENGINE_DBGFN("to len : %d",templen);
+	ret = templen;
+    }while(FALSE);
 
 #ifdef WORKAROUND    
-	pal_os_event_disarm();	
+    pal_os_event_disarm();	
 #endif
 
-	TRUSTM_ENGINE_DBGFN("<");	
-	return ret;	
+    // Capture OPTIGA Error
+    if (return_status != OPTIGA_LIB_SUCCESS)
+	trustmPrintErrorCode(return_status);
+
+    TRUSTM_ENGINE_DBGFN("<");	
+    return ret;	
 }
 
 /** Decrypt data using priv trustM key 
@@ -364,25 +314,15 @@ static int trustmEngine_rsa_priv_dec(int flen,
     uint8_t decrypted_message[2048];
     uint16_t decrypted_message_length = sizeof(decrypted_message);
 
-    optiga_crypt_t * me;    
-    
     TRUSTM_ENGINE_DBGFN(">");
     //TRUSTM_ENGINE_DBGFN("From len : %d",flen);
     //trustmHexDump((uint8_t *)from,flen);
 
+#ifdef WORKAROUND		
+    pal_os_event_arm();
+#endif	
     do
     {
-        me = optiga_crypt_create(0, optiga_crypt_callback, NULL);
-        if (NULL == me)
-        {
-	    TRUSTM_ENGINE_ERRFN("optiga_crypt_create fail!!");
-            break;
-        }
-
-#ifdef WORKAROUND		
-		pal_os_event_arm();
-#endif	
-	
         optiga_lib_status = OPTIGA_LIB_BUSY;
         encryption_scheme = OPTIGA_RSAES_PKCS1_V15;
 	
@@ -390,7 +330,7 @@ static int trustmEngine_rsa_priv_dec(int flen,
         //OPTIGA_CRYPT_SET_COMMS_PROTOCOL_VERSION(me, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
         //OPTIGA_CRYPT_SET_COMMS_PROTECTION_LEVEL(me, OPTIGA_COMMS_RESPONSE_PROTECTION);	
 	
-        return_status = optiga_crypt_rsa_decrypt_and_export(me,
+        return_status = optiga_crypt_rsa_decrypt_and_export(me_crypt,
                                                             encryption_scheme,
                                                             from,
                                                             flen,
@@ -399,28 +339,14 @@ static int trustmEngine_rsa_priv_dec(int flen,
                                                             trustm_ctx.key_oid,
                                                             decrypted_message,
                                                             &decrypted_message_length);
-							    
-        if (OPTIGA_LIB_SUCCESS != return_status)
-        {
-		TRUSTM_ENGINE_ERRFN("optiga_crypt_rsa_decrypt_and_export fail-1!!");
-            break;
-        }
-
-	printf("Please wait decrypting message .......\n");
-        while (OPTIGA_LIB_BUSY == optiga_lib_status) 
-        {
-		//Wait until the optiga_crypt_rsa_generate_keypair operation is completed
-        }
-
-        if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
-        {
-		//RSA Key pair generation failed
-		TRUSTM_ENGINE_ERRFN("optiga_crypt_rsa_decrypt_message fail-2!!");
-		printf("error : %x \n", optiga_lib_status);
-		break;
-        }
-        
-	
+	if (OPTIGA_LIB_SUCCESS != return_status)
+	    break;			
+	//Wait until the optiga_util_read_metadata operation is completed
+	while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+	return_status = optiga_lib_status;
+	if (return_status != OPTIGA_LIB_SUCCESS)
+	    break;
+        	
 	memcpy(to,decrypted_message,decrypted_message_length);
         printf("length : %d\n",decrypted_message_length);
         trustmHexDump(to,decrypted_message_length);
@@ -428,15 +354,12 @@ static int trustmEngine_rsa_priv_dec(int flen,
 
     } while (FALSE);
 
-    if (me)
-    {
-        //Destroy the instance after the completion of usecase if not required.
-        return_status = optiga_crypt_destroy(me);
-    }
-
 #ifdef WORKAROUND    
-	pal_os_event_disarm();	
+    pal_os_event_disarm();	
 #endif    
+    // Capture OPTIGA Error
+    if (return_status != OPTIGA_LIB_SUCCESS)
+	trustmPrintErrorCode(return_status);
 	
     TRUSTM_ENGINE_DBGFN("<");	
     return ret;	
@@ -466,25 +389,16 @@ static int trustmEngine_rsa_pub_enc(int flen,
     uint16_t encrypted_message_length = sizeof(encrypted_message);
     public_key_from_host_t public_key_from_host;
 
-    optiga_crypt_t * me;    
-    
     TRUSTM_ENGINE_DBGFN(">");
     //TRUSTM_ENGINE_DBGFN("From len : %d",flen);
     //trustmHexDump((uint8_t *)from,flen);
 
-    do
-    {
-        me = optiga_crypt_create(0, optiga_crypt_callback, NULL);
-        if (NULL == me)
-        {
-	    TRUSTM_ENGINE_ERRFN("optiga_crypt_create fail!!");
-            break;
-        }
-
 #ifdef WORKAROUND		
-		pal_os_event_arm();
+    pal_os_event_arm();
 #endif	
 
+    do
+    {
         optiga_lib_status = OPTIGA_LIB_BUSY;
 	
         encryption_scheme = OPTIGA_RSAES_PKCS1_V15;
@@ -495,7 +409,7 @@ static int trustmEngine_rsa_pub_enc(int flen,
 	//printf("Pubkey:\n");
 	//trustmHexDump(public_key_from_host.public_key, public_key_from_host.length);
 	
-        return_status = optiga_crypt_rsa_encrypt_message(me, 
+        return_status = optiga_crypt_rsa_encrypt_message(me_crypt, 
                                                             encryption_scheme,
                                                             from,
                                                             flen,
@@ -505,25 +419,13 @@ static int trustmEngine_rsa_pub_enc(int flen,
                                                             &public_key_from_host,
                                                             encrypted_message,
                                                             &encrypted_message_length);
-        if (OPTIGA_LIB_SUCCESS != return_status)
-        {
-		TRUSTM_ENGINE_ERRFN("optiga_crypt_rsa_generate_keypair fail-1!!");
-            break;
-        }
-
-	printf("Please wait encrypting message .......\n");
-        while (OPTIGA_LIB_BUSY == optiga_lib_status) 
-        {
-		//Wait until the optiga_crypt_rsa_generate_keypair operation is completed
-        }
-
-        if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
-        {
-		//RSA Key pair generation failed
-		TRUSTM_ENGINE_ERRFN("optiga_crypt_rsa_encrypt_message fail-2!!");
-		break;
-        }
-        
+	if (OPTIGA_LIB_SUCCESS != return_status)
+	    break;			
+	//Wait until the optiga_util_read_metadata operation is completed
+	while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+	return_status = optiga_lib_status;
+	if (return_status != OPTIGA_LIB_SUCCESS)
+	    break;
 	
 	memcpy(to,encrypted_message,encrypted_message_length);
         //printf("length : %d\n",encrypted_message_length);
@@ -532,15 +434,13 @@ static int trustmEngine_rsa_pub_enc(int flen,
 
     } while (FALSE);
 
-    if (me)
-    {
-        //Destroy the instance after the completion of usecase if not required.
-        return_status = optiga_crypt_destroy(me);
-    }
-
 #ifdef WORKAROUND    
-	pal_os_event_disarm();	
+    pal_os_event_disarm();	
 #endif    
+
+    // Capture OPTIGA Error
+    if (return_status != OPTIGA_LIB_SUCCESS)
+	trustmPrintErrorCode(return_status);
 	
     TRUSTM_ENGINE_DBGFN("<");	
     return ret;	
@@ -562,17 +462,18 @@ int trustmEngine_rsa_pub_dec(int flen,
 				RSA * rsa,
 				int padding)
 {
-	int ret = TRUSTM_ENGINE_FAIL;
-	TRUSTM_ENGINE_DBGFN(">");
+    int ret = TRUSTM_ENGINE_FAIL;
+    TRUSTM_ENGINE_DBGFN(">");
 
-	do {
-		TRUSTM_ENGINE_MSGFN("Function Not supported.");
-		//Implement code here;
-		//ret = TRUSTM_ENGINE_SUCCESS;
-	}while(FALSE);
-	
-	TRUSTM_ENGINE_DBGFN("<");	
-	return ret;	
+    do 
+    {
+	TRUSTM_ENGINE_MSGFN("Function Not supported.");
+	//Implement code here;
+	//ret = TRUSTM_ENGINE_SUCCESS;
+    }while(FALSE);
+    
+    TRUSTM_ENGINE_DBGFN("<");	
+    return ret;	
 }  
 
 static int trustmEngine_rsa_sign(int type, 
@@ -583,76 +484,53 @@ static int trustmEngine_rsa_sign(int type,
 				const RSA *rsa)
 {
     int ret = TRUSTM_ENGINE_FAIL;
-    optiga_crypt_t * me = NULL;
     optiga_lib_status_t return_status;
     uint16_t key_oid;
     uint16_t templen = 500;
 
-	TRUSTM_ENGINE_DBGFN(">");
+    TRUSTM_ENGINE_DBGFN(">");
 
-	TRUSTM_ENGINE_DBGFN("type : %d",type);
-	TRUSTM_ENGINE_DBGFN("m_length : %d", m_length);
-	//trustmHexDump((uint8_t *)m,m_length);
+    TRUSTM_ENGINE_DBGFN("type : %d",type);
+    TRUSTM_ENGINE_DBGFN("m_length : %d", m_length);
+    //trustmHexDump((uint8_t *)m,m_length);
 
-	do {
-		//Implement code here;
-	
-		key_oid = trustm_ctx.key_oid;
 #ifdef WORKAROUND		
-		pal_os_event_arm();
+    pal_os_event_arm();
 #endif		
 
-        me = optiga_crypt_create(0, optiga_crypt_callback, NULL);
-        if (NULL == me)
-        {
-			TRUSTM_ENGINE_MSGFN("optiga_crypt_create fail.");
-            break;
-        }
-
-        optiga_lib_status = OPTIGA_LIB_BUSY;
-        return_status = optiga_crypt_rsa_sign(me,
-                                              trustm_ctx.rsa_key_sig_scheme,
-                                              (uint8_t *)m,
-                                              m_length,
-                                              key_oid,
-                                              sigret,
-                                              &templen,
-                                              0x0000);
-
-        if (OPTIGA_LIB_SUCCESS != return_status)
-        {
-			TRUSTM_ENGINE_MSGFN("optiga_crypt_rsa_sign fail_1");
-            break;
-        }
-
-        while (OPTIGA_LIB_BUSY == optiga_lib_status) 
-        {
-            //Wait until the optiga_crypt_rsa_sign operation is completed
-        }
-
-        if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
-        {
-            //RSA Signature generation failed.
-			TRUSTM_ENGINE_MSGFN("optiga_crypt_rsa_sign fail_2");
-            break;
-        }
-		
-		*siglen = templen;
-		ret = TRUSTM_ENGINE_SUCCESS;
-	}while(FALSE);
-
-    if (me)
+    do 
     {
-        //Destroy the instance after the completion of usecase if not required.
-        return_status = optiga_crypt_destroy(me);
-    }
+	key_oid = trustm_ctx.key_oid;
+	optiga_lib_status = OPTIGA_LIB_BUSY;
+	return_status = optiga_crypt_rsa_sign(me_crypt,
+					      trustm_ctx.rsa_key_sig_scheme,
+					      (uint8_t *)m,
+					      m_length,
+					      key_oid,
+					      sigret,
+					      &templen,
+					      0x0000);
+	if (OPTIGA_LIB_SUCCESS != return_status)
+	    break;			
+	//Wait until the optiga_util_read_metadata operation is completed
+	while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+	return_status = optiga_lib_status;
+	if (return_status != OPTIGA_LIB_SUCCESS)
+	    break;
+	
+	*siglen = templen;
+	ret = TRUSTM_ENGINE_SUCCESS;
+    }while(FALSE);
 
 #ifdef WORKAROUND    
-	pal_os_event_disarm();	
+    pal_os_event_disarm();	
 #endif
-	
-	TRUSTM_ENGINE_DBGFN("<");	
-	return ret;	
+    // Capture OPTIGA Error
+    if (return_status != OPTIGA_LIB_SUCCESS)
+	trustmPrintErrorCode(return_status);
+    
+    TRUSTM_ENGINE_DBGFN("<");	
+    return ret;	
 }
 
 int trustmEngine_rsa_verify(int dtype,
@@ -663,99 +541,78 @@ int trustmEngine_rsa_verify(int dtype,
 				const RSA *rsa)
 {
     int ret = TRUSTM_ENGINE_FAIL;
-    optiga_crypt_t * me = NULL;
     optiga_lib_status_t return_status;
     uint8_t public_key[512];
     uint16_t i;
     //uint16_t key_oid;
     //uint16_t templen = 500;
     
-    
+    TRUSTM_ENGINE_DBGFN(">");
 
-	TRUSTM_ENGINE_DBGFN(">");
+    //TRUSTM_ENGINE_DBGFN("type : %d",dtype);
+    //TRUSTM_ENGINE_DBGFN("m_length : %d", m_length);
+    //trustmHexDump((uint8_t *)m,m_length);
+    //TRUSTM_ENGINE_DBGFN("siglen : %d", siglen);
+    //trustmHexDump((uint8_t *)sigbuf,siglen);
 
-	//TRUSTM_ENGINE_DBGFN("type : %d",dtype);
-	//TRUSTM_ENGINE_DBGFN("m_length : %d", m_length);
-	//trustmHexDump((uint8_t *)m,m_length);
-	//TRUSTM_ENGINE_DBGFN("siglen : %d", siglen);
-	//trustmHexDump((uint8_t *)sigbuf,siglen);
+    //trustmHexDump(trustm_ctx.pubkey,trustm_ctx.pubkeylen);
 
-	//trustmHexDump(trustm_ctx.pubkey,trustm_ctx.pubkeylen);
-    do {
+#ifdef WORKAROUND	    
+    pal_os_event_arm();
+#endif
+
+    do 
+    {
 	if (trustm_ctx.pubkeylen == 0)
 	{
-		 TRUSTM_ENGINE_ERRFN("Error No Public loaded!!!");
-		 break;
+	     TRUSTM_ENGINE_ERRFN("Error No Public loaded!!!");
+	     break;
 	}
 
 	public_key_from_host_t public_key_details = 
 	{
-		public_key,
-		trustm_ctx.pubkeylen - 19,
-		trustm_ctx.rsa_key_type
+	    public_key,
+	    trustm_ctx.pubkeylen - 19,
+	    trustm_ctx.rsa_key_type
 	};
 
-#ifdef WORKAROUND	    
-	pal_os_event_arm();
-#endif
 	
 	for(i=0;i<(trustm_ctx.pubkeylen - 19);i++)
 	{
-		public_key[i] = trustm_ctx.pubkey[i+19];
+	    public_key[i] = trustm_ctx.pubkey[i+19];
 	}
 	//trustmHexDump(public_key,trustm_ctx.pubkeylen - 19);
-
-        me = optiga_crypt_create(0, optiga_crypt_callback, NULL);
-        if (NULL == me)
-        {
-	    TRUSTM_ENGINE_MSGFN("optiga_crypt_create fail.");
-            break;
-        }
 	
-        optiga_lib_status = OPTIGA_LIB_BUSY;
-        return_status = optiga_crypt_rsa_verify (me,
-                                                 trustm_ctx.rsa_key_sig_scheme,
-                                                 (uint8_t *)m,
-                                                 m_length,
-                                                 sigbuf,
-                                                 siglen,
-                                                 OPTIGA_CRYPT_HOST_DATA,
-                                                 &public_key_details,
-                                                 0x0000);
-
-        if (OPTIGA_LIB_SUCCESS != return_status)
-        {
-			TRUSTM_ENGINE_MSGFN("optiga_crypt_rsa_verify fail_1");
-            break;
-        }
-        while (OPTIGA_LIB_BUSY == optiga_lib_status) 
-        {
-            //Wait until the optiga_crypt_rsa_sign operation is completed
-		//printf("test point 1\n");
-        }
-
-        if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
-        {
-            //RSA Signature generation failed.
-	    TRUSTM_ENGINE_MSGFN("optiga_crypt_rsa_verify fail_2");
-            break;
-        }
+	optiga_lib_status = OPTIGA_LIB_BUSY;
+	return_status = optiga_crypt_rsa_verify (me_crypt,
+						 trustm_ctx.rsa_key_sig_scheme,
+						 (uint8_t *)m,
+						 m_length,
+						 sigbuf,
+						 siglen,
+						 OPTIGA_CRYPT_HOST_DATA,
+						 &public_key_details,
+						 0x0000);
+	if (OPTIGA_LIB_SUCCESS != return_status)
+	    break;			
+	//Wait until the optiga_util_read_metadata operation is completed
+	while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+	return_status = optiga_lib_status;
+	if (return_status != OPTIGA_LIB_SUCCESS)
+	    break;
 		
 	ret = TRUSTM_ENGINE_SUCCESS;
     }while(FALSE);
-
-    if (me)
-    {
-        //Destroy the instance after the completion of usecase if not required.
-        return_status = optiga_crypt_destroy(me);
-    }
  
 #ifdef WORKAROUND    
-	pal_os_event_disarm();
+    pal_os_event_disarm();
 #endif
-	
-	TRUSTM_ENGINE_DBGFN("<");	
-	return ret;	
+    // Capture OPTIGA Error
+    if (return_status != OPTIGA_LIB_SUCCESS)
+	trustmPrintErrorCode(return_status);	
+
+    TRUSTM_ENGINE_DBGFN("<");	
+    return ret;	
 }
 
 static int trustmEngine_rsa_keygen(RSA *rsa, 
@@ -763,48 +620,51 @@ static int trustmEngine_rsa_keygen(RSA *rsa,
 				BIGNUM *e,
 				BN_GENCB *cb)
 {
-	int ret = TRUSTM_ENGINE_FAIL;
-	TRUSTM_ENGINE_DBGFN(">");
-	TRUSTM_ENGINE_DBG("bits: %d", bits);
+    int ret = TRUSTM_ENGINE_FAIL;
+    TRUSTM_ENGINE_DBGFN(">");
+    TRUSTM_ENGINE_DBG("bits: %d", bits);
 
-	do {
-		TRUSTM_ENGINE_MSGFN("Function Not supported.");
-		
-		//Implement code here;
-
-		
-		//ret = TRUSTM_ENGINE_SUCCESS;
-	}while(FALSE);
+    do 
+    {
+	TRUSTM_ENGINE_MSGFN("Function Not supported.");
 	
-	TRUSTM_ENGINE_DBGFN("<");	
-	return ret;	
+	//Implement code here;
+
+	
+	//ret = TRUSTM_ENGINE_SUCCESS;
+    }while(FALSE);
+    
+    TRUSTM_ENGINE_DBGFN("<");	
+    return ret;	
 }
 	
 int trustmEngine_rsa_init(RSA *rsa)
 {
-	int ret = TRUSTM_ENGINE_FAIL;
-	TRUSTM_ENGINE_DBGFN(">");
-	do {
-		//Do not do anything here is it is call by other 
-		//RSA method
-		ret = TRUSTM_ENGINE_SUCCESS;
-	}while(FALSE);
-	
-	TRUSTM_ENGINE_DBGFN("<");	
-	return ret;	
+    int ret = TRUSTM_ENGINE_FAIL;
+    TRUSTM_ENGINE_DBGFN(">");
+    do 
+    {
+	//Do not do anything here is it is call by other 
+	//RSA method
+	ret = TRUSTM_ENGINE_SUCCESS;
+    }while(FALSE);
+    
+    TRUSTM_ENGINE_DBGFN("<");	
+    return ret;	
 }
 
 static int trustmEngine_rsa_finish(RSA *rsa)
 {
-	int ret = TRUSTM_ENGINE_FAIL;
-	TRUSTM_ENGINE_DBGFN(">");
-	do {
-		//Implement code here;
-		ret = TRUSTM_ENGINE_SUCCESS;
-	}while(FALSE);
-	
-	TRUSTM_ENGINE_DBGFN("<");	
-	return ret;	
+    int ret = TRUSTM_ENGINE_FAIL;
+    TRUSTM_ENGINE_DBGFN(">");
+    do 
+    {
+	//Implement code here;
+	ret = TRUSTM_ENGINE_SUCCESS;
+    }while(FALSE);
+    
+    TRUSTM_ENGINE_DBGFN("<");	
+    return ret;	
 }
 				
 
@@ -814,35 +674,36 @@ static int trustmEngine_rsa_finish(RSA *rsa)
  */
 uint16_t trustmEngine_init_rsa(ENGINE *e)
 {
-	uint16_t ret = TRUSTM_ENGINE_FAIL;
-	TRUSTM_ENGINE_DBGFN(">");
-	do {
-		default_rsa = RSA_PKCS1_OpenSSL();
-		if (default_rsa == NULL)
-			break;
+    uint16_t ret = TRUSTM_ENGINE_FAIL;
+    TRUSTM_ENGINE_DBGFN(">");
+    do 
+    {
+	default_rsa = RSA_PKCS1_OpenSSL();
+	if (default_rsa == NULL)
+	    break;
 
-		rsa_methods = RSA_meth_dup(default_rsa);
-		RSA_meth_set1_name(rsa_methods, "TrustM RSA methods");
+	rsa_methods = RSA_meth_dup(default_rsa);
+	RSA_meth_set1_name(rsa_methods, "TrustM RSA methods");
 
-		RSA_meth_set_priv_enc(rsa_methods, trustmEngine_rsa_priv_enc);
-		RSA_meth_set_priv_dec(rsa_methods, trustmEngine_rsa_priv_dec);
+	RSA_meth_set_priv_enc(rsa_methods, trustmEngine_rsa_priv_enc);
+	RSA_meth_set_priv_dec(rsa_methods, trustmEngine_rsa_priv_dec);
 
-		RSA_meth_set_pub_enc(rsa_methods, trustmEngine_rsa_pub_enc);
-		//RSA_meth_set_pub_dec(rsa_methods, trustmEngine_rsa_pub_dec);
-		
-		//RSA_meth_set_init(rsa_methods, trustmEngine_rsa_init);
-		RSA_meth_set_finish(rsa_methods, trustmEngine_rsa_finish);
-
-		RSA_meth_set_sign(rsa_methods, trustmEngine_rsa_sign);
-		
-		//RSA_meth_set_verify(rsa_methods, trustmEngine_rsa_verify);
-		
-		RSA_meth_set_keygen(rsa_methods, trustmEngine_rsa_keygen);
-		
-		ret = ENGINE_set_RSA(e, rsa_methods);
-    
-	}while(FALSE);
+	RSA_meth_set_pub_enc(rsa_methods, trustmEngine_rsa_pub_enc);
+	//RSA_meth_set_pub_dec(rsa_methods, trustmEngine_rsa_pub_dec);
 	
-	TRUSTM_ENGINE_DBGFN("<");
-	return ret;
+	//RSA_meth_set_init(rsa_methods, trustmEngine_rsa_init);
+	RSA_meth_set_finish(rsa_methods, trustmEngine_rsa_finish);
+
+	RSA_meth_set_sign(rsa_methods, trustmEngine_rsa_sign);
+	
+	//RSA_meth_set_verify(rsa_methods, trustmEngine_rsa_verify);
+	
+	RSA_meth_set_keygen(rsa_methods, trustmEngine_rsa_keygen);
+	
+	ret = ENGINE_set_RSA(e, rsa_methods);
+
+    }while(FALSE);
+    
+    TRUSTM_ENGINE_DBGFN("<");
+    return ret;
 }

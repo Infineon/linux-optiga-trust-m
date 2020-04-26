@@ -107,8 +107,27 @@ typedef struct trustm_ctx_str
   char			pubkeyfilename[PUBKEYFILE_SIZE];
   uint8_t   pubkey[PUBKEY_SIZE];
   uint16_t  pubkeylen;
+  uint8_t   appOpen;
   
 } trustm_ctx_t;
+
+typedef struct trustm_metadata_str
+{
+  uint8_t metadataLen;
+  uint8_t C0_lsc0;
+  uint8_t C1_verion[2];
+  uint16_t C4_maxSize;
+  uint16_t C5_used;
+  uint8_t D0_change[10];
+  uint8_t D0_changeLen;
+  uint8_t D1_read[10];
+  uint8_t D1_readLen;
+  uint8_t D3_execute[10];
+  uint8_t D3_executeLen;
+  uint8_t E0_algo;
+  uint8_t E1_keyUsage;
+  uint8_t E8_dataObjType;  
+} trustm_metadata_t;
 
 //extern
 extern trustm_ctx_t trustm_ctx;

@@ -42,79 +42,235 @@ extern void pal_os_event_disarm(void);
 static const char *engine_id   = "trustm_engine";
 static const char *engine_name = "Infineon OPTIGA TrustM Engine";
 
+static optiga_lib_status_t readmetadata(uint16_t optiga_oid, trustm_metadata_t *oidMetadata)
+{
+	optiga_lib_status_t return_status;
+	uint16_t bytes_to_read;
+    uint8_t read_data_buffer[2048];
+    uint16_t i,j;
+
+    oidMetadata->metadataLen = 0;
+    oidMetadata->D0_changeLen = 0;
+    oidMetadata->D1_readLen = 0;
+    oidMetadata->D3_executeLen = 0;
+    oidMetadata->C4_maxSize = 0;
+    oidMetadata->C5_used = 0;
+        
+    do
+    {
+        bytes_to_read = sizeof(read_data_buffer);
+        optiga_lib_status = OPTIGA_LIB_BUSY;
+        return_status = optiga_util_read_metadata(me_util,
+                                                    optiga_oid,
+                                                    read_data_buffer,
+                                                    &bytes_to_read);
+        if (OPTIGA_LIB_SUCCESS != return_status)
+            break;			
+        //Wait until the optiga_util_read_metadata operation is completed
+        while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+        return_status = optiga_lib_status;
+        if (return_status != OPTIGA_LIB_SUCCESS)
+            break;
+        else
+        {
+            //printf("[Size %.4d] : \n", bytes_to_read);
+            //trustmHexDump(read_data_buffer,bytes_to_read);
+            //printf("\t");
+            //trustmdecodeMetaData(read_data_buffer);
+            //printf("\n");
+
+            if(read_data_buffer[0] == 0x20)
+            {
+                oidMetadata->metadataLen = read_data_buffer[1];
+                for(i = 2; i < read_data_buffer[1];i += read_data_buffer[i+1]+2)
+                {
+                    switch(read_data_buffer[i])
+                    {
+                        case 0xC0:
+                            oidMetadata->C0_lsc0 = read_data_buffer[i+2];
+                            break;
+                        case 0xC1:
+                            oidMetadata->C1_verion[0] = read_data_buffer[i+1];
+                            oidMetadata->C1_verion[1] = read_data_buffer[i+2];                    
+                            break;
+                        case 0xC4:
+                            if (read_data_buffer[i+1] == 2)
+                                oidMetadata->C4_maxSize = (uint16_t)((read_data_buffer[i+2] << 8)+read_data_buffer[i+3]);
+                            else
+                                oidMetadata->C4_maxSize = (uint16_t) read_data_buffer[i+2];                              
+                            break;
+                        case 0xC5:
+                            if (read_data_buffer[i+1] == 2)
+                                oidMetadata->C5_used = (uint16_t)((read_data_buffer[i+2] << 8)+read_data_buffer[i+3]);
+                            else
+                                oidMetadata->C5_used = (uint16_t) read_data_buffer[i+2]; 
+                            break;
+                        case 0xD0:
+                            oidMetadata->D0_changeLen = read_data_buffer[i+1];
+                            for(j=0;j<read_data_buffer[i+1];j++)
+                                oidMetadata->D0_change[j] = read_data_buffer[i+2+j];                            
+                            break;
+                        case 0xD1:
+                            oidMetadata->D1_readLen = read_data_buffer[i+1];
+                            for(j=0;j<read_data_buffer[i+1];j++)
+                                oidMetadata->D1_read[j] = read_data_buffer[i+2+j];                        
+                            break;
+                        case 0xD3:
+                            oidMetadata->D3_executeLen = read_data_buffer[i+1];
+                            for(j=0;j<read_data_buffer[i+1];j++)
+                                oidMetadata->D3_execute[j] = read_data_buffer[i+2+j];
+                            break;
+                        case 0xE0:
+                            oidMetadata->E0_algo = read_data_buffer[i+2];                        
+                            break;
+                        case 0xE1:
+                            oidMetadata->E1_keyUsage = read_data_buffer[i+2];
+                            break;
+                        case 0xE8:
+                            oidMetadata->E8_dataObjType = read_data_buffer[i+2];
+                            break;
+                        default:
+                            i = bytes_to_read;
+                            oidMetadata->metadataLen = 0;
+                    }
+                }
+            }
+        }        
+    }while(FALSE);
+
+    // Capture OPTIGA Trust M error
+	if (return_status != OPTIGA_LIB_SUCCESS)
+        trustmPrintErrorCode(return_status);
+        
+    return return_status;
+}
+
 static uint32_t parseKeyParams(const char *aArg)
 {
+    uint32_t ret;
     uint32_t value;
     char in[1024];
 
     char *token[5];
     int   i;
-    FILE *fp;
+    
+    trustm_metadata_t oidMetadata;
+    //FILE *fp;
       
     TRUSTM_ENGINE_DBGFN(">");
     
-    strncpy(in, aArg,1024);
-    
-    if (aArg == NULL)
+    do
     {
-        TRUSTM_ENGINE_ERRFN("No input key parameters present. (key_oid:<pubkeyfile>)");
-        return EVP_FAIL;
-    }
-      
-    i = 0;
-    token[0] = strtok((char *)aArg, ":");
-    
-    if (token[0] == NULL)
-    {
-      TRUSTM_ENGINE_ERRFN("Too few parameters in key parameters list. (key_oid:<pubkeyfile>)");
-      return EVP_FAIL;
-    }
-
-    while (token[i] != NULL)
-    {
-        i++;
-        token[i] = strtok(NULL, ":");
-    }
-
-    if (i > 6)
-    {
-      TRUSTM_ENGINE_ERRFN("Too many parameters in key parameters list. (key_oid:<pubkeyfile>)");
-      return EVP_FAIL;
-    }
-    
-    if (strncmp(token[0], "0x",2) == 0)
-        sscanf(token[0],"%x",&value);
-    else
-    {
-        if(i==1) // this is to workaround OpenSSL s_server 
+        strncpy(in, aArg,1024);
+        
+        if (aArg == NULL)
         {
-            fp = fopen((const char *)token[0],"r");
-            if (!fp)
-            {
-                TRUSTM_ENGINE_ERRFN("failed to open key file %s\n",token[0]);
-                return EVP_FAIL;
-            }
-
-            //Read file
-            value = 0;
-            fread(&value,2,1, fp); 
-            fclose(fp);
-            TRUSTM_ENGINE_DBGFN("value : %x\n",value); 
+            TRUSTM_ENGINE_ERRFN("No input key parameters present. (key_oid:<pubkeyfile>)");
+            //return EVP_FAIL;
+            ret = 0;
+            break;
         }
-        else        
+          
+        i = 0;
+        token[0] = strtok((char *)aArg, ":");
+        
+        if (token[0] == NULL)
+        {
+            TRUSTM_ENGINE_ERRFN("Too few parameters in key parameters list. (key_oid:<pubkeyfile>)");
+            //return EVP_FAIL;
+            ret = 0;
+            break;
+        }
+
+        while (token[i] != NULL)
+        {
+            i++;
+            token[i] = strtok(NULL, ":");
+        }
+
+        if (i > 6)
+        {
+            TRUSTM_ENGINE_ERRFN("Too many parameters in key parameters list. (key_oid:<pubkeyfile>)");
+            //return EVP_FAIL;
+            ret = 0;
+            break;
+        }
+        
+        if (strncmp(token[0], "0x",2) == 0)
+            sscanf(token[0],"%x",&value);
+        else
             value = 0;
-    }
 
-    trustm_ctx.key_oid = value;
-    if ((token[1] != NULL) && (*(token[1]) != '*'))
-    {
-        strncpy(trustm_ctx.pubkeyfilename, token[1], PUBKEYFILE_SIZE);
-    }
-    else
-        trustm_ctx.pubkeyfilename[0]='\0';
+        if (((value < 0xE0F0) || (value > 0xE0F3)) &&
+            ((value < 0xE0FC) || (value > 0xE0FD)))
+        {
+            TRUSTM_ENGINE_ERRFN("Invalid Key OID");
+            //return EVP_FAIL;
+            ret = 0;
+            break;
+        }
+        else
+        {
+            trustm_ctx.key_oid = value;
+            readmetadata(value, &oidMetadata);
+            if ((oidMetadata.E0_algo == OPTIGA_ECC_CURVE_NIST_P_256) ||
+                (oidMetadata.E0_algo == OPTIGA_ECC_CURVE_NIST_P_384))
+            {
+                trustm_ctx.ec_key_curve = oidMetadata.E0_algo;
+                trustm_ctx.ec_key_usage = oidMetadata.E1_keyUsage;
+                trustm_ctx.rsa_key_type = 0x00;
+                trustm_ctx.rsa_key_usage = 0x00;
+            }
+            
+            if ((oidMetadata.E0_algo == OPTIGA_RSA_KEY_2048_BIT_EXPONENTIAL) ||
+                (oidMetadata.E0_algo == OPTIGA_RSA_KEY_1024_BIT_EXPONENTIAL))
+            {
+                trustm_ctx.rsa_key_type = oidMetadata.E0_algo;
+                trustm_ctx.rsa_key_usage = oidMetadata.E1_keyUsage;
+                trustm_ctx.ec_key_curve = 0x00;
+                trustm_ctx.ec_key_usage = 0x00;
+            } 
 
-    if ((i>2) && (token[2] != NULL))
-    {
+            /*
+            printf("Metadata Len: 0x%.2X\n",oidMetadata.metadataLen);
+            printf("Lsc0        : 0x%.2X\n",oidMetadata.C0_lsc0);            
+            printf("Max Size    : %d\n",oidMetadata.C4_maxSize);
+            printf("Used        : %d\n",oidMetadata.C5_used);
+            printf("algo        : 0x%.2X\n",oidMetadata.E0_algo);
+            printf("usage       : 0x%.2X\n",oidMetadata.E1_keyUsage);
+            printf("dataObjType : 0x%.2X\n",oidMetadata.E8_dataObjType);
+            uint8_t test;
+            printf("Change      : ");
+            for(test=0;test<oidMetadata.D0_changeLen;test++)
+            {
+                printf("0x%.2X ",oidMetadata.D0_change[test]);
+            }
+            printf("\n");
+            printf("Read        : ");
+            for(test=0;test<oidMetadata.D1_readLen;test++)
+            {
+                printf("0x%.2X ",oidMetadata.D1_read[test]);
+            }
+            printf("\n");
+            printf("Execute     : ");
+            for(test=0;test<oidMetadata.D3_executeLen;test++)
+            {
+                printf("0x%.2X ",oidMetadata.D3_execute[test]);
+            }
+            printf("\n");
+            */ 
+        }
+        
+        // If token is not empty or '*' then it must be a pubkeyfile.
+        if ((token[1] != NULL) && (*(token[1]) != '*'))
+        {
+            strncpy(trustm_ctx.pubkeyfilename, token[1], PUBKEYFILE_SIZE);
+        }
+        else
+            trustm_ctx.pubkeyfilename[0]='\0';
+
+        if ((i>2) && (token[2] != NULL))
+        {
             if (!strcmp(token[2],"NEW"))
             {
                 // Request NEW key generation
@@ -141,26 +297,21 @@ static uint32_t parseKeyParams(const char *aArg)
                     if ((i>5) && (strcmp(token[5], "LOCK") == 0))
                         trustm_ctx.ec_flag |= TRUSTM_ENGINE_FLAG_LOCK;
                 }
-                
             }
             else
             {
                 // No NEW key request
-                TRUSTM_ENGINE_DBGFN("No NEW found\n");
+                TRUSTM_ENGINE_DBGFN("No NEW key request\n");
             }
-    }
+        }
+        
+        ret = value;
+    }while(FALSE);
 
-
-    if (((value < 0xE0F0) || (value > 0xE0F3)) &&
-        ((value < 0xE0FC) || (value > 0xE0FD)))
-    {
-      TRUSTM_ENGINE_ERRFN("Invalid Key OID");
-      return EVP_FAIL;
-    }
 
     TRUSTM_ENGINE_DBGFN("<");
 
-    return value;
+    return ret;
 }
 
 static int engine_destroy(ENGINE *e)
@@ -229,34 +380,39 @@ static EVP_PKEY * engine_load_privkey(ENGINE *e, const char *key_id, UI_METHOD *
     
     TRUSTM_ENGINE_DBGFN("> key_id : %s", key_id);
 
-    do {
-        parseKeyParams(key_id);
+    do 
+    {
+        if(parseKeyParams(key_id) == 0)
+        {
+            TRUSTM_ENGINE_ERRFN("Invalid OID!!!");
+            break;
+        }
     
-        TRUSTM_ENGINE_DBGFN("KEY_OID       : 0x%.4x \n",trustm_ctx.key_oid);        
-        TRUSTM_ENGINE_DBGFN("Pubkey        : %s \n",trustm_ctx.pubkeyfilename);
+        TRUSTM_ENGINE_DBGFN("KEY_OID       : 0x%.4x",trustm_ctx.key_oid);        
+        TRUSTM_ENGINE_DBGFN("Pubkey        : %s",trustm_ctx.pubkeyfilename);
 
-        TRUSTM_ENGINE_DBGFN("RSA key type  : 0x%.2x \n",trustm_ctx.rsa_key_type);
-        TRUSTM_ENGINE_DBGFN("RSA key usage : 0x%.2x \n",trustm_ctx.rsa_key_usage);    
-        TRUSTM_ENGINE_DBGFN("RSA key flag  : 0x%.2x \n",trustm_ctx.rsa_flag);    
+        TRUSTM_ENGINE_DBGFN("RSA key type  : 0x%.2x",trustm_ctx.rsa_key_type);
+        TRUSTM_ENGINE_DBGFN("RSA key usage : 0x%.2x",trustm_ctx.rsa_key_usage);    
+        TRUSTM_ENGINE_DBGFN("RSA key flag  : 0x%.2x",trustm_ctx.rsa_flag);    
 
-        TRUSTM_ENGINE_DBGFN("EC key type  : 0x%.2x \n",trustm_ctx.ec_key_curve);
-        TRUSTM_ENGINE_DBGFN("EC key usage : 0x%.2x \n",trustm_ctx.ec_key_usage);    
-        TRUSTM_ENGINE_DBGFN("EC key flag  : 0x%.2x \n",trustm_ctx.ec_flag);        
+        TRUSTM_ENGINE_DBGFN("EC key type   : 0x%.2x",trustm_ctx.ec_key_curve);
+        TRUSTM_ENGINE_DBGFN("EC key usage  : 0x%.2x",trustm_ctx.ec_key_usage);    
+        TRUSTM_ENGINE_DBGFN("EC key flag   : 0x%.2x",trustm_ctx.ec_flag);        
         switch(trustm_ctx.key_oid)
         {
             case 0xE0F0:
-                TRUSTM_ENGINE_MSGFN("EC Private Key. [0x%.4X]", trustm_ctx.key_oid);
+                //TRUSTM_ENGINE_MSGFN("EC Private Key. [0x%.4X]", trustm_ctx.key_oid);
                 key = trustm_ec_loadkeyE0E0();
                 break;
             case 0xE0F1:
             case 0xE0F2:
             case 0xE0F3:
-                TRUSTM_ENGINE_MSGFN("EC Private Key");
+                //TRUSTM_ENGINE_MSGFN("EC Private Key");
                 key = trustm_ec_loadkey();
                 break;
             case 0xE0FC:
             case 0xE0FD:
-                TRUSTM_ENGINE_DBGFN("RSA Private Key.");
+                //TRUSTM_ENGINE_DBGFN("RSA Private Key.");
                 key = trustm_rsa_loadkey();
                 break;
             case 0xE100:
@@ -385,8 +541,11 @@ static int engine_init(ENGINE *e)
         return_status = trustm_Open();
         if (return_status != OPTIGA_LIB_SUCCESS)
         {
-            TRUSTM_ENGINE_ERRFN("Fail to open trustM!!");            
-            break;
+            TRUSTM_ENGINE_ERRFN("Fail to open trustM!!");
+            trustm_ctx.appOpen = 0;
+            ret = TRUSTM_ENGINE_FAIL; 
+            exit(1);
+            //break;
         }
 
         //Init TrustM context
@@ -404,9 +563,10 @@ static int engine_init(ENGINE *e)
         trustm_ctx.pubkeyfilename[0] = '\0';
         trustm_ctx.pubkey[0] = '\0';
         trustm_ctx.pubkeylen = 0;
+        
+        trustm_ctx.appOpen = 1;
 
         // Init Random Method
-
         ret = trustmEngine_init_rand(e);
         if (ret != TRUSTM_ENGINE_SUCCESS) {
             TRUSTM_ENGINE_ERRFN("Init Rand Fail!!");
@@ -440,7 +600,7 @@ static int bind(ENGINE *e, const char *id)
     
     TRUSTM_ENGINE_DBGFN(">");
 
-    do {
+    do {         
         if (!ENGINE_set_id(e, engine_id)) {
             TRUSTM_ENGINE_DBGFN("ENGINE_set_id failed\n");
             break;
