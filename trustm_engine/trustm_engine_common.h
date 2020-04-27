@@ -107,6 +107,7 @@ typedef struct trustm_ctx_str
   char			pubkeyfilename[PUBKEYFILE_SIZE];
   uint8_t   pubkey[PUBKEY_SIZE];
   uint16_t  pubkeylen;
+  uint8_t   pubkeyHeaderLen;
   uint8_t   appOpen;
   
 } trustm_ctx_t;

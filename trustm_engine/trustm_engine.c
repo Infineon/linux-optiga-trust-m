@@ -49,10 +49,15 @@ static uint32_t parseKeyParams(const char *aArg)
     char in[1024];
 
     char *token[5];
-    int   i;
+    int   i, j, k;
     
     trustm_metadata_t oidMetadata;
-    //FILE *fp;
+
+    FILE *fp;
+    char *name;
+    char *header;
+    uint8_t *data;
+    uint32_t len;
       
     TRUSTM_ENGINE_DBGFN(">");
     
@@ -162,6 +167,43 @@ static uint32_t parseKeyParams(const char *aArg)
         if ((token[1] != NULL) && (*(token[1]) != '*'))
         {
             strncpy(trustm_ctx.pubkeyfilename, token[1], PUBKEYFILE_SIZE);
+            
+            fp = fopen((const char *)trustm_ctx.pubkeyfilename,"r");
+            if (!fp)
+            {
+                TRUSTM_ENGINE_ERRFN("failed to open file %s\n",trustm_ctx.pubkeyfilename);
+                break;
+            }
+            PEM_read(fp, &name,&header,&data,(long int *)&len);
+            TRUSTM_ENGINE_DBGFN("name   : %s\n",name);
+            TRUSTM_ENGINE_DBGFN("len : %d\n",len);
+            trustmHexDump(data,len);
+            if (!(strcmp(name,"PUBLIC KEY")))
+            {
+                trustm_ctx.pubkeylen = (uint16_t)len;
+                j=k=0;
+                for(i=0;i<len;i++)
+                {
+                    trustm_ctx.pubkey[i] = *(data+i);
+                }
+                
+                if((trustm_ctx.pubkey[1] & 0x80) == 0x00)
+                    j = trustm_ctx.pubkey[3] + 4;
+                else
+                {
+                    j = (trustm_ctx.pubkey[1] & 0x7f);
+                    printf("j: %d\n",j);
+                    j = trustm_ctx.pubkey[j+3] + j + 4; 
+                }
+                trustm_ctx.pubkeyHeaderLen = j;
+                printf("headerlen : %d \n", trustm_ctx.pubkeyHeaderLen); 
+                printf("first byte : 0x%.2X \n", trustm_ctx.pubkey[trustm_ctx.pubkeyHeaderLen]); 
+                trustmHexDump(&trustm_ctx.pubkey[trustm_ctx.pubkeyHeaderLen],trustm_ctx.pubkeylen-trustm_ctx.pubkeyHeaderLen);
+                
+                //key = d2i_PUBKEY(NULL,(const unsigned char **)&data,len);
+
+                //trustmHexDump(trustm_ctx.pubkey,trustm_ctx.pubkeylen);
+            }
         }
         else
             trustm_ctx.pubkeyfilename[0]='\0';
@@ -231,7 +273,8 @@ static int engine_destroy(ENGINE *e)
     trustm_ctx.ec_flag = 0;
     
     trustm_ctx.pubkeylen = 0;
-
+    trustm_ctx.pubkeyHeaderLen = 0;
+        
     for(i=0;i<PUBKEYFILE_SIZE;i++)
     {
         trustm_ctx.pubkeyfilename[i] = 0x00;
@@ -460,6 +503,7 @@ static int engine_init(ENGINE *e)
         trustm_ctx.pubkeyfilename[0] = '\0';
         trustm_ctx.pubkey[0] = '\0';
         trustm_ctx.pubkeylen = 0;
+        trustm_ctx.pubkeyHeaderLen = 0;
         
         trustm_ctx.appOpen = 1;
 
