@@ -156,8 +156,8 @@ static int trustmEngine_getrandom(unsigned char *buf, int num)
         }
     }
     
-    TRUSTM_ENGINE_DBGFN("length : %d\n",num);
-    trustmHexDump(buf,num);    
+    //TRUSTM_ENGINE_DBGFN("length : %d\n",num);
+    //trustmHexDump(buf,num);    
     
 #ifdef WORKAROUND    
 	pal_os_event_disarm();	

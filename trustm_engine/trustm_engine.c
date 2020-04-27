@@ -175,9 +175,9 @@ static uint32_t parseKeyParams(const char *aArg)
                 break;
             }
             PEM_read(fp, &name,&header,&data,(long int *)&len);
-            TRUSTM_ENGINE_DBGFN("name   : %s\n",name);
-            TRUSTM_ENGINE_DBGFN("len : %d\n",len);
-            trustmHexDump(data,len);
+            //TRUSTM_ENGINE_DBGFN("name   : %s\n",name);
+            //TRUSTM_ENGINE_DBGFN("len : %d\n",len);
+            //trustmHexDump(data,len);
             if (!(strcmp(name,"PUBLIC KEY")))
             {
                 trustm_ctx.pubkeylen = (uint16_t)len;
@@ -192,13 +192,12 @@ static uint32_t parseKeyParams(const char *aArg)
                 else
                 {
                     j = (trustm_ctx.pubkey[1] & 0x7f);
-                    printf("j: %d\n",j);
                     j = trustm_ctx.pubkey[j+3] + j + 4; 
                 }
                 trustm_ctx.pubkeyHeaderLen = j;
-                printf("headerlen : %d \n", trustm_ctx.pubkeyHeaderLen); 
-                printf("first byte : 0x%.2X \n", trustm_ctx.pubkey[trustm_ctx.pubkeyHeaderLen]); 
-                trustmHexDump(&trustm_ctx.pubkey[trustm_ctx.pubkeyHeaderLen],trustm_ctx.pubkeylen-trustm_ctx.pubkeyHeaderLen);
+                //printf("headerlen : %d \n", trustm_ctx.pubkeyHeaderLen); 
+                //printf("first byte : 0x%.2X \n", trustm_ctx.pubkey[trustm_ctx.pubkeyHeaderLen]); 
+                //trustmHexDump(&trustm_ctx.pubkey[trustm_ctx.pubkeyHeaderLen],trustm_ctx.pubkeylen-trustm_ctx.pubkeyHeaderLen);
                 
                 //key = d2i_PUBKEY(NULL,(const unsigned char **)&data,len);
 
@@ -206,7 +205,11 @@ static uint32_t parseKeyParams(const char *aArg)
             }
         }
         else
+        {
             trustm_ctx.pubkeyfilename[0]='\0';
+            trustm_ctx.pubkeyHeaderLen = 0;
+            trustm_ctx.pubkeylen = 0;
+        }
 
         if ((i>2) && (token[2] != NULL))
         {

@@ -164,12 +164,8 @@ static EVP_PKEY *trustm_rsa_generatekey(void)
 EVP_PKEY *trustm_rsa_loadkey(void)
 {
     EVP_PKEY    *key = NULL;
-    FILE *fp;
-    char *name;
-    char *header;
     uint8_t *data;
     uint32_t len;
-    uint16_t i;
 
     TRUSTM_ENGINE_DBGFN(">");
     do
@@ -180,42 +176,15 @@ EVP_PKEY *trustm_rsa_loadkey(void)
 	else // Load Pubkey
 	{
 	    TRUSTM_ENGINE_DBGFN("no new key request\n");
-	    if (trustm_ctx.pubkeyfilename[0] != '\0')
+	    if (trustm_ctx.pubkeylen != 0)
 	    {
-		TRUSTM_ENGINE_DBGFN("filename : %s\n",trustm_ctx.pubkeyfilename);
-		//open 
-		fp = fopen((const char *)trustm_ctx.pubkeyfilename,"r");
-		if (!fp)
-		{
-		    TRUSTM_ENGINE_ERRFN("failed to open file %s\n",trustm_ctx.pubkeyfilename);
-		    break;
-		}
-		PEM_read(fp, &name,&header,&data,(long int *)&len);
-		//TRUSTM_ENGINE_DBGFN("name   : %s\n",name);
-		//TRUSTM_ENGINE_DBGFN("len : %d\n",len);
-		//trustmHexDump(data,len);
-		if (!(strcmp(name,"PUBLIC KEY")))
-		{
-		    trustm_ctx.pubkeylen = (uint16_t)len;
-		    for(i=0;i<len;i++)
-		    {
-			trustm_ctx.pubkey[i] = *(data+i);
-			//printf("%.x ",trustm_ctx.pubkey[i]);
-		    }
-		    key = d2i_PUBKEY(NULL,(const unsigned char **)&data,len);
-
-		    //trustmHexDump(trustm_ctx.pubkey,trustm_ctx.pubkeylen);
-		}
-		else
-		{
-		    TRUSTM_ENGINE_ERRFN("Error : No Plubic Key found!!");
-		    key = NULL;
-		}
+		data = &trustm_ctx.pubkey[0];
+		len = trustm_ctx.pubkeylen;
+		key = d2i_PUBKEY(NULL,(const unsigned char **)&data, len);
 	    }
 	    else
 	    {
 		TRUSTM_ENGINE_DBGFN("No plubic Key found, Register Private Key only");
-		//key = NULL;
 		//load dummy public key
 		if(trustm_ctx.rsa_key_type == OPTIGA_RSA_KEY_2048_BIT_EXPONENTIAL)
 		{
@@ -422,18 +391,15 @@ static int trustmEngine_rsa_pub_enc(int flen,
         optiga_lib_status = OPTIGA_LIB_BUSY;
 	
         encryption_scheme = OPTIGA_RSAES_PKCS1_V15;
+
+	public_key_from_host.public_key = (uint8_t *)(trustm_ctx.pubkey+trustm_ctx.pubkeyHeaderLen);
+	public_key_from_host.length = (trustm_ctx.pubkeylen)-(trustm_ctx.pubkeyHeaderLen);
+	
 	if (trustm_ctx.rsa_key_type == OPTIGA_RSA_KEY_2048_BIT_EXPONENTIAL)
-	{
-	    public_key_from_host.public_key = (uint8_t *)(trustm_ctx.pubkey+19);
-	    public_key_from_host.length = (trustm_ctx.pubkeylen)-19;
 	    public_key_from_host.key_type = (uint8_t)OPTIGA_RSA_KEY_2048_BIT_EXPONENTIAL;	
-	}
 	else
-	{
-	    public_key_from_host.public_key = (uint8_t *)(trustm_ctx.pubkey+18);
-	    public_key_from_host.length = (trustm_ctx.pubkeylen)-18;
 	    public_key_from_host.key_type = (uint8_t)OPTIGA_RSA_KEY_1024_BIT_EXPONENTIAL;	
-	}
+
 	//printf("Pubkey:\n");
 	//trustmHexDump(public_key_from_host.public_key, public_key_from_host.length);
 	
@@ -570,8 +536,10 @@ int trustmEngine_rsa_verify(int dtype,
 {
     int ret = TRUSTM_ENGINE_FAIL;
     optiga_lib_status_t return_status;
-    uint8_t public_key[512];
-    uint16_t i;
+    public_key_from_host_t public_key_details;
+
+    //uint8_t public_key[512];
+    //uint16_t i;
     //uint16_t key_oid;
     //uint16_t templen = 500;
     
@@ -597,19 +565,27 @@ int trustmEngine_rsa_verify(int dtype,
 	     break;
 	}
 
+/*
 	public_key_from_host_t public_key_details = 
 	{
 	    public_key,
 	    trustm_ctx.pubkeylen - 19,
 	    trustm_ctx.rsa_key_type
 	};
-
 	
 	for(i=0;i<(trustm_ctx.pubkeylen - 19);i++)
 	{
 	    public_key[i] = trustm_ctx.pubkey[i+19];
 	}
 	//trustmHexDump(public_key,trustm_ctx.pubkeylen - 19);
+*/
+	public_key_details.public_key = (uint8_t *)(trustm_ctx.pubkey+trustm_ctx.pubkeyHeaderLen);
+	public_key_details.length = (trustm_ctx.pubkeylen)-(trustm_ctx.pubkeyHeaderLen);
+	
+	if (trustm_ctx.rsa_key_type == OPTIGA_RSA_KEY_2048_BIT_EXPONENTIAL)
+	    public_key_details.key_type = (uint8_t)OPTIGA_RSA_KEY_2048_BIT_EXPONENTIAL;	
+	else
+	    public_key_details.key_type = (uint8_t)OPTIGA_RSA_KEY_1024_BIT_EXPONENTIAL;
 	
 	optiga_lib_status = OPTIGA_LIB_BUSY;
 	return_status = optiga_crypt_rsa_verify (me_crypt,
