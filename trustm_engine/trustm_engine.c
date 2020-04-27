@@ -49,7 +49,7 @@ static uint32_t parseKeyParams(const char *aArg)
     char in[1024];
 
     char *token[5];
-    int   i, j, k;
+    int   i, j;
     
     trustm_metadata_t oidMetadata;
 
@@ -181,7 +181,7 @@ static uint32_t parseKeyParams(const char *aArg)
             if (!(strcmp(name,"PUBLIC KEY")))
             {
                 trustm_ctx.pubkeylen = (uint16_t)len;
-                j=k=0;
+                j=0;
                 for(i=0;i<len;i++)
                 {
                     trustm_ctx.pubkey[i] = *(data+i);

@@ -81,23 +81,33 @@ EVP_PKEY *trustm_ec_generatekey(void)
 			    0x2A,0x86,0x48,0xCE,0x3D,0x02,0x01,
 			    0x06,0x08, // OID:1.2.840.10045.3.1.7
 			    0x2A,0x86,0x48,0xCE,0x3D,0x03,0x01,0x07};
-/*			    
+			    
     uint8_t eccheader384[] = {0x30,0x76, // SEQUENCE
 					  0x30,0x10, //SEQUENCE
 					  0x06,0x07, // OID:1.2.840.10045.2.1
 					  0x2A,0x86,0x48,0xCE,0x3D,0x02,0x01,
 					  0x06,0x05, // OID:1.3.132.0.34
 					  0x2B,0x81,0x04,0x00,0x22};
-*/
-					  
+
     TRUSTM_ENGINE_DBGFN(">");
     do
     {
-	for (i=0; i < sizeof(eccheader256);i++)
+	if (trustm_ctx.ec_key_curve == OPTIGA_ECC_CURVE_NIST_P_256)
 	{
-	    public_key[i] = eccheader256[i];
-	}	
-
+	    trustm_ctx.pubkeyHeaderLen = sizeof(eccheader256);
+	    for (i=0; i < trustm_ctx.pubkeyHeaderLen;i++)
+	    {
+		public_key[i] = eccheader256[i];
+	    }
+	} 
+	else	
+	{
+	    trustm_ctx.pubkeyHeaderLen = sizeof(eccheader384);
+	    for (i=0; i < trustm_ctx.pubkeyHeaderLen;i++)
+	    {
+		public_key[i] = eccheader384[i];
+	    }
+	}
 
         optiga_key_id = trustm_ctx.key_oid;
 	optiga_lib_status = OPTIGA_LIB_BUSY;
@@ -125,7 +135,7 @@ EVP_PKEY *trustm_ec_generatekey(void)
 	trustm_ctx.pubkeylen = public_key_length+i;
 	for(j=0;j<trustm_ctx.pubkeylen;j++)
 	{
-		trustm_ctx.pubkey[j] = *(data+j);
+	    trustm_ctx.pubkey[j] = *(data+j);
 	}
 	
         key = d2i_PUBKEY(NULL,(const unsigned char **)&data,public_key_length+i);
@@ -148,7 +158,8 @@ EVP_PKEY *trustm_ec_loadkeyE0E0(void)
     uint8_t read_data_buffer[5000];
     const unsigned char *pCert;
     uint16_t certLen;
-    uint8_t *data;  
+    uint8_t *data; 
+    int j; 
     
     optiga_lib_status_t return_status;
 
@@ -181,6 +192,16 @@ EVP_PKEY *trustm_ec_loadkeyE0E0(void)
 	    data = trustm_ctx.pubkey;
 	    key = X509_get_pubkey(x509_cert);
 	    trustm_ctx.pubkeylen = i2d_PUBKEY(key,&data);
+
+	    j=0;    
+	    if((trustm_ctx.pubkey[1] & 0x80) == 0x00)
+		j = trustm_ctx.pubkey[3] + 4;
+	    else
+	    {
+		j = (trustm_ctx.pubkey[1] & 0x7f);
+		j = trustm_ctx.pubkey[j+3] + j + 4; 
+	    }
+	    trustm_ctx.pubkeyHeaderLen = j;
 		
 	    //trustmHexDump(trustm_ctx.pubkey,trustm_ctx.pubkeylen);
 		
@@ -205,64 +226,42 @@ EVP_PKEY *trustm_ec_loadkeyE0E0(void)
 EVP_PKEY *trustm_ec_loadkey(void)
 {
     EVP_PKEY    *key = NULL;
-    FILE *fp;
-    char *name;
-    char *header;
     uint8_t *data;
     uint32_t len;
-    uint16_t i;
+
 
     TRUSTM_ENGINE_DBGFN(">");
     do
     {
 	// New key request
 	if (trustm_ctx.ec_flag == (0x01 & TRUSTM_ENGINE_FLAG_NEW))
-		key = trustm_ec_generatekey();
+	    key = trustm_ec_generatekey();
 	else // Load Pubkey
 	{
-		TRUSTM_ENGINE_DBGFN("no new key request\n");
-		if (trustm_ctx.pubkeyfilename[0] != '\0')
+	    TRUSTM_ENGINE_DBGFN("no new key request\n");
+	    if (trustm_ctx.pubkeylen != 0)
+	    {
+		data = &trustm_ctx.pubkey[0];
+		len = trustm_ctx.pubkeylen;
+		key = d2i_PUBKEY(NULL,(const unsigned char **)&data, len);
+	    }
+	    else
+	    {
+		TRUSTM_ENGINE_DBGFN("No plubic Key found, Register Private Key only");
+		//load dummy public key
+		if(trustm_ctx.ec_key_curve == OPTIGA_ECC_CURVE_NIST_P_256)
 		{
-			TRUSTM_ENGINE_DBGFN("filename : %s\n",trustm_ctx.pubkeyfilename);
-			//open 
-			fp = fopen((const char *)trustm_ctx.pubkeyfilename,"r");
-			if (!fp)
-			{
-				TRUSTM_ENGINE_ERRFN("failed to open file %s\n",trustm_ctx.pubkeyfilename);
-				break;
-			}
-			PEM_read(fp, &name,&header,&data,(long int *)&len);
-			//TRUSTM_ENGINE_DBGFN("name   : %s\n",name);
-			//TRUSTM_ENGINE_DBGFN("len : %d\n",len);
-			//trustmHexDump(data,len);
-			if (!(strcmp(name,"PUBLIC KEY")))
-			{
-				trustm_ctx.pubkeylen = (uint16_t)len;
-				for(i=0;i<len;i++)
-				{
-					trustm_ctx.pubkey[i] = *(data+i);
-					//printf("%.x ",trustm_ctx.pubkey[i]);
-				}
-				key = d2i_PUBKEY(NULL,(const unsigned char **)&data,len);
-
-				//trustmHexDump(trustm_ctx.pubkey,trustm_ctx.pubkeylen);
-			}
-			else
-			{
-				TRUSTM_ENGINE_ERRFN("Error : No Plubic Key found!!");
-				key = NULL;
-			}
+		    data = dummy_ec_public_key_256;
+		    len = sizeof(dummy_ec_public_key_256);
 		}
 		else
 		{
-			TRUSTM_ENGINE_DBGFN("No plubic Key found, Register Private Key only");
-			//key = NULL;
-			//load dummy public key
-			data = dummy_ec_public_key_256;
-			len = sizeof(dummy_ec_public_key_256);
-			key = d2i_PUBKEY(NULL,(const unsigned char **)&data,len);
-			trustm_ctx.pubkeylen = 0;
+		    data = dummy_ec_public_key_384;
+		    len = sizeof(dummy_ec_public_key_384);
 		}
+		key = d2i_PUBKEY(NULL,(const unsigned char **)&data,len);
+		trustm_ctx.pubkeylen = 0;
+	    }
 	}
     } while (FALSE);
       
@@ -278,65 +277,69 @@ static ECDSA_SIG* trustm_ecdsa_sign(
   EC_KEY               *eckey
 )
 {
-  ECDSA_SIG  *ecdsa_sig = NULL;
-  
-  uint8_t     sig[256];
-  uint16_t    sig_len = 256;
+    ECDSA_SIG  *ecdsa_sig = NULL;
 
-  optiga_lib_status_t return_status;
+    uint8_t     sig[500];
+    uint16_t    sig_len = 500;
 
-  TRUSTM_ENGINE_DBGFN(">");
-  TRUSTM_ENGINE_DBGFN("oid : 0x%.4x",trustm_ctx.key_oid);
-  TRUSTM_ENGINE_DBGFN("dgst len : %d",dgstlen);
-  
-  // TODO/HACK:
-  if (dgstlen != 32)
-  {
-    dgstlen = 32;
-    TRUSTM_ENGINE_DBGFN("APPLIED digest length hack");
-  }
+    optiga_lib_status_t return_status;
 
-  do 
-  {  
-#ifdef WORKAROUND		
-    pal_os_event_arm();
-#endif	    
-    
-    optiga_lib_status = OPTIGA_LIB_BUSY;
-    return_status = optiga_crypt_ecdsa_sign(me_crypt,
-					    dgst,
-					    dgstlen,
-					    trustm_ctx.key_oid,
-					    (sig+2),
-					    &sig_len);
-    if (OPTIGA_LIB_SUCCESS != return_status)
-	    break;			
-    //Wait until the optiga_util_read_metadata operation is completed
-    while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
-    return_status = optiga_lib_status;
-    if (return_status != OPTIGA_LIB_SUCCESS)
-	    break;
-    else
+    TRUSTM_ENGINE_DBGFN(">");
+    TRUSTM_ENGINE_DBGFN("oid : 0x%.4x",trustm_ctx.key_oid);
+    TRUSTM_ENGINE_DBGFN("dgst len : %d",dgstlen);
+
+    // TODO/HACK:
+    if (dgstlen != 32)
     {
-      TRUSTM_ENGINE_DBGFN("Signature received : sig+2=%x, sig_len=0x%x=%d",
-      (unsigned int) sig+2,
-      sig_len, sig_len);
-
-      sig[0] = 0x30;
-      sig[1] = sig_len;
-      const unsigned char *p = sig;
-      ecdsa_sig = d2i_ECDSA_SIG(NULL, &p, sig_len+2);
+	dgstlen = 32;
+	TRUSTM_ENGINE_DBGFN("APPLIED digest length hack");
     }
-  }while(FALSE);  
-  
-  
+
 #ifdef WORKAROUND		
     pal_os_event_arm();
+#endif	 
+
+    do 
+    {  
+	optiga_lib_status = OPTIGA_LIB_BUSY;
+	return_status = optiga_crypt_ecdsa_sign(me_crypt,
+						dgst,
+						dgstlen,
+						trustm_ctx.key_oid,
+						(sig+2),
+						&sig_len);
+	if (OPTIGA_LIB_SUCCESS != return_status)
+	    break;			
+	//Wait until the optiga_util_read_metadata operation is completed
+	while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+	return_status = optiga_lib_status;
+	if (return_status != OPTIGA_LIB_SUCCESS)
+	    break;
+	else
+	{
+	    TRUSTM_ENGINE_DBGFN("Signature received : sig+2=%x, sig_len=0x%x=%d",
+	    (unsigned int) sig+2,
+	    sig_len, sig_len);
+
+	    sig[0] = 0x30;
+	    sig[1] = sig_len;
+	    const unsigned char *p = sig;
+	    ecdsa_sig = d2i_ECDSA_SIG(NULL, &p, sig_len+2);
+	}
+    }while(FALSE);  
+  
+  
+#ifdef WORKAROUND    
+    pal_os_event_disarm();	
 #endif
 
-  TRUSTM_ENGINE_DBGFN("<");
-  //return ret;
-  return ecdsa_sig;
+    // Capture OPTIGA Error
+    if (return_status != OPTIGA_LIB_SUCCESS)
+	trustmPrintErrorCode(return_status);	
+	
+    TRUSTM_ENGINE_DBGFN("<");
+    //return ret;
+    return ecdsa_sig;
 } 
 
 /*
