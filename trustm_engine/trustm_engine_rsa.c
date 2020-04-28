@@ -239,24 +239,19 @@ static int trustmEngine_rsa_priv_enc(int flen,
     
     do 
     {
-	//Implement code here;
-
-	//key_oid = trustm_ctx.key_oid;
 	// OPTIGA Comms Shielded connection settings to enable the protection
 	OPTIGA_CRYPT_SET_COMMS_PROTOCOL_VERSION(me, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
 	OPTIGA_CRYPT_SET_COMMS_PROTECTION_LEVEL(me, OPTIGA_COMMS_RESPONSE_PROTECTION);
 
-	//trustm_ctx.rsa_key_enc_scheme = OPTIGA_RSAES_PKCS1_V15;
 	optiga_lib_status = OPTIGA_LIB_BUSY;
-	return_status = optiga_crypt_rsa_decrypt_and_export(me_crypt,
-							    trustm_ctx.rsa_key_enc_scheme,
-							    (uint8_t *)from,
-							    flen,
-							    NULL,
-							    0,
-							    trustm_ctx.key_oid,
-							    to,
-							    &templen);
+	return_status = optiga_crypt_rsa_sign(me_crypt,
+					      trustm_ctx.rsa_key_sig_scheme,
+					      (uint8_t *)from,
+					      flen,
+					      trustm_ctx.key_oid,
+					      to,
+					      &templen,
+					      0x0000);
 	if (OPTIGA_LIB_SUCCESS != return_status)
 	    break;			
 	//Wait until the optiga_util_read_metadata operation is completed
@@ -264,9 +259,11 @@ static int trustmEngine_rsa_priv_enc(int flen,
 	return_status = optiga_lib_status;
 	if (return_status != OPTIGA_LIB_SUCCESS)
 	    break;
-		
+	
 	TRUSTM_ENGINE_DBGFN("to len : %d",templen);
 	ret = templen;
+
+
     }while(FALSE);
 
 #ifdef WORKAROUND    
