@@ -44,6 +44,20 @@ static const char *engine_name = "Infineon OPTIGA TrustM Engine";
 
 static uint32_t parseKeyParams(const char *aArg)
 {
+    uint8_t eccheader256[] = {0x30,0x59, // SEQUENCE
+			    0x30,0x13, // SEQUENCE
+			    0x06,0x07, // OID:1.2.840.10045.2.1
+			    0x2A,0x86,0x48,0xCE,0x3D,0x02,0x01,
+			    0x06,0x08, // OID:1.2.840.10045.3.1.7
+			    0x2A,0x86,0x48,0xCE,0x3D,0x03,0x01,0x07};
+			    
+    uint8_t eccheader384[] = {0x30,0x76, // SEQUENCE
+					  0x30,0x10, //SEQUENCE
+					  0x06,0x07, // OID:1.2.840.10045.2.1
+					  0x2A,0x86,0x48,0xCE,0x3D,0x02,0x01,
+					  0x06,0x05, // OID:1.3.132.0.34
+					  0x2B,0x81,0x04,0x00,0x22};
+    
     uint32_t ret;
     uint32_t value;
     char in[1024];
@@ -58,7 +72,12 @@ static uint32_t parseKeyParams(const char *aArg)
     char *header;
     uint8_t *data;
     uint32_t len;
-      
+    
+    optiga_lib_status_t return_status;
+    uint16_t offset =0;
+    uint32_t bytes_to_read;
+    uint8_t read_data_buffer[2048];
+          
     TRUSTM_ENGINE_DBGFN(">");
     
     do
@@ -122,6 +141,7 @@ static uint32_t parseKeyParams(const char *aArg)
                 trustm_ctx.ec_key_usage = oidMetadata.E1_keyUsage;
                 trustm_ctx.rsa_key_type = 0x00;
                 trustm_ctx.rsa_key_usage = 0x00;
+                trustm_ctx.pubkeyStore = trustm_ctx.key_oid + 0x10E0;
             }
             
             if ((oidMetadata.E0_algo == OPTIGA_RSA_KEY_2048_BIT_EXPONENTIAL) ||
@@ -131,40 +151,13 @@ static uint32_t parseKeyParams(const char *aArg)
                 trustm_ctx.rsa_key_usage = oidMetadata.E1_keyUsage;
                 trustm_ctx.ec_key_curve = 0x00;
                 trustm_ctx.ec_key_usage = 0x00;
+                trustm_ctx.pubkeyStore = trustm_ctx.key_oid + 0x10E4;
             } 
-
-            /*
-            printf("Metadata Len: 0x%.2X\n",oidMetadata.metadataLen);
-            printf("Lsc0        : 0x%.2X\n",oidMetadata.C0_lsc0);            
-            printf("Max Size    : %d\n",oidMetadata.C4_maxSize);
-            printf("Used        : %d\n",oidMetadata.C5_used);
-            printf("algo        : 0x%.2X\n",oidMetadata.E0_algo);
-            printf("usage       : 0x%.2X\n",oidMetadata.E1_keyUsage);
-            printf("dataObjType : 0x%.2X\n",oidMetadata.E8_dataObjType);
-            uint8_t test;
-            printf("Change      : ");
-            for(test=0;test<oidMetadata.D0_changeLen;test++)
-            {
-                printf("0x%.2X ",oidMetadata.D0_change[test]);
-            }
-            printf("\n");
-            printf("Read        : ");
-            for(test=0;test<oidMetadata.D1_readLen;test++)
-            {
-                printf("0x%.2X ",oidMetadata.D1_read[test]);
-            }
-            printf("\n");
-            printf("Execute     : ");
-            for(test=0;test<oidMetadata.D3_executeLen;test++)
-            {
-                printf("0x%.2X ",oidMetadata.D3_execute[test]);
-            }
-            printf("\n");
-            */ 
         }
-        
+
+       
         // If token is not empty or '*' then it must be a pubkeyfile.
-        if ((token[1] != NULL) && (*(token[1]) != '*'))
+        if ((token[1] != NULL) && (*(token[1]) != '*') && (*(token[1]) != '^'))
         {
             strncpy(trustm_ctx.pubkeyfilename, token[1], PUBKEYFILE_SIZE);
             
@@ -175,9 +168,6 @@ static uint32_t parseKeyParams(const char *aArg)
                 break;
             }
             PEM_read(fp, &name,&header,&data,(long int *)&len);
-            //TRUSTM_ENGINE_DBGFN("name   : %s\n",name);
-            //TRUSTM_ENGINE_DBGFN("len : %d\n",len);
-            //trustmHexDump(data,len);
             if (!(strcmp(name,"PUBLIC KEY")))
             {
                 trustm_ctx.pubkeylen = (uint16_t)len;
@@ -195,13 +185,6 @@ static uint32_t parseKeyParams(const char *aArg)
                     j = trustm_ctx.pubkey[j+3] + j + 4; 
                 }
                 trustm_ctx.pubkeyHeaderLen = j;
-                //printf("headerlen : %d \n", trustm_ctx.pubkeyHeaderLen); 
-                //printf("first byte : 0x%.2X \n", trustm_ctx.pubkey[trustm_ctx.pubkeyHeaderLen]); 
-                //trustmHexDump(&trustm_ctx.pubkey[trustm_ctx.pubkeyHeaderLen],trustm_ctx.pubkeylen-trustm_ctx.pubkeyHeaderLen);
-                
-                //key = d2i_PUBKEY(NULL,(const unsigned char **)&data,len);
-
-                //trustmHexDump(trustm_ctx.pubkey,trustm_ctx.pubkeylen);
             }
         }
         else
@@ -209,6 +192,78 @@ static uint32_t parseKeyParams(const char *aArg)
             trustm_ctx.pubkeyfilename[0]='\0';
             trustm_ctx.pubkeyHeaderLen = 0;
             trustm_ctx.pubkeylen = 0;
+            if(*(token[1]) == '^')
+            {
+                trustm_ctx.ec_flag |= TRUSTM_ENGINE_FLAG_SAVEPUBKEY;
+                trustm_ctx.rsa_flag |= TRUSTM_ENGINE_FLAG_SAVEPUBKEY;                
+            }
+            if(i == 2)
+            {
+                bytes_to_read = sizeof(read_data_buffer);
+                optiga_lib_status = OPTIGA_LIB_BUSY;
+                return_status = optiga_util_read_data(me_util,
+                                                    trustm_ctx.pubkeyStore,
+                                                    offset,
+                                                    read_data_buffer,
+                                                    (uint16_t *)&bytes_to_read);
+                if (OPTIGA_LIB_SUCCESS != return_status)
+                    break;			
+                //Wait until the optiga_util_read_metadata operation is completed
+                while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+                return_status = optiga_lib_status;
+                if (return_status != OPTIGA_LIB_SUCCESS)
+                    break;
+                else
+                {
+                    TRUSTM_ENGINE_DBGFN("Load Pubkey from : 0x%.4X",trustm_ctx.pubkeyStore);
+/*
+                    //Insert Header if it is ECC
+                    if ((oidMetadata.E0_algo == OPTIGA_ECC_CURVE_NIST_P_256) ||
+                        (oidMetadata.E0_algo == OPTIGA_ECC_CURVE_NIST_P_384))
+                    {
+                        if(oidMetadata.E0_algo == OPTIGA_ECC_CURVE_NIST_P_256)
+                        {
+                            for(i=0;i<sizeof(eccheader256);i++)
+                                trustm_ctx.pubkey[i] = eccheader256[i];
+                        }
+                        else
+                        {
+                            for(i=0;i<sizeof(eccheader384);i++)
+                                trustm_ctx.pubkey[i] = eccheader384[i];
+                        }
+                                                
+                        for(j=i;i<bytes_to_read;i++)
+                        {
+                            trustm_ctx.pubkey[i] = *(read_data_buffer+i+j);
+                        }                        
+                        bytes_to_read += j;
+                    }
+                    else
+                    {
+                        for(i=0;i<bytes_to_read;i++)
+                        {
+                            trustm_ctx.pubkey[i] = *(read_data_buffer+i);
+                        }                        
+                    }
+*/
+                    for(i=0;i<bytes_to_read;i++)
+                    {
+                        trustm_ctx.pubkey[i] = *(read_data_buffer+i);
+                    }                        
+
+                    trustm_ctx.pubkeylen = (uint16_t) bytes_to_read;                    
+                    j=0;
+                    if((trustm_ctx.pubkey[1] & 0x80) == 0x00)
+                        j = trustm_ctx.pubkey[3] + 4;
+                    else
+                    {
+                        j = (trustm_ctx.pubkey[1] & 0x7f);
+                        j = trustm_ctx.pubkey[j+3] + j + 4; 
+                    }
+                    trustm_ctx.pubkeyHeaderLen = j;
+                }    
+            }
+            
         }
 
         if ((i>2) && (token[2] != NULL))
@@ -219,11 +274,12 @@ static uint32_t parseKeyParams(const char *aArg)
                 if (((value >= 0xE0FC) && (value <= 0xE0FD)))
                 {
                     TRUSTM_ENGINE_DBGFN("found NEW\n");
-                    trustm_ctx.rsa_flag = TRUSTM_ENGINE_FLAG_NEW;
+                    trustm_ctx.rsa_flag |= TRUSTM_ENGINE_FLAG_NEW;
                     if ((i>3) && (strncmp(token[3], "0x",2) == 0))
                         sscanf(token[3],"%x",&(trustm_ctx.rsa_key_type));
                     if ((i>4) && (strncmp(token[4], "0x",2) == 0))
                         sscanf(token[4],"%x",&(trustm_ctx.rsa_key_usage));
+                    // LOCK function not implemented
                     if ((i>5) && (strcmp(token[5], "LOCK") == 0))
                         trustm_ctx.rsa_flag |= TRUSTM_ENGINE_FLAG_LOCK;
                 }
@@ -231,7 +287,7 @@ static uint32_t parseKeyParams(const char *aArg)
                 if (((value >= 0xE0F1) && (value <= 0xE0F3)))
                 {
                     TRUSTM_ENGINE_DBGFN("found NEW\n");
-                    trustm_ctx.ec_flag = TRUSTM_ENGINE_FLAG_NEW;
+                    trustm_ctx.ec_flag |= TRUSTM_ENGINE_FLAG_NEW;
                     if ((i>3) && (strncmp(token[3], "0x",2) == 0))
                         sscanf(token[3],"%x",&(trustm_ctx.ec_key_curve));
                     if ((i>4) && (strncmp(token[4], "0x",2) == 0))
@@ -249,6 +305,8 @@ static uint32_t parseKeyParams(const char *aArg)
         
         ret = value;
     }while(FALSE);
+
+
 
 
     TRUSTM_ENGINE_DBGFN("<");
@@ -333,6 +391,9 @@ static EVP_PKEY * engine_load_privkey(ENGINE *e, const char *key_id, UI_METHOD *
     
         TRUSTM_ENGINE_DBGFN("KEY_OID       : 0x%.4x",trustm_ctx.key_oid);        
         TRUSTM_ENGINE_DBGFN("Pubkey        : %s",trustm_ctx.pubkeyfilename);
+        TRUSTM_ENGINE_DBGFN("PubkeyLen     : %d",trustm_ctx.pubkeylen);
+        TRUSTM_ENGINE_DBGFN("PubkeyHeader  : %d",trustm_ctx.pubkeyHeaderLen);
+        TRUSTM_ENGINE_DBGFN("PubkeyStore   : 0x%.4X",trustm_ctx.pubkeyStore);
 
         TRUSTM_ENGINE_DBGFN("RSA key type  : 0x%.2x",trustm_ctx.rsa_key_type);
         TRUSTM_ENGINE_DBGFN("RSA key usage : 0x%.2x",trustm_ctx.rsa_key_usage);    

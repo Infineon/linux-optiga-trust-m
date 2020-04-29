@@ -235,7 +235,7 @@ int main (int argc, char **argv)
 		    optiga_lib_status = OPTIGA_LIB_BUSY;
 		    return_status = optiga_util_write_data(me_util,
 							    (optiga_key_id+0x10E4),
-							    OPTIGA_UTIL_WRITE_ONLY,
+							    OPTIGA_UTIL_ERASE_AND_WRITE,
 							    0,
 							    (pubKey+i), 
 							    pubKeyLen);
@@ -246,7 +246,7 @@ int main (int argc, char **argv)
 			return_status = optiga_lib_status;
 			if (return_status != OPTIGA_LIB_SUCCESS)
 				break;
-		    else
+			else
 				printf("Write Success to OID: 0x%.4X.\n",(optiga_key_id+0x10E4));
 		}
 		

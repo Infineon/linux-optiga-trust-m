@@ -84,7 +84,7 @@ static EVP_PKEY *trustm_rsa_generatekey(void)
 
     uint8_t public_key [1024];
     uint16_t public_key_length = sizeof(public_key);
-    uint16_t i,j;
+    uint16_t i, j;
     uint8_t *data;
 
     uint8_t rsaheader2048[] = {0x30,0x82,0x01,0x22,
@@ -96,7 +96,7 @@ static EVP_PKEY *trustm_rsa_generatekey(void)
 				0x30,0x0D,
 				0x06,0x09,
 				0x2A,0x86,0x48,0x86,0xF7,0x0D,0x01,0x01,0x01,0x05,0x00};
-
+				
     TRUSTM_ENGINE_DBGFN(">");
     do
     {
@@ -135,11 +135,29 @@ static EVP_PKEY *trustm_rsa_generatekey(void)
 	if (return_status != OPTIGA_LIB_SUCCESS)
 	    break;
 
-        //printf("length : %d\n",public_key_length+i);
-        //trustmHexDump(public_key,public_key_length+i);
-        //trustmWriteDER(public_key, public_key_length+i, "myTest.key");
-
         data = public_key;
+	    
+	if ((trustm_ctx.rsa_flag & TRUSTM_ENGINE_FLAG_SAVEPUBKEY) == TRUSTM_ENGINE_FLAG_SAVEPUBKEY)
+	{
+	    TRUSTM_ENGINE_DBGFN("Save Pubkey to : 0x%.4X",(trustm_ctx.key_oid) + 0x10E4);
+
+	    optiga_lib_status = OPTIGA_LIB_BUSY;
+	    return_status = optiga_util_write_data(me_util,
+						    (trustm_ctx.key_oid)+0x10E4,
+						    OPTIGA_UTIL_ERASE_AND_WRITE,
+						    0,
+						    public_key, 
+						    public_key_length+i);
+	    if (OPTIGA_LIB_SUCCESS != return_status)
+		break;			
+	    //Wait until the optiga_util_read_metadata operation is completed
+	    while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+	    return_status = optiga_lib_status;
+	    if (return_status != OPTIGA_LIB_SUCCESS)
+		break;
+	    else
+		TRUSTM_ENGINE_DBGFN("Write Success \n");		      
+	}
 	
 	trustm_ctx.pubkeylen = public_key_length+i;
 	for(j=0;j<trustm_ctx.pubkeylen;j++)
@@ -171,7 +189,7 @@ EVP_PKEY *trustm_rsa_loadkey(void)
     do
     {
 	// New key request
-	if (trustm_ctx.rsa_flag == (0x01 & TRUSTM_ENGINE_FLAG_NEW))
+	if ((trustm_ctx.rsa_flag & TRUSTM_ENGINE_FLAG_NEW) == TRUSTM_ENGINE_FLAG_NEW)
 	    key = trustm_rsa_generatekey();
 	else // Load Pubkey
 	{

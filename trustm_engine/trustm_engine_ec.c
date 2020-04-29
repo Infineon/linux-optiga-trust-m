@@ -131,6 +131,29 @@ EVP_PKEY *trustm_ec_generatekey(void)
         //trustmWriteDER(public_key, public_key_length+i, "myTest.key");
 
         data = public_key;
+
+	if ((trustm_ctx.ec_flag & TRUSTM_ENGINE_FLAG_SAVEPUBKEY) == TRUSTM_ENGINE_FLAG_SAVEPUBKEY)
+	{
+	    TRUSTM_ENGINE_DBGFN("Save Pubkey to : 0x%.4X",(trustm_ctx.key_oid) + 0x10E0);
+
+	    // Save pubkey without header
+	    optiga_lib_status = OPTIGA_LIB_BUSY;
+	    return_status = optiga_util_write_data(me_util,
+						    (trustm_ctx.key_oid)+0x10E0,
+						    OPTIGA_UTIL_ERASE_AND_WRITE,
+						    0,
+						    public_key, 
+						    public_key_length+i);
+	    if (OPTIGA_LIB_SUCCESS != return_status)
+		break;			
+	    //Wait until the optiga_util_read_metadata operation is completed
+	    while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+	    return_status = optiga_lib_status;
+	    if (return_status != OPTIGA_LIB_SUCCESS)
+		break;
+	    else
+		TRUSTM_ENGINE_DBGFN("Write Success \n");		      
+	}
 	
 	trustm_ctx.pubkeylen = public_key_length+i;
 	for(j=0;j<trustm_ctx.pubkeylen;j++)
@@ -234,7 +257,7 @@ EVP_PKEY *trustm_ec_loadkey(void)
     do
     {
 	// New key request
-	if (trustm_ctx.ec_flag == (0x01 & TRUSTM_ENGINE_FLAG_NEW))
+	if ((trustm_ctx.ec_flag & TRUSTM_ENGINE_FLAG_NEW) == TRUSTM_ENGINE_FLAG_NEW)
 	    key = trustm_ec_generatekey();
 	else // Load Pubkey
 	{

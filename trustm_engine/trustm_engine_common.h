@@ -87,6 +87,7 @@ typedef enum trustmEngine_flag
     TRUSTM_ENGINE_FLAG_NONE = 0x00,
     TRUSTM_ENGINE_FLAG_NEW = 0x01,
     TRUSTM_ENGINE_FLAG_SAVEPUBKEY = 0x02,
+    TRUSTM_ENGINE_FLAG_LOADPUBKEY = 0x02,
     TRUSTM_ENGINE_FLAG_LOCK = 0x80
 } trustmEngine_flag_t;
 
@@ -108,6 +109,7 @@ typedef struct trustm_ctx_str
   uint8_t   pubkey[PUBKEY_SIZE];
   uint16_t  pubkeylen;
   uint8_t   pubkeyHeaderLen;
+  uint16_t  pubkeyStore;
   uint8_t   appOpen;
   
 } trustm_ctx_t;
