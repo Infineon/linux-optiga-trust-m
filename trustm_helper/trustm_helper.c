@@ -1116,8 +1116,8 @@ void trustmPrintErrorCode(uint16_t errcode)
             break; 
             
         // Unknown error
-        //default: // OPTIGA device Unknown Error
-        //    TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA Unknown Error");
-        //    break; 
+        default: // OPTIGA device Unknown Error
+            TRUSTM_HELPER_RETCODEFN(errcode, "OPTIGA Unknown Error");
+            break; 
     }   
 }

@@ -147,6 +147,12 @@ int main (int argc, char **argv)
 /***************************************************************
  * Example 
  **************************************************************/
+    if((uOptFlag.flags.read != 1) || (uOptFlag.flags.write != 1))
+    {
+        printf("at least a read or write option must be selected\n");
+        exit(1);
+    }
+ 
     return_status = trustm_Open();
     if (return_status != OPTIGA_LIB_SUCCESS)
         exit(1);
