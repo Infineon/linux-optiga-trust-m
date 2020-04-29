@@ -147,9 +147,9 @@ int main (int argc, char **argv)
 /***************************************************************
  * Example 
  **************************************************************/
-    if((uOptFlag.flags.read != 1) || (uOptFlag.flags.write != 1))
+    if((uOptFlag.flags.read != 1) && (uOptFlag.flags.write != 1))
     {
-        printf("at least a read or write option must be selected\n");
+        printf("At least  -r or -w option must be selected.\n");
         exit(1);
     }
  

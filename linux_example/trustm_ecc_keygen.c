@@ -75,7 +75,7 @@ void helpmenu(void)
 	printf("                           [default Auth]\n");  
 	printf("-k <key size>   : Key size ECC256:0x03 ECC384:0x04 [default ECC256]\n");
 	printf("-o <filename>  	: Output Pubkey to file in PEM format\n");
-	printf("-s              : Save Pubkey without header in <Key OID + 0x10E0>\n");
+	printf("-s              : Save Pubkey in <Key OID + 0x10E0>\n");
 	printf("-h              : Print this help \n");
 }
 
@@ -238,10 +238,10 @@ int main (int argc, char **argv)
 	    optiga_lib_status = OPTIGA_LIB_BUSY;
 	    return_status = optiga_util_write_data(me_util,
 						   (optiga_key_id+0x10E0),
-						   OPTIGA_UTIL_WRITE_ONLY,
+						   OPTIGA_UTIL_ERASE_AND_WRITE,
 						   0,
-						   (pubKey+i), 
-						   pubKeyLen);
+						   (pubKey), 
+						   pubKeyLen+i);
 	    if (OPTIGA_LIB_SUCCESS != return_status)
 		break;			
 	    //Wait until the optiga_util_read_metadata operation is completed

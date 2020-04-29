@@ -222,7 +222,7 @@ int main (int argc, char **argv)
 				trustmHexDump(pubKey, (uint32_t) pubKeyLen+i);
 
 				return_status = trustmWritePEM(pubKey, pubKeyLen+i, 
-												outFile,"PUBLIC KEY");
+								outFile,"PUBLIC KEY");
 				if (return_status != OPTIGA_LIB_SUCCESS)
 				{
 					printf("Error when saving file!!!\n");
