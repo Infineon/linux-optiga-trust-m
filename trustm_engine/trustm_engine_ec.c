@@ -90,6 +90,8 @@ EVP_PKEY *trustm_ec_generatekey(void)
 					  0x2B,0x81,0x04,0x00,0x22};
 
     TRUSTM_ENGINE_DBGFN(">");
+
+    TRUSTM_WORKAROUND_TIMER_ARM;
     do
     {
 	if (trustm_ctx.ec_key_curve == OPTIGA_ECC_CURVE_NIST_P_256)
@@ -164,6 +166,7 @@ EVP_PKEY *trustm_ec_generatekey(void)
         key = d2i_PUBKEY(NULL,(const unsigned char **)&data,public_key_length+i);
     } while (FALSE);
 
+    TRUSTM_WORKAROUND_TIMER_DISARM;
     // Capture OPTIGA Error
     if (return_status != OPTIGA_LIB_SUCCESS)
 	key = NULL;
@@ -186,6 +189,7 @@ EVP_PKEY *trustm_ec_loadkeyE0E0(void)
     
     optiga_lib_status_t return_status;
 
+    TRUSTM_WORKAROUND_TIMER_ARM;
     do
     {
         offset = 9;
@@ -237,6 +241,7 @@ EVP_PKEY *trustm_ec_loadkeyE0E0(void)
 	  }
 
     } while(FALSE);
+    TRUSTM_WORKAROUND_TIMER_DISARM;
     
     // Capture OPTIGA Error
     if (return_status != OPTIGA_LIB_SUCCESS)
@@ -317,11 +322,8 @@ static ECDSA_SIG* trustm_ecdsa_sign(
 	dgstlen = 32;
 	TRUSTM_ENGINE_DBGFN("APPLIED digest length hack");
     }
-
-#ifdef WORKAROUND		
-    pal_os_event_arm();
-#endif	 
-
+	 
+    TRUSTM_WORKAROUND_TIMER_ARM;
     do 
     {  
 	optiga_lib_status = OPTIGA_LIB_BUSY;
@@ -350,11 +352,7 @@ static ECDSA_SIG* trustm_ecdsa_sign(
 	    ecdsa_sig = d2i_ECDSA_SIG(NULL, &p, sig_len+2);
 	}
     }while(FALSE);  
-  
-  
-#ifdef WORKAROUND    
-    pal_os_event_disarm();	
-#endif
+    TRUSTM_WORKAROUND_TIMER_DISARM;  
 
     // Capture OPTIGA Error
     if (return_status != OPTIGA_LIB_SUCCESS)

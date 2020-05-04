@@ -98,6 +98,8 @@ static EVP_PKEY *trustm_rsa_generatekey(void)
 				0x2A,0x86,0x48,0x86,0xF7,0x0D,0x01,0x01,0x01,0x05,0x00};
 				
     TRUSTM_ENGINE_DBGFN(">");
+    
+    TRUSTM_WORKAROUND_TIMER_ARM;    
     do
     {
 	if (trustm_ctx.rsa_key_type == OPTIGA_RSA_KEY_2048_BIT_EXPONENTIAL)
@@ -167,7 +169,8 @@ static EVP_PKEY *trustm_rsa_generatekey(void)
 	
         key = d2i_PUBKEY(NULL,(const unsigned char **)&data,public_key_length+i);
     } while (FALSE);
-
+    TRUSTM_WORKAROUND_TIMER_DISARM;
+    
     // Capture OPTIGA Error
     if (return_status != OPTIGA_LIB_SUCCESS)
 	trustmPrintErrorCode(return_status);
@@ -251,10 +254,7 @@ static int trustmEngine_rsa_priv_enc(int flen,
     TRUSTM_ENGINE_DBGFN("oid : 0x%X\n",trustm_ctx.key_oid);
     trustmHexDump((uint8_t *)from,flen);
 
-#ifdef WORKAROUND		
-    pal_os_event_arm();
-#endif		
-    
+    TRUSTM_WORKAROUND_TIMER_ARM;    
     do 
     {
 	// OPTIGA Comms Shielded connection settings to enable the protection
@@ -283,10 +283,7 @@ static int trustmEngine_rsa_priv_enc(int flen,
 
 
     }while(FALSE);
-
-#ifdef WORKAROUND    
-    pal_os_event_disarm();	
-#endif
+    TRUSTM_WORKAROUND_TIMER_DISARM;
 
     // Capture OPTIGA Error
     if (return_status != OPTIGA_LIB_SUCCESS)
@@ -322,9 +319,7 @@ static int trustmEngine_rsa_priv_dec(int flen,
     //TRUSTM_ENGINE_DBGFN("From len : %d",flen);
     //trustmHexDump((uint8_t *)from,flen);
 
-#ifdef WORKAROUND		
-    pal_os_event_arm();
-#endif	
+    TRUSTM_WORKAROUND_TIMER_ARM;
     do
     {
         optiga_lib_status = OPTIGA_LIB_BUSY;
@@ -357,10 +352,8 @@ static int trustmEngine_rsa_priv_dec(int flen,
 	ret = decrypted_message_length;
 
     } while (FALSE);
+    TRUSTM_WORKAROUND_TIMER_DISARM;
 
-#ifdef WORKAROUND    
-    pal_os_event_disarm();	
-#endif    
     // Capture OPTIGA Error
     if (return_status != OPTIGA_LIB_SUCCESS)
 	trustmPrintErrorCode(return_status);
@@ -397,10 +390,7 @@ static int trustmEngine_rsa_pub_enc(int flen,
     //TRUSTM_ENGINE_DBGFN("From len : %d",flen);
     //trustmHexDump((uint8_t *)from,flen);
 
-#ifdef WORKAROUND		
-    pal_os_event_arm();
-#endif	
-
+    TRUSTM_WORKAROUND_TIMER_ARM;
     do
     {
         optiga_lib_status = OPTIGA_LIB_BUSY;
@@ -442,10 +432,7 @@ static int trustmEngine_rsa_pub_enc(int flen,
 	ret = encrypted_message_length;
 
     } while (FALSE);
-
-#ifdef WORKAROUND    
-    pal_os_event_disarm();	
-#endif    
+    TRUSTM_WORKAROUND_TIMER_DISARM;
 
     // Capture OPTIGA Error
     if (return_status != OPTIGA_LIB_SUCCESS)
@@ -502,11 +489,8 @@ static int trustmEngine_rsa_sign(int type,
     TRUSTM_ENGINE_DBGFN("type : %d",type);
     TRUSTM_ENGINE_DBGFN("m_length : %d", m_length);
     //trustmHexDump((uint8_t *)m,m_length);
-
-#ifdef WORKAROUND		
-    pal_os_event_arm();
-#endif		
-
+	
+    TRUSTM_WORKAROUND_TIMER_ARM;
     do 
     {
 	key_oid = trustm_ctx.key_oid;
@@ -530,10 +514,8 @@ static int trustmEngine_rsa_sign(int type,
 	*siglen = templen;
 	ret = TRUSTM_ENGINE_SUCCESS;
     }while(FALSE);
+    TRUSTM_WORKAROUND_TIMER_DISARM;
 
-#ifdef WORKAROUND    
-    pal_os_event_disarm();	
-#endif
     // Capture OPTIGA Error
     if (return_status != OPTIGA_LIB_SUCCESS)
 	trustmPrintErrorCode(return_status);
@@ -568,10 +550,7 @@ int trustmEngine_rsa_verify(int dtype,
 
     //trustmHexDump(trustm_ctx.pubkey,trustm_ctx.pubkeylen);
 
-#ifdef WORKAROUND	    
-    pal_os_event_arm();
-#endif
-
+    TRUSTM_WORKAROUND_TIMER_ARM;
     do 
     {
 	if (trustm_ctx.pubkeylen == 0)
@@ -580,20 +559,6 @@ int trustmEngine_rsa_verify(int dtype,
 	     break;
 	}
 
-/*
-	public_key_from_host_t public_key_details = 
-	{
-	    public_key,
-	    trustm_ctx.pubkeylen - 19,
-	    trustm_ctx.rsa_key_type
-	};
-	
-	for(i=0;i<(trustm_ctx.pubkeylen - 19);i++)
-	{
-	    public_key[i] = trustm_ctx.pubkey[i+19];
-	}
-	//trustmHexDump(public_key,trustm_ctx.pubkeylen - 19);
-*/
 	public_key_details.public_key = (uint8_t *)(trustm_ctx.pubkey+trustm_ctx.pubkeyHeaderLen);
 	public_key_details.length = (trustm_ctx.pubkeylen)-(trustm_ctx.pubkeyHeaderLen);
 	
@@ -622,10 +587,9 @@ int trustmEngine_rsa_verify(int dtype,
 		
 	ret = TRUSTM_ENGINE_SUCCESS;
     }while(FALSE);
- 
-#ifdef WORKAROUND    
-    pal_os_event_disarm();
-#endif
+
+    TRUSTM_WORKAROUND_TIMER_DISARM; 
+
     // Capture OPTIGA Error
     if (return_status != OPTIGA_LIB_SUCCESS)
 	trustmPrintErrorCode(return_status);	

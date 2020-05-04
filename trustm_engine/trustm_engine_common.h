@@ -36,7 +36,17 @@
 #define PARAM_MAX_LEN        (128)
 
 #define WORKAROUND 1
-#define TRUSTM_ENGINE_DEBUG = 1
+//#define TRUSTM_ENGINE_DEBUG = 1
+
+#ifdef WORKAROUND
+#define TRUSTM_WORKAROUND_TIMER_ARM        pal_os_event_arm()
+#define TRUSTM_WORKAROUND_TIMER_DISARM     pal_os_event_disarm()
+#define TRUSTM_WORKAROUND_TIMER_DESTROY    pal_os_event_destroy1()
+#else
+#define TRUSTM_WORKAROUND_TIMER_ARM
+#define TRUSTM_WORKAROUND_TIMER_DISARM
+#define TRUSTM_WORKAROUND_TIMER_DESTROY    
+#endif
 
 #ifdef TRUSTM_ENGINE_DEBUG
 

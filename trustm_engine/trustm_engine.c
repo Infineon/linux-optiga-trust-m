@@ -66,6 +66,7 @@ static uint32_t parseKeyParams(const char *aArg)
           
     TRUSTM_ENGINE_DBGFN(">");
     
+    TRUSTM_WORKAROUND_TIMER_ARM;
     do
     {
         strncpy(in, aArg,1024);
@@ -117,15 +118,9 @@ static uint32_t parseKeyParams(const char *aArg)
             break;
         }
         else
-        {
-#ifdef WORKAROUND	
-	pal_os_event_arm();
-#endif            
+        {          
             trustm_ctx.key_oid = value;
-            trustmReadMetadata(value, &oidMetadata);
-#ifdef WORKAROUND	
-	pal_os_event_disarm();
-#endif            
+            trustmReadMetadata(value, &oidMetadata);          
             
             if ((oidMetadata.E0_algo == OPTIGA_ECC_CURVE_NIST_P_256) ||
                 (oidMetadata.E0_algo == OPTIGA_ECC_CURVE_NIST_P_384))
@@ -147,7 +142,6 @@ static uint32_t parseKeyParams(const char *aArg)
                 trustm_ctx.pubkeyStore = trustm_ctx.key_oid + 0x10E4;
             } 
         }
-
        
         // If token is not empty or '*' then it must be a pubkeyfile.
         if ((token[1] != NULL) && (*(token[1]) != '*') && (*(token[1]) != '^'))
@@ -185,17 +179,15 @@ static uint32_t parseKeyParams(const char *aArg)
             trustm_ctx.pubkeyfilename[0]='\0';
             trustm_ctx.pubkeyHeaderLen = 0;
             trustm_ctx.pubkeylen = 0;
-            if(*(token[1]) == '^')
+
+            if((i > 1) && (*(token[1]) == '^'))
             {
                 trustm_ctx.ec_flag |= TRUSTM_ENGINE_FLAG_SAVEPUBKEY;
                 trustm_ctx.rsa_flag |= TRUSTM_ENGINE_FLAG_SAVEPUBKEY;                
             }
+
             if(i == 2)
             {
-
-#ifdef WORKAROUND
-	pal_os_event_arm();
-#endif
                 bytes_to_read = sizeof(read_data_buffer);
                 optiga_lib_status = OPTIGA_LIB_BUSY;
                 return_status = optiga_util_read_data(me_util,
@@ -213,36 +205,7 @@ static uint32_t parseKeyParams(const char *aArg)
                 else
                 {
                     TRUSTM_ENGINE_DBGFN("Load Pubkey from : 0x%.4X",trustm_ctx.pubkeyStore);
-/*
-                    //Insert Header if it is ECC
-                    if ((oidMetadata.E0_algo == OPTIGA_ECC_CURVE_NIST_P_256) ||
-                        (oidMetadata.E0_algo == OPTIGA_ECC_CURVE_NIST_P_384))
-                    {
-                        if(oidMetadata.E0_algo == OPTIGA_ECC_CURVE_NIST_P_256)
-                        {
-                            for(i=0;i<sizeof(eccheader256);i++)
-                                trustm_ctx.pubkey[i] = eccheader256[i];
-                        }
-                        else
-                        {
-                            for(i=0;i<sizeof(eccheader384);i++)
-                                trustm_ctx.pubkey[i] = eccheader384[i];
-                        }
-                                                
-                        for(j=i;i<bytes_to_read;i++)
-                        {
-                            trustm_ctx.pubkey[i] = *(read_data_buffer+i+j);
-                        }                        
-                        bytes_to_read += j;
-                    }
-                    else
-                    {
-                        for(i=0;i<bytes_to_read;i++)
-                        {
-                            trustm_ctx.pubkey[i] = *(read_data_buffer+i);
-                        }                        
-                    }
-*/
+
                     for(i=0;i<bytes_to_read;i++)
                     {
                         trustm_ctx.pubkey[i] = *(read_data_buffer+i);
@@ -259,11 +222,7 @@ static uint32_t parseKeyParams(const char *aArg)
                     }
                     trustm_ctx.pubkeyHeaderLen = j;
                 } 
-#ifdef WORKAROUND	
-	pal_os_event_disarm();
-#endif
             }
-            
         }
 
         if ((i>2) && (token[2] != NULL))
@@ -299,15 +258,12 @@ static uint32_t parseKeyParams(const char *aArg)
             else
             {
                 // No NEW key request
-                TRUSTM_ENGINE_DBGFN("No NEW key request\n");
             }
-        }
-        
+        }        
         ret = value;
     }while(FALSE);
 
-
-
+    TRUSTM_WORKAROUND_TIMER_DISARM;
 
     TRUSTM_ENGINE_DBGFN("<");
 
@@ -344,17 +300,11 @@ static int engine_destroy(ENGINE *e)
     {
         trustm_ctx.pubkey[i] = 0x00;
     }
-
-#ifdef WORKAROUND
-	pal_os_event_arm();
-#endif
-
-    trustm_Close();
     
-#ifdef WORKAROUND	
-	pal_os_event_disarm();
-	pal_os_event_destroy1();
-#endif
+    TRUSTM_WORKAROUND_TIMER_ARM;
+    trustm_Close();
+    TRUSTM_WORKAROUND_TIMER_DISARM;
+    TRUSTM_WORKAROUND_TIMER_DESTROY;
     
     TRUSTM_ENGINE_DBGFN("<");
     return TRUSTM_ENGINE_SUCCESS;
@@ -431,10 +381,6 @@ static EVP_PKEY * engine_load_privkey(ENGINE *e, const char *key_id, UI_METHOD *
         
     }while(FALSE);
     
-#ifdef WORKAROUND	
-	pal_os_event_disarm();
-#endif
-
     TRUSTM_ENGINE_DBGFN("<");
     return key;
 }
@@ -498,10 +444,6 @@ static EVP_PKEY * engine_load_pubkey(ENGINE *e, const char *key_id, UI_METHOD *u
         
     }while(FALSE);
 
-#ifdef WORKAROUND	
-	pal_os_event_disarm();
-#endif
-
     TRUSTM_ENGINE_DBGFN("<");
     return key;
 }
@@ -533,6 +475,7 @@ static int engine_init(ENGINE *e)
     int ret = TRUSTM_ENGINE_FAIL;
     TRUSTM_ENGINE_DBGFN("> Engine 0x%x init", (unsigned int) e);
 
+    //TRUSTM_WORKAROUND_TIMER_ARM;
     do {
         TRUSTM_ENGINE_DBGFN("Initializing");
         if (initialized) {
@@ -593,6 +536,7 @@ static int engine_init(ENGINE *e)
 
         initialized = 1;
     }while(FALSE);
+    TRUSTM_WORKAROUND_TIMER_DISARM;    
     
     TRUSTM_ENGINE_DBGFN("<");
     return ret;

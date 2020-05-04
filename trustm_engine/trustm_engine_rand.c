@@ -94,10 +94,7 @@ static int trustmEngine_getrandom(unsigned char *buf, int num)
     i = num % MAX_RAND_INPUT; // max random number output, find the reminder
     j = (num - i)/MAX_RAND_INPUT; // Get the count 
 
-#ifdef WORKAROUND		
-    pal_os_event_arm();
-#endif
-  
+    TRUSTM_WORKAROUND_TIMER_ARM;
     do 
     {    
         k = 0;
@@ -142,6 +139,8 @@ static int trustmEngine_getrandom(unsigned char *buf, int num)
         ret = TRUSTM_ENGINE_SUCCESS;
     }while(FALSE);
 
+    TRUSTM_WORKAROUND_TIMER_DISARM;
+    
 	// Capture OPTIGA Error
 	if (return_status != OPTIGA_LIB_SUCCESS)
 		trustmPrintErrorCode(return_status);
@@ -155,13 +154,6 @@ static int trustmEngine_getrandom(unsigned char *buf, int num)
             *(buf+i) = 0;
         }
     }
-    
-    //TRUSTM_ENGINE_DBGFN("length : %d\n",num);
-    //trustmHexDump(buf,num);    
-    
-#ifdef WORKAROUND    
-	pal_os_event_disarm();	
-#endif    
     
     TRUSTM_ENGINE_DBGFN("<");    
     return ret;
