@@ -212,6 +212,7 @@ int main (int argc, char **argv)
 			if (OPTIGA_LIB_SUCCESS != return_status)
 				break;			
 			//Wait until the optiga_util_read_metadata operation is completed
+			printf("Generating RSA Key ........\n");
 			while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
 			return_status = optiga_lib_status;
 			if (return_status != OPTIGA_LIB_SUCCESS)
@@ -237,8 +238,8 @@ int main (int argc, char **argv)
 							    (optiga_key_id+0x10E4),
 							    OPTIGA_UTIL_ERASE_AND_WRITE,
 							    0,
-							    (pubKey+i), 
-							    pubKeyLen);
+							    pubKey, 
+							    pubKeyLen+i);
 			if (OPTIGA_LIB_SUCCESS != return_status)
 				break;			
 			//Wait until the optiga_util_read_metadata operation is completed

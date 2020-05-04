@@ -118,8 +118,15 @@ static uint32_t parseKeyParams(const char *aArg)
         }
         else
         {
+#ifdef WORKAROUND	
+	pal_os_event_arm();
+#endif            
             trustm_ctx.key_oid = value;
             trustmReadMetadata(value, &oidMetadata);
+#ifdef WORKAROUND	
+	pal_os_event_disarm();
+#endif            
+            
             if ((oidMetadata.E0_algo == OPTIGA_ECC_CURVE_NIST_P_256) ||
                 (oidMetadata.E0_algo == OPTIGA_ECC_CURVE_NIST_P_384))
             {
@@ -185,6 +192,10 @@ static uint32_t parseKeyParams(const char *aArg)
             }
             if(i == 2)
             {
+
+#ifdef WORKAROUND
+	pal_os_event_arm();
+#endif
                 bytes_to_read = sizeof(read_data_buffer);
                 optiga_lib_status = OPTIGA_LIB_BUSY;
                 return_status = optiga_util_read_data(me_util,
@@ -247,7 +258,10 @@ static uint32_t parseKeyParams(const char *aArg)
                         j = trustm_ctx.pubkey[j+3] + j + 4; 
                     }
                     trustm_ctx.pubkeyHeaderLen = j;
-                }    
+                } 
+#ifdef WORKAROUND	
+	pal_os_event_disarm();
+#endif
             }
             
         }
@@ -500,13 +514,12 @@ static int engine_ctrl(ENGINE *e, int cmd, long i, void *p, void (*f) ())
     TRUSTM_ENGINE_DBGFN(">");
     TRUSTM_ENGINE_DBGFN(">");
     TRUSTM_ENGINE_DBGFN("cmd: %d", cmd);
-    TRUSTM_ENGINE_DBGFN("P : %s", (char *)p);
 
     do {
-        TRUSTM_ENGINE_MSGFN("Function Not implemented.");
+        //TRUSTM_ENGINE_MSGFN("Function Not implemented.");
         //Implement code here;
     }while(FALSE);
-    
+   
     TRUSTM_ENGINE_DBGFN("<");
     return ret;
     

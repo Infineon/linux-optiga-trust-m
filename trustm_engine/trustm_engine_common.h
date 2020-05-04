@@ -36,7 +36,7 @@
 #define PARAM_MAX_LEN        (128)
 
 #define WORKAROUND 1
-//#define TRUSTM_ENGINE_DEBUG = 1
+#define TRUSTM_ENGINE_DEBUG = 1
 
 #ifdef TRUSTM_ENGINE_DEBUG
 
