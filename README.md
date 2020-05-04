@@ -266,8 +266,8 @@ option:-
                            [default Auth]
 -k <key size>   : Key size ECC256:0x03 ECC384:0x04 [default ECC256]
 -o <filename>  	: Output Pubkey to file in PEM format
--s              : Save Pubkey without header in <Key OID + 0x10E0>
--h              : Print this help 
+-s              : Save Pubkey in <Key OID + 0x10E0>
+-h              : Print this help
 ```
 
 Example : generate an ECC256 key with type Auth/Enc/Sign in OID 0xE0F3 and save pubkey in OID 0xF1D3.
@@ -278,31 +278,30 @@ foo@bar:~$ ./bin/trustm_ecc_keygen -g 0xe0f3 -t 0x13 -k 0x03 -o test_e0f3_pub.pe
 Generating Key to 0xE0F3
 Output File Name : test_e0f3_pub.pem 
 Pubkey :
-	30 59 30 13 06 07 2a 86 48 ce 3d 02 01 06 08 2a 
-	86 48 ce 3d 03 01 07 03 42 00 04 07 52 4e 41 67 
-	09 ac 78 a0 c4 a8 74 d5 ba 99 59 b6 a2 30 c7 8d 
-	33 f6 98 3c cc 51 a5 04 8e 38 34 d1 38 c2 7f 23 
-	fa f9 98 5e 8b c6 ed 0b b1 f4 4f 74 cb 69 79 0f 
-	ce 05 11 a1 d3 86 59 3b 0d 80 b6 
+	30 59 30 13 06 07 2A 86 48 CE 3D 02 01 06 08 2A 
+	86 48 CE 3D 03 01 07 03 42 00 04 DA 08 53 86 67 
+	D1 DA 47 6E 0C 7E 9D 96 99 D8 7F 7B 96 E9 80 3B 
+	1B 12 5E EB 8C 14 C0 77 8C D9 05 CE A2 EA EF 65 
+	94 25 BC 48 A2 8A 7E A0 65 69 90 BB F7 1E 29 B0 
+	A1 72 96 4B 85 E2 CC 60 3E 8F 68 
 Write Success to OID: 0xF1D3.
 ========================================================
 
 foo@bar:~$ cat test_e0f3_pub.pem 
 -----BEGIN PUBLIC KEY-----
-MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEB1JOQWcJrHigxKh01bqZWbaiMMeN
-M/aYPMxRpQSOODTROMJ/I/r5mF6Lxu0LsfRPdMtpeQ/OBRGh04ZZOw2Atg==
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE2ghThmfR2kduDH6dlpnYf3uW6YA7
+GxJe64wUwHeM2QXOourvZZQlvEiiin6gZWmQu/ceKbChcpZLheLMYD6PaA==
 -----END PUBLIC KEY-----
 
 foo@bar:~$ ./bin/trustm_data -r 0xf1d3
 ========================================================
-App DataStrucObj type 1     [0xF1D3] [Size 0100] : 
-	03 42 00 04 07 52 4e 41 67 09 ac 78 a0 c4 a8 74 
-	d5 ba 99 59 b6 a2 30 c7 8d 33 f6 98 3c cc 51 a5 
-	04 8e 38 34 d1 38 c2 7f 23 fa f9 98 5e 8b c6 ed 
-	0b b1 f4 4f 74 cb 69 79 0f ce 05 11 a1 d3 86 59 
-	3b 0d 80 b6 00 00 00 00 00 00 00 00 00 00 00 00 
-	00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
-	00 00 00 00 
+App DataStrucObj type 1     [0xF1D3] [Size 0091] : 
+	30 59 30 13 06 07 2A 86 48 CE 3D 02 01 06 08 2A 
+	86 48 CE 3D 03 01 07 03 42 00 04 DA 08 53 86 67 
+	D1 DA 47 6E 0C 7E 9D 96 99 D8 7F 7B 96 E9 80 3B 
+	1B 12 5E EB 8C 14 C0 77 8C D9 05 CE A2 EA EF 65 
+	94 25 BC 48 A2 8A 7E A0 65 69 90 BB F7 1E 29 B0 
+	A1 72 96 4B 85 E2 CC 60 3E 8F 68 
 ========================================================
 ```
 
@@ -338,12 +337,12 @@ Success
 ========================================================
 
 foo@bar:~$ hd testsignature.bin 
-00000000  02 20 08 fe f2 2a 8c 3c  b2 c2 f3 3e fa 69 e9 a7  |. ...*.<...>.i..|
-00000010  9a 16 58 2f 9f 53 52 0e  40 18 95 f7 39 b5 ac 10  |..X/.SR.@...9...|
-00000020  e0 8b 02 20 13 e1 e1 ea  57 7e e2 cc f7 c7 09 98  |... ....W~......|
-00000030  e4 41 d7 64 c5 99 a1 1b  f0 65 45 32 3a ec e1 61  |.A.d.....eE2:..a|
-00000040  21 32 97 78                                       |!2.x|
-00000044
+00000000  02 20 13 29 0d 5c dd ef  42 d0 f4 6d e6 92 b0 ad  |. .).\..B..m....|
+00000010  fd ec 3e 59 41 40 f3 53  39 04 c9 05 91 b6 b1 91  |..>YA@.S9.......|
+00000020  19 49 02 21 00 d6 98 c6  25 8d 87 dd d1 af 7b 42  |.I.!....%.....{B|
+00000030  1a 15 32 c7 84 9f 9d fe  ce f3 15 8f d7 12 e1 fa  |..2.............|
+00000040  1b 41 19 c2 82                                    |.A...|
+00000045
 ```
 
 
@@ -377,17 +376,17 @@ Hash Digest :
 	2A 26 95 A0 2F B4 AF 30 33 CC 5B C0 62 01 DE 70 
 	
 Signature : 
-	02 20 08 FE F2 2A 8C 3C B2 C2 F3 3E FA 69 E9 A7 
-	9A 16 58 2F 9F 53 52 0E 40 18 95 F7 39 B5 AC 10 
-	E0 8B 02 20 13 E1 E1 EA 57 7E E2 CC F7 C7 09 98 
-	E4 41 D7 64 C5 99 A1 1B F0 65 45 32 3A EC E1 61 
-	21 32 97 78 
+	02 20 13 29 0D 5C DD EF 42 D0 F4 6D E6 92 B0 AD 
+	FD EC 3E 59 41 40 F3 53 39 04 C9 05 91 B6 B1 91 
+	19 49 02 21 00 D6 98 C6 25 8D 87 DD D1 AF 7B 42 
+	1A 15 32 C7 84 9F 9D FE CE F3 15 8F D7 12 E1 FA 
+	1B 41 19 C2 82 
 Pub key : [256]
-	03 42 00 04 07 52 4E 41 67 09 AC 78 A0 C4 A8 74 
-	D5 BA 99 59 B6 A2 30 C7 8D 33 F6 98 3C CC 51 A5 
-	04 8E 38 34 D1 38 C2 7F 23 FA F9 98 5E 8B C6 ED 
-	0B B1 F4 4F 74 CB 69 79 0F CE 05 11 A1 D3 86 59 
-	3B 0D 80 B6 
+	03 42 00 04 DA 08 53 86 67 D1 DA 47 6E 0C 7E 9D 
+	96 99 D8 7F 7B 96 E9 80 3B 1B 12 5E EB 8C 14 C0 
+	77 8C D9 05 CE A2 EA EF 65 94 25 BC 48 A2 8A 7E 
+	A0 65 69 90 BB F7 1E 29 B0 A1 72 96 4B 85 E2 CC 
+	60 3E 8F 68 
 Verify Success.
 ========================================================
 ```
@@ -407,11 +406,11 @@ Hash Digest :
 	2A 26 95 A0 2F B4 AF 30 33 CC 5B C0 62 01 DE 70 
 	
 Signature : 
-	02 20 08 FE F2 2A 8C 3C B2 C2 F3 3E FA 69 E9 A7 
-	9A 16 58 2F 9F 53 52 0E 40 18 95 F7 39 B5 AC 10 
-	E0 8B 02 20 13 E1 E1 EA 57 7E E2 CC F7 C7 09 98 
-	E4 41 D7 64 C5 99 A1 1B F0 65 45 32 3A EC E1 61 
-	21 32 97 78 
+	02 20 13 29 0D 5C DD EF 42 D0 F4 6D E6 92 B0 AD 
+	FD EC 3E 59 41 40 F3 53 39 04 C9 05 91 B6 B1 91 
+	19 49 02 21 00 D6 98 C6 25 8D 87 DD D1 AF 7B 42 
+	1A 15 32 C7 84 9F 9D FE CE F3 15 8F D7 12 E1 FA 
+	1B 41 19 C2 82 
 Verify Success.
 
 ========================================================
@@ -1168,7 +1167,7 @@ foo@bar:~$ openssl s_client \
 
 ### <a name="testServercert"></a>Generating a Test Server Certificate
 
- Generate a certificate request.
+ Generate a new key pair and certificate request. Private key is output to private.pem
 
 ```console
 foo@bar:~$ openssl req -new -out test_opensslserver.csr
