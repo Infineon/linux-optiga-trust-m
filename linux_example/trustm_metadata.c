@@ -1,7 +1,7 @@
 /**
 * MIT License
 *
-* Copyright (c) 2019 Infineon Technologies AG
+* Copyright (c) 2020 Infineon Technologies AG
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -45,7 +45,7 @@ typedef struct _OPTFLAG {
 	uint16_t	lcslock		: 1;
 	uint16_t	lcsterminate: 1;
 	uint16_t	lcsexecute	: 1;
-	uint16_t	dummy7		: 1;
+	uint16_t	custom		: 1;
 	uint16_t	dummy8		: 1;
 	uint16_t	dummy9		: 1;
 	uint16_t	dummy10		: 1;
@@ -78,73 +78,11 @@ static void _helpmenu(void)
 	printf("                             n:disable execute,\n"); 
 	printf("                             t:disable execute on termination,\n");
 	printf("                             f:<input file for complex setting>)\n");
+	printf("-F <file> : Custom input\n"); 
+	printf("          : (Need to input the full Metadata to be written)\n"); 
 	printf("-L        : Lock OID metadata \n");
 	printf("-T        : TERMINATE OID \n");	
 	printf("-h        : Print this help \n");
-}
-
-static uint32_t _ParseHexorDec(const char *aArg)
-{
-	uint32_t value;
-
-	if ((strncmp(aArg, "0x",2) == 0) ||(strncmp(aArg, "0X",2) == 0))
-		sscanf(aArg,"%x",&value);
-	else
-		sscanf(aArg,"%d",&value);
-
-	return value;
-}
-
-void _hexdump(uint8_t *data, uint16_t len)
-{
-	uint16_t j,k;
-
-	printf("\t");
-	k=0;
-	for (j=0;j<len;j++)
-	{
-		printf("%.2X ", data[j]);
-		if(k < 15)
-		{
-			k++;
-		}	
-		else
-		{
-			printf("\n\t");
-			k=0;
-		}
-	}
-	printf("\n");
-}
-
-static uint16_t _readFrom(uint8_t *data, uint8_t *filename)
-{
-	
-	FILE *datafile;
-	uint16_t len;
-	uint8_t buf[2048];
-	uint16_t ret;
-
-	//open 
-	datafile = fopen((const char *)filename,"rb");
-	if (!datafile)
-	{
-		printf("File open error!!!\n");
-		return 1;
-	}
-
-	//Read file
-	len = fread(buf, 1, sizeof(buf), datafile); 
-	if (len > 0)
-	{
-		ret = len;
-		memcpy(data,buf,len);
-	}
-
-	fclose(datafile);
-
-	return ret;
-
 }
 
 int main (int argc, char **argv)
@@ -155,10 +93,10 @@ int main (int argc, char **argv)
     uint8_t read_data_buffer[2048];
     uint8_t mode[200];
     uint16_t modeLen;
-    uint16_t j,k;
     uint8_t *lcsChange = NULL;
     uint8_t *lcsRead = NULL;
     uint8_t *lcsExecute = NULL;
+    uint8_t *customSetting = NULL;
     uint8_t tempData[20];
      
  	int option = 0;                    // Command line option.
@@ -182,17 +120,17 @@ int main (int argc, char **argv)
         opterr = 0; // Disable getopt error messages in case of unknown parameters
 
         // Loop through parameters with getopt.
-        while (-1 != (option = getopt(argc, argv, "r:w:C:R:E:LTh")))
+        while (-1 != (option = getopt(argc, argv, "r:w:C:R:E:LTF:h")))
         {
 			switch (option)
             {
 				case 'r': // Read
 					uOptFlag.flags.read = 1;
-					optiga_oid = _ParseHexorDec(optarg);			 	
+					optiga_oid = trustmHexorDec(optarg);			 	
 					break;
 				case 'w': // Write
 					uOptFlag.flags.write = 1;	
-					optiga_oid = _ParseHexorDec(optarg);								 	
+					optiga_oid = trustmHexorDec(optarg);								 	
 					break;
 				case 'C': // Change setting
 					uOptFlag.flags.lcschange = 1;
@@ -230,6 +168,11 @@ int main (int argc, char **argv)
 				case 'T': // Terminate
 					uOptFlag.flags.lcsterminate = 1;
 					break;					
+				case 'F': // Custom Setting
+					uOptFlag.flags.custom = 1;
+					customSetting = (uint8_t *)optarg;
+					break;					
+					
 				case 'h': // Print Help Menu
 				default:  // Any other command Print Help Menu
 					_helpmenu();
@@ -315,7 +258,7 @@ int main (int argc, char **argv)
 					printf("Monotonic Counter x         [0x%.4X] ", optiga_oid);
 					break;
 				case 0xE140:
-					printf("Shared Platform Binding Secert. [0x%.4x] ", optiga_oid);
+					printf("Shared Platform Binding Secret. [0x%.4x] ", optiga_oid);
 					break;
 				case 0xF1C0:
 					printf("Application Life Cycle Sts  [0x%.4X] ", optiga_oid);
@@ -360,50 +303,17 @@ int main (int argc, char **argv)
 														read_data_buffer,
 														&bytes_to_read);
 			if (OPTIGA_LIB_SUCCESS != return_status)
-			{
-				break;
-			}
-
-			while (OPTIGA_LIB_BUSY == optiga_lib_status) 
-			{
-				//Wait until the optiga_util_read_metadata operation is completed
-			}
-
-			if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
-			{
-				//Reading metadata data object failed.
-				break;
-			}			
-/*
-			return_status = optiga_util_read_metadata(optiga_oid,
-														read_data_buffer,
-														&bytes_to_read);
-*/
+				break;			
+			//Wait until the optiga_util_read_metadata operation is completed
+			while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+			return_status = optiga_lib_status;
 			if (return_status != OPTIGA_LIB_SUCCESS)
-			{
-				printf("Error!!! [0x%.8X]\n",return_status);
-			}
+				break;
 			else
 			{
-				k=0;
-				printf("[Size %.4d] : ", bytes_to_read);
-				
-				printf("\n\t");
-					
-				for (j=0;j<bytes_to_read;j++)
-				{
-					printf("%.2X ", read_data_buffer[j]);
-					if(k < 15)
-					{
-						k++;
-					}	
-					else
-					{
-						printf("\n\t");
-						k=0;
-					}
-				}
-				printf("\n\t");
+				printf("[Size %.4d] : \n", bytes_to_read);
+				trustmHexDump(read_data_buffer,bytes_to_read);
+				printf("\t");
 				trustmdecodeMetaData(read_data_buffer);
 				printf("\n");
 			}	
@@ -411,153 +321,161 @@ int main (int argc, char **argv)
 
 		if(uOptFlag.flags.write == 1)
 		{
-			if (!(uOptFlag.all & 0x007C))
+			if (!(uOptFlag.all & 0x008C))
 			{
-				printf ("\nMust at least input -L,-T,-C,-R or -E!!! \n");
+				printf ("\nMust at least input -F -L,-T,-C,-R or -E!!! \n");
 				exit(1);
 			}
 			
-			modeLen=0;
-			mode[modeLen++] = 0x20;
-			modeLen++; // skip the len input first
-			if ((uOptFlag.flags.lcslock == 1) || (uOptFlag.flags.lcsterminate == 1))
+			if (uOptFlag.flags.custom == 1)
 			{
-				mode[modeLen++] = 0xC0; // LcsO
-				if(uOptFlag.flags.lcsterminate == 1)
-				{
-					memcpy((mode+modeLen),__bTERMINATE,sizeof(__bTERMINATE));
-					modeLen += sizeof(__bTERMINATE);
-				}
-				else
-				{
-					memcpy((mode+modeLen),__bLOCK,sizeof(__bLOCK));
-					modeLen += sizeof(__bLOCK); 
-				}	 
+				modeLen=0;
+				modeLen = trustmreadFrom(tempData, customSetting);
+				memcpy(mode,tempData,modeLen);							
 			}
-			
-			if (uOptFlag.flags.lcschange == 1)
+			else
 			{
-				mode[modeLen++] = 0xD0; // Change Access Condition
-				switch(lcsChange[0])
+				modeLen=0;
+				mode[modeLen++] = 0x20;
+				modeLen++; // skip the len input first
+				if ((uOptFlag.flags.lcslock == 1) || (uOptFlag.flags.lcsterminate == 1))
 				{
-					case 'a':
-						memcpy((mode+modeLen),__bALW,sizeof(__bALW));
-						modeLen += sizeof(__bALW);
-						break;
-					case 'n':
-						memcpy((mode+modeLen),__bNEV,sizeof(__bNEV));
-						modeLen += sizeof(__bNEV); 
-						break;
-					case 't':
-						memcpy((mode+modeLen),__bON_TERMINATE,sizeof(__bON_TERMINATE));
-						modeLen += sizeof(__bON_TERMINATE); 
-						break;
-					case 'f':
-						if (lcsChange[1] == ':')
-						{
-							_readFrom(tempData, (lcsChange+2));
-							if((tempData[0]+1) < 0x0b)
+					mode[modeLen++] = 0xC0; // LcsO
+					if(uOptFlag.flags.lcsterminate == 1)
+					{
+						memcpy((mode+modeLen),__bTERMINATE,sizeof(__bTERMINATE));
+						modeLen += sizeof(__bTERMINATE);
+					}
+					else
+					{
+						memcpy((mode+modeLen),__bLOCK,sizeof(__bLOCK));
+						modeLen += sizeof(__bLOCK); 
+					}	 
+				}
+				
+				if (uOptFlag.flags.lcschange == 1)
+				{
+					mode[modeLen++] = 0xD0; // Change Access Condition
+					switch(lcsChange[0])
+					{
+						case 'a':
+							memcpy((mode+modeLen),__bALW,sizeof(__bALW));
+							modeLen += sizeof(__bALW);
+							break;
+						case 'n':
+							memcpy((mode+modeLen),__bNEV,sizeof(__bNEV));
+							modeLen += sizeof(__bNEV); 
+							break;
+						case 't':
+							memcpy((mode+modeLen),__bON_TERMINATE,sizeof(__bON_TERMINATE));
+							modeLen += sizeof(__bON_TERMINATE); 
+							break;
+						case 'f':
+							if (lcsChange[1] == ':')
 							{
-								memcpy((mode+modeLen),tempData,(tempData[0]+1));
-								modeLen += (tempData[0]+1);							
+								trustmreadFrom(tempData, (lcsChange+2));
+								if((tempData[0]+1) < 0x0b)
+								{
+									memcpy((mode+modeLen),tempData,(tempData[0]+1));
+									modeLen += (tempData[0]+1);							
+								}
+								else
+								{
+									printf ("\nInvalid input!!! \n");
+									exit(1);														
+								}
 							}
 							else
 							{
-								printf ("\nInvalid input!!! \n");
-								exit(1);														
+								printf ("\nInvalid f parameter input!!! \n");
+								exit(1);							
 							}
-						}
-						else
-						{
-							printf ("\nInvalid f parameter input!!! \n");
-							exit(1);							
-						}
-						break;
+							break;
+					}
 				}
-			}
 
-			if (uOptFlag.flags.lcsread == 1)
-			{
-				mode[modeLen++] = 0xD1; // Read Access Condition
-				switch(lcsRead[0])
+				if (uOptFlag.flags.lcsread == 1)
 				{
-					case 'a':
-						memcpy((mode+modeLen),__bALW,sizeof(__bALW));
-						modeLen += sizeof(__bALW); 
-						break;
-					case 't':
-						memcpy((mode+modeLen),__bON_TERMINATE,sizeof(__bON_TERMINATE));
-						modeLen += sizeof(__bON_TERMINATE); 
-						break;
-					case 'f':
-						if (lcsRead[1] == ':')
-						{
-							_readFrom(tempData, (lcsRead+2));
-							if((tempData[0]+1) < 0x0b)
+					mode[modeLen++] = 0xD1; // Read Access Condition
+					switch(lcsRead[0])
+					{
+						case 'a':
+							memcpy((mode+modeLen),__bALW,sizeof(__bALW));
+							modeLen += sizeof(__bALW); 
+							break;
+						case 't':
+							memcpy((mode+modeLen),__bON_TERMINATE,sizeof(__bON_TERMINATE));
+							modeLen += sizeof(__bON_TERMINATE); 
+							break;
+						case 'f':
+							if (lcsRead[1] == ':')
 							{
-								memcpy((mode+modeLen),tempData,(tempData[0]+1));
-								modeLen += (tempData[0]+1);							
+								trustmreadFrom(tempData, (lcsRead+2));
+								if((tempData[0]+1) < 0x0b)
+								{
+									memcpy((mode+modeLen),tempData,(tempData[0]+1));
+									modeLen += (tempData[0]+1);							
+								}
+								else
+								{
+									printf ("\nInvalid input!!! \n");
+									exit(1);														
+								}
 							}
 							else
 							{
-								printf ("\nInvalid input!!! \n");
-								exit(1);														
+								printf ("\nInvalid f parameter input!!! \n");
+								exit(1);							
 							}
-						}
-						else
-						{
-							printf ("\nInvalid f parameter input!!! \n");
-							exit(1);							
-						}
-						break;
+							break;
+					}
 				}
-			}
 
-			if (uOptFlag.flags.lcsexecute == 1)
-			{
-				mode[modeLen++] = 0xD3; // Execute Access Condition
-				switch(lcsExecute[0])
+				if (uOptFlag.flags.lcsexecute == 1)
 				{
-					case 'a':
-						memcpy((mode+modeLen),__bALW,sizeof(__bALW));
-						modeLen += sizeof(__bALW);
-						break;
-					case 'n':
-						memcpy((mode+modeLen),__bNEV,sizeof(__bNEV));
-						modeLen += sizeof(__bNEV); 
-						break;
-					case 't':
-						memcpy((mode+modeLen),__bON_TERMINATE,sizeof(__bON_TERMINATE));
-						modeLen += sizeof(__bON_TERMINATE); 
-						break;
-					case 'f':
-						if (lcsExecute[1] == ':')
-						{
-							_readFrom(tempData, (lcsExecute+2));
-							if((tempData[0]+1) < 0x0b)
+					mode[modeLen++] = 0xD3; // Execute Access Condition
+					switch(lcsExecute[0])
+					{
+						case 'a':
+							memcpy((mode+modeLen),__bALW,sizeof(__bALW));
+							modeLen += sizeof(__bALW);
+							break;
+						case 'n':
+							memcpy((mode+modeLen),__bNEV,sizeof(__bNEV));
+							modeLen += sizeof(__bNEV); 
+							break;
+						case 't':
+							memcpy((mode+modeLen),__bON_TERMINATE,sizeof(__bON_TERMINATE));
+							modeLen += sizeof(__bON_TERMINATE); 
+							break;
+						case 'f':
+							if (lcsExecute[1] == ':')
 							{
-								memcpy((mode+modeLen),tempData,(tempData[0]+1));
-								modeLen += (tempData[0]+1);							
+								trustmreadFrom(tempData, (lcsExecute+2));
+								if((tempData[0]+1) < 0x0b)
+								{
+									memcpy((mode+modeLen),tempData,(tempData[0]+1));
+									modeLen += (tempData[0]+1);							
+								}
+								else
+								{
+									printf ("\nInvalid input!!! \n");
+									exit(1);														
+								}
 							}
 							else
 							{
-								printf ("\nInvalid input!!! \n");
-								exit(1);														
+								printf ("\nInvalid f parameter input!!! \n");
+								exit(1);							
 							}
-						}
-						else
-						{
-							printf ("\nInvalid f parameter input!!! \n");
-							exit(1);							
-						}
-						break;
+							break;
+					}
 				}
+				mode[1] = modeLen-2;
 			}
 
-
-			mode[1] = modeLen-2;
 			printf("\n");
-			_hexdump(mode,modeLen);
+			trustmHexDump(mode,modeLen);
 			printf("\t");
 			trustmdecodeMetaData(mode);
 
@@ -567,36 +485,22 @@ int main (int argc, char **argv)
 														mode,
 														modeLen);
 			if (OPTIGA_LIB_SUCCESS != return_status)
-			{
-				break;
-			}
-
-			while (OPTIGA_LIB_BUSY == optiga_lib_status) 
-			{
-				//Wait until the optiga_util_read_metadata operation is completed
-			}
-
-			if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
-			{
-				//Reading metadata data object failed.
-				break;
-			}	
-
-/*
-			return_status = optiga_util_write_metadata(optiga_oid,
-													   mode,
-													   modeLen);
-*/
+				break;			
+			//Wait until the optiga_util_read_metadata operation is completed
+			while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+			return_status = optiga_lib_status;
 			if (return_status != OPTIGA_LIB_SUCCESS)
-			{
-				printf("Error!!! [0x%.8X]\n",return_status);
-			}
+				break;
 			else
-			{
-				printf("Write Success.\n");
-			}				
+				printf("Write Success.\n");				
 		}
-	} while(0);
+
+	} while(FALSE);
+	
+    // Capture OPTIGA Trust M error
+	if (return_status != OPTIGA_LIB_SUCCESS)
+        trustmPrintErrorCode(return_status);	
+	
 	printf("========================================================\n");	
 	
 	trustm_Close();

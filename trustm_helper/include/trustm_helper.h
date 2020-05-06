@@ -1,7 +1,7 @@
 /**
 * MIT License
 *
-* Copyright (c) 2019 Infineon Technologies AG
+* Copyright (c) 2020 Infineon Technologies AG
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -46,15 +46,13 @@
 
 #define TRUSTM_HELPER_DBG(x, ...)      fprintf(stderr, x,##__VA_ARGS__)
 #define TRUSTM_HELPER_DBGFN(x, ...)    fprintf(stderr, "%s:%d %s: " x "\n", __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
-#define TRUSTM_HELPER_ERRFN(x, ...)    fprintf(stderr, "Error in %s:%d %s: " x "\n", __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
-
 #else
-
 #define TRUSTM_HELPER_DBG(x, ...)
 #define TRUSTM_HELPER_DBGFN(x, ...)
-#define TRUSTM_HELPER_ERRFN(x, ...)    fprintf(stderr, "Error in %s:%d %s: " x "\n", __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
-
 #endif
+
+#define TRUSTM_HELPER_ERRFN(x, ...)    fprintf(stderr, "Error in %s:%d %s: " x "\n", __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
+#define TRUSTM_HELPER_RETCODEFN(y, x, ...)	   fprintf(stdout, "\nError [0x%.4X] : " x "\n", y, ##__VA_ARGS__)
 
 // ********** typedef
 typedef struct _tag_trustm_UID {
@@ -82,9 +80,28 @@ typedef enum _tag_trustm_LifeCycStatus {
 	TERMINATION	= 0x0f
 } trustm_eLifeCycStatus_t;
 
+typedef struct trustm_metadata_str
+{
+  uint8_t metadataLen;
+  uint8_t C0_lsc0;
+  uint8_t C1_verion[2];
+  uint16_t C4_maxSize;
+  uint16_t C5_used;
+  uint8_t D0_change[10];
+  uint8_t D0_changeLen;
+  uint8_t D1_read[10];
+  uint8_t D1_readLen;
+  uint8_t D3_execute[10];
+  uint8_t D3_executeLen;
+  uint8_t E0_algo;
+  uint8_t E1_keyUsage;
+  uint8_t E8_dataObjType;  
+} trustm_metadata_t;
+
 
 // *********** Extern
 extern optiga_util_t * me_util;
+extern optiga_crypt_t * me_crypt;
 extern optiga_lib_status_t optiga_lib_status;
 
 // Function Prototype
@@ -95,12 +112,21 @@ void optiga_crypt_callback(void * context, optiga_lib_status_t return_status);
 void trustmHexDump(uint8_t *pdata, uint32_t len);
 uint16_t trustmWritePEM(uint8_t *buf, uint32_t len, const char *filename, char *name);
 uint16_t trustmWriteDER(uint8_t *buf, uint32_t len, const char *filename);
-uint16_t trustmReadPEM(uint8_t *buf, uint32_t *len, const char *filename, char *name);
+
+uint16_t trustmReadPEM(uint8_t *buf, uint32_t *len, const char *filename, char *name, uint16_t *keySize, uint16_t *keyType);
 uint16_t trustmReadDER(uint8_t *buf, uint32_t *len, const char *filename);
+
 void trustmdecodeMetaData(uint8_t * metaData);
 uint16_t trustmWriteX509PEM(X509 *x509, const char *filename);
 uint16_t trustmReadX509PEM(X509 **x509, const char *filename);
 
+void trustmPrintErrorCode(uint16_t errcode);
+
 optiga_lib_status_t trustm_readUID(utrustm_UID_t *UID);
+optiga_lib_status_t trustmReadMetadata(uint16_t optiga_oid, trustm_metadata_t *oidMetadata);
+
+uint32_t trustmHexorDec(const char *aArg);
+uint16_t trustmwriteTo(uint8_t *buf, uint32_t len, const char *filename);
+uint16_t trustmreadFrom(uint8_t *data, uint8_t *filename);
 
 #endif	// _TRUSTM_HELPER_H_

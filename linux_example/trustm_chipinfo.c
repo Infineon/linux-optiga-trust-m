@@ -1,7 +1,7 @@
 /**
 * MIT License
 *
-* Copyright (c) 2019 Infineon Technologies AG
+* Copyright (c) 2020 Infineon Technologies AG
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -40,14 +40,12 @@ int main (int argc, char **argv)
         exit(1);
 
     return_status = trustm_readUID(&UID);
-        if (return_status != OPTIGA_LIB_SUCCESS)
-        {
-            printf("readUID [0xE0C2]: FAIL!!!\n");
-        }
+    if (return_status != OPTIGA_LIB_SUCCESS)
+        trustmPrintErrorCode(return_status);
     else
     {
         printf("Read Chip Info [0xE0C2]: Success.\n");
-        printf("===========================================\n");
+        printf("========================================================\n");    
         printf("CIM Identifier             [bCimIdentifer]: 0x%.2x\n", UID.st.bCimIdentifer);
         printf("Platform Identifer   [bPlatformIdentifier]: 0x%.2x\n", UID.st.bPlatformIdentifier);
         printf("Model Identifer         [bModelIdentifier]: 0x%.2x\n", UID.st.bModelIdentifier);
@@ -99,9 +97,9 @@ int main (int argc, char **argv)
 	else if ((UID.st.rgbESWBuild[0] == 0x08) && (UID.st.rgbESWBuild[1] == 0x09))
         printf("OPTIGA(TM) Trust M rev.1; Firmware Version: 1.30.809\n");
     else
-        printf("Unknown\n");
-    printf("===========================================\n");    
-
+        {printf("Unknown\n");}
+        
+	printf("========================================================\n");    
 
     trustm_Close();
     return 0;

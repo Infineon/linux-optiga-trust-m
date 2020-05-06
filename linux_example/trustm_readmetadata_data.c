@@ -1,7 +1,7 @@
 /**
 * MIT License
 *
-* Copyright (c) 2019 Infineon Technologies AG
+* Copyright (c) 2020 Infineon Technologies AG
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -33,7 +33,7 @@
 int main (int argc, char **argv)
 {
     optiga_lib_status_t return_status;
-    uint16_t i, j, k, skip_flag;
+    uint16_t i, skip_flag;
     
     uint16_t bytes_to_read;
     uint16_t optiga_oid;
@@ -46,10 +46,7 @@ int main (int argc, char **argv)
     do
     {
         printf("===========================================\n");    
-        
 
-
-        //for (i = 0; i < (0xE140-0xE0E0+1); i++) // Limit to Obj
         for (i = 0; i < 0xe200; i++) // Limit to Obj
         {
             optiga_oid = 0xE0E0;
@@ -114,51 +111,29 @@ int main (int argc, char **argv)
                                                             read_data_buffer,
                                                             &bytes_to_read);
                 if (OPTIGA_LIB_SUCCESS != return_status)
-                {
-                    break;
-                }
-
-                while (OPTIGA_LIB_BUSY == optiga_lib_status) 
-                {
-                    //Wait until the optiga_util_read_metadata operation is completed
-                }
-
-                if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
-                {
-                    //Reading metadata data object failed.
-                    break;
-                }
+                    break;			
+                //Wait until the optiga_util_read_metadata operation is completed
+                while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+                return_status = optiga_lib_status;
                 if (return_status != OPTIGA_LIB_SUCCESS)
-                {
-                    printf("Error!!! [0x%.8X]\n", return_status);
-                }
+                    break;
                 else
                 {
-                    k=0;
-                    printf("[Size %.4d] : \n\t", bytes_to_read);
-                    
-                    for (j=0;j<bytes_to_read;j++)
-                    {
-                        printf("%.2X ", read_data_buffer[j]);
-                        if(k < 40)
-                        {
-                            k++;
-                        }    
-                        else
-                        {
-                            printf("\n\t");
-                            k=0;
-                        }
-                    }
-                    printf("\n\t");
+                    printf("[Size %.4d] : \n", bytes_to_read);
+                    trustmHexDump(read_data_buffer,bytes_to_read);
+                    printf("\t");
                     trustmdecodeMetaData(read_data_buffer);
                     printf("\n");
                 }
             }
         }
     }while(FALSE);
-
-    printf("===========================================\n");    
+    
+    // Capture OPTIGA Trust M error
+	if (return_status != OPTIGA_LIB_SUCCESS)
+        trustmPrintErrorCode(return_status);
+        
+    printf("========================================================\n");     
 
     trustm_Close();
     return 0;
