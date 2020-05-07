@@ -157,7 +157,7 @@ $(BINDIR)/$(ENG): %: $(ENGOBJ) $(INCSRC) $(BINDIR)/$(LIB)
 	@mkdir -p bin
 	@$(CC) $(LDFLAGS) $(LDFLAGS_1) $(ENGOBJ) -shared -o $@
 
-$(APPS): %: $(OTHOBJ) $(INCSRC) %.o
+$(APPS): %: $(OTHOBJ) $(INCSRC) $(BINDIR)/$(LIB) %.o
 	@echo "******* Linking $@ "
 	@mkdir -p bin
 	@$(CC) $(LDFLAGS) $(LDFLAGS_1) $@.o $(OTHOBJ) -o $@
