@@ -155,12 +155,12 @@ clean :
 $(BINDIR)/$(ENG): %: $(ENGOBJ) $(INCSRC) $(BINDIR)/$(LIB)
 	@echo "******* Linking $@ "
 	@mkdir -p bin
-	@$(CC) $(LDFLAGS) $(LDFLAGS_1) $(ENGOBJ) -shared -o $@
+	@$(CC) $(LDFLAGS_1) $(LDFLAGS) $(ENGOBJ) -shared -o $@
 
 $(APPS): %: $(OTHOBJ) $(INCSRC) $(BINDIR)/$(LIB) %.o
 	@echo "******* Linking $@ "
 	@mkdir -p bin
-	@$(CC) $(LDFLAGS) $(LDFLAGS_1) $@.o $(OTHOBJ) -o $@
+	@$(CC) $@.o $(LDFLAGS_1) $(LDFLAGS) $(OTHOBJ) -o $@
 	@cp $@ bin/.
 
 $(BINDIR)/$(LIB): %: $(LIBOBJ) $(INCSRC)
