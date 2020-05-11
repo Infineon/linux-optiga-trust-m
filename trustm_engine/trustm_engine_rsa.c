@@ -258,8 +258,8 @@ static int trustmEngine_rsa_priv_enc(int flen,
     do 
     {
 	// OPTIGA Comms Shielded connection settings to enable the protection
-	OPTIGA_CRYPT_SET_COMMS_PROTOCOL_VERSION(me, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
-	OPTIGA_CRYPT_SET_COMMS_PROTECTION_LEVEL(me, OPTIGA_COMMS_RESPONSE_PROTECTION);
+	OPTIGA_CRYPT_SET_COMMS_PROTOCOL_VERSION(me_crypt, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
+	OPTIGA_CRYPT_SET_COMMS_PROTECTION_LEVEL(me_crypt, OPTIGA_COMMS_RESPONSE_PROTECTION);
 
 	optiga_lib_status = OPTIGA_LIB_BUSY;
 	return_status = optiga_crypt_rsa_sign(me_crypt,
