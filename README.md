@@ -4,26 +4,27 @@
     * [Prerequisites](#prerequisites)
     * [Contents of the package](#contents_of_package)
 2. [Getting Started](#getting_started)
+    * [Getting the Code from Github](#getting_code)
     * [First time building the library](#build_lib)
 3. [CLI Tools Usage](#cli_usage)
-	* [trustm_cert](#trustm_cert)
-    * [trustm_chipinfo](#trustm_chipinfo)
-    * [trustm_data](#trustm_data)
-    * [trustm_ecc_keygen](#trustm_ecc_keygen)
-    * [trustm_ecc_sign](#trustm_ecc_sign)
-    * [trustm_ecc_verify](#trustm_ecc_verify)
-    * [trustm_errorcode](#trustm_errorcode)
-    * [trustm_metadata](#trustm_metadata)
-    * [trustm_monotonic_counter](#trustm_monotonic_counter)
-    * [trustm_readmetadata_data](#trustm_readmetadata_data)
-    * [trustm_readmetadata_private](#trustm_readmetadata_private)
-    * [trustm_readmetadata_status](#trustm_readmetadata_status)
-    * [trustm_read_status](#trustm_read_status)
-    * [trustm_rsa_dec](#trustm_rsa_dec)
-    * [trustm_rsa_enc](#trustm_rsa_enc)
-    * [trustm_rsa_keygen](#trustm_rsa_keygen)
-    * [trustm_rsa_sign](#trustm_rsa_sign)
-    * [trustm_rsa_verify](#trustm_rsa_verify)
+  * [trustm_cert](#trustm_cert)
+   * [trustm_chipinfo](#trustm_chipinfo)
+   * [trustm_data](#trustm_data)
+   * [trustm_ecc_keygen](#trustm_ecc_keygen)
+   * [trustm_ecc_sign](#trustm_ecc_sign)
+   * [trustm_ecc_verify](#trustm_ecc_verify)
+   * [trustm_errorcode](#trustm_errorcode)
+   * [trustm_metadata](#trustm_metadata)
+   * [trustm_monotonic_counter](#trustm_monotonic_counter)
+   * [trustm_readmetadata_data](#trustm_readmetadata_data)
+   * [trustm_readmetadata_private](#trustm_readmetadata_private)
+   * [trustm_readmetadata_status](#trustm_readmetadata_status)
+   * [trustm_read_status](#trustm_read_status)
+   * [trustm_rsa_dec](#trustm_rsa_dec)
+   * [trustm_rsa_enc](#trustm_rsa_enc)
+   * [trustm_rsa_keygen](#trustm_rsa_keygen)
+   * [trustm_rsa_sign](#trustm_rsa_sign)
+   * [trustm_rsa_verify](#trustm_rsa_verify)
 4. [Trust M1 OpenSSL Engine usage](#engine_usage)
     * [rand](#rand)
     * [req](#req)
@@ -95,12 +96,48 @@ This tools consists of the following files & directory:
 ```
 
 ## <a name="getting_started"></a>Getting Started
+### <a name="getting_code"></a>Getting the Code from Github
+
+Getting the initial code from Github with submodules
+
+```console
+foo@bar:~$ git clone --branch=tim --recurse-submodules https://github.com/Infineon/cli-optiga-trust-m.git
+```
+
+Checking the submodule is the correct version (v1.30.885-116-gf19f7c8)
+
+```console
+foo@bar:~$ cd cli-optiga-trust-m
+foo@bar:~/cli-optiga-trust-m$ git submodule status
++f19f7c8fc3dac12eba1f334cc1c4808b84fd3618 trustm_lib (v1.30.885-116-gf19f7c8)
+```
+
+In case submodule is not the correct version follow the following steps to updates the submodules
+
+```console
+foo@bar:~/cli-optiga-trust-m$ cd trustm_lib
+foo@bar:~/cli-optiga-trust-m/trustm_lib$ git checkout v1.30.885-116-gf19f7c8
+foo@bar:~/cli-optiga-trust-m/trustm_lib$ cd ..
+foo@bar:~/cli-optiga-trust-m$ git submodule status
++f19f7c8fc3dac12eba1f334cc1c4808b84fd3618 trustm_lib (v1.30.885-116-gf19f7c8)
+```
+
+Applying patch to workaround the known pal_os_event.c issue
+
+```console
+foo@bar:~/cli-optiga-trust-m$ make workaround_patch 
+Applying workaround patch for pal_os_event.c
+Original file backup to trustm_lib/pal/linux/pal_os_event.org
+```
+
 ### <a name="build_lib"></a>First time building the library
 
 ```console 
 foo@bar:~$ make
 ```
  to install
+
+*Note : In case install fail try performing the uninstall and redo make.*
 
 ```console 
 foo@bar:~$ sudo make install
