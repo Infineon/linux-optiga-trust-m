@@ -1,7 +1,7 @@
 #/**
 #* MIT License
 #*
-#* Copyright (c) 2019 Infineon Technologies AG
+#* Copyright (c) 2020 Infineon Technologies AG
 #*
 #* Permission is hereby granted, free of charge, to any person obtaining a copy
 #* of this software and associated documentation files (the "Software"), to deal
@@ -121,7 +121,7 @@ LDFLAGS += -lrt
 LDFLAGS_1 = -L$(BINDIR) -Wl,-R$(BINDIR)
 LDFLAGS_1 += -ltrustm
 
-.Phony : install uninstall all clean install_lib install_engine
+.Phony : install uninstall workaround_patch all clean
 
 all : $(BINDIR)/$(LIB) $(APPS) $(BINDIR)/$(ENG)
 
@@ -137,6 +137,12 @@ uninstall: clean
 	@-rm $(ENGINE_INSTALL_DIR)/$(ENG)
 	@echo "Removing trustm_lib $(LIB_INSTALL_DIR)/$(LIB)"
 	@-rm $(LIB_INSTALL_DIR)/$(LIB)
+
+workaround_patch:
+	@echo "Applying workaround patch for pal_os_event.c"
+	@echo "Original file backup to $(PALDIR)/pal_os_event.org"
+	@mv $(PALDIR)/pal_os_event.c $(PALDIR)/pal_os_event.org
+	@cp patch/pal_os_event.c $(PALDIR)/.
 
 clean :
 	@echo "Removing *.o from $(LIBDIR)" 

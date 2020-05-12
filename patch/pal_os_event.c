@@ -2,7 +2,7 @@
 * \copyright
 * MIT License
 *
-* Copyright (c) 2019 Infineon Technologies AG
+* Copyright (c) 2020 Infineon Technologies AG
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -42,8 +42,6 @@
 #include <time.h>
 #include "optiga/pal/pal_os_timer.h"
 #include "optiga/pal/pal_os_event.h"
-
-#include "pal_raspberry.h"
 
 //#define TRUSTM_PAL_EVENT_DEBUG = 1
 
