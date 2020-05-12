@@ -101,25 +101,7 @@ This tools consists of the following files & directory:
 Getting the initial code from Github with submodules
 
 ```console
-foo@bar:~$ git clone --branch=tim --recurse-submodules https://github.com/Infineon/cli-optiga-trust-m.git
-```
-
-Checking the submodule is the correct version (v1.30.885-116-gf19f7c8)
-
-```console
-foo@bar:~$ cd cli-optiga-trust-m
-foo@bar:~/cli-optiga-trust-m$ git submodule status
-+f19f7c8fc3dac12eba1f334cc1c4808b84fd3618 trustm_lib (v1.30.885-116-gf19f7c8)
-```
-
-In case submodule is not the correct version follow the following steps to updates the submodules
-
-```console
-foo@bar:~/cli-optiga-trust-m$ cd trustm_lib
-foo@bar:~/cli-optiga-trust-m/trustm_lib$ git checkout v1.30.885-116-gf19f7c8
-foo@bar:~/cli-optiga-trust-m/trustm_lib$ cd ..
-foo@bar:~/cli-optiga-trust-m$ git submodule status
-+f19f7c8fc3dac12eba1f334cc1c4808b84fd3618 trustm_lib (v1.30.885-116-gf19f7c8)
+foo@bar:~$ git clone --recurse-submodules https://github.com/Infineon/cli-optiga-trust-m.git
 ```
 
 Applying patch to workaround the known pal_os_event.c issue
