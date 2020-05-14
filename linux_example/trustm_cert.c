@@ -46,7 +46,7 @@ typedef struct _OPTFLAG {
 	uint16_t	format		: 1;
 	uint16_t	clear		: 1;
 	uint16_t	input		: 1;
-	uint16_t	dummy6		: 1;
+	uint16_t	bypass		: 1;
 	uint16_t	dummy7		: 1;
 	uint16_t	dummy8		: 1;
 	uint16_t	dummy9		: 1;
@@ -73,6 +73,7 @@ void helpmenu(void)
 	printf("-o <filename>  	: Output certificate to file \n");
 	printf("-i <filename>  	: Input certificate to file \n");
 	printf("-c <Cert OID>   : Clear cert OID data to zero \n");
+    printf("-X              : Bypass Shielded Communication \n");
 	printf("-h              : Print this help \n");
 }
 
@@ -111,7 +112,7 @@ int main (int argc, char **argv)
         opterr = 0; // Disable getopt error messages in case of unknown parameters
 
         // Loop through parameters with getopt.
-        while (-1 != (option = getopt(argc, argv, "r:w:o:i:f:c:h")))
+        while (-1 != (option = getopt(argc, argv, "r:w:o:i:f:c:Xh")))
         {
 			switch (option)
             {
@@ -139,6 +140,10 @@ int main (int argc, char **argv)
 					uOptFlag.flags.clear = 1;	
 					optiga_oid = trustmHexorDec(optarg);							 	
 					break;
+				case 'X': // Bypass Shielded Communication
+					uOptFlag.flags.bypass = 1;
+					printf("Bypass Shielded Communication. \n");
+					break;   
 				case 'h': // Print Help Menu
 				default:  // Any other command Print Help Menu
 					helpmenu();
@@ -149,8 +154,7 @@ int main (int argc, char **argv)
     } while (0); // End of DO WHILE FALSE loop.
  
 	return_status = trustm_Open();
-	if (return_status != OPTIGA_LIB_SUCCESS)
-		exit(1);
+	if (return_status != OPTIGA_LIB_SUCCESS) {exit(1);}
 		
 	printf("========================================================\n");    
 	
@@ -169,6 +173,14 @@ int main (int argc, char **argv)
 			printf("Output File Name : %s \n", outFile);
 			offset = 0x00;
 			bytes_to_read = sizeof(read_data_buffer);
+
+            if(uOptFlag.flags.bypass != 1)
+            {
+                // OPTIGA Comms Shielded connection settings to enable the protection
+                OPTIGA_UTIL_SET_COMMS_PROTOCOL_VERSION(me_util, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
+                //OPTIGA_UTIL_SET_COMMS_PROTECTION_LEVEL(me_util, OPTIGA_COMMS_RESPONSE_PROTECTION);        
+                OPTIGA_UTIL_SET_COMMS_PROTECTION_LEVEL(me_util, OPTIGA_COMMS_RESPONSE_PROTECTION|OPTIGA_COMMS_RE_ESTABLISH);
+            }
 
 			optiga_lib_status = OPTIGA_LIB_BUSY;
 			return_status = optiga_util_read_data(me_util,
@@ -239,6 +251,15 @@ int main (int argc, char **argv)
 				certLen = i2d_X509(x509Cert, &pCert);
 				if(certLen != 0)
 				{
+					
+					if(uOptFlag.flags.bypass != 1)
+					{
+						// OPTIGA Comms Shielded connection settings to enable the protection
+						OPTIGA_UTIL_SET_COMMS_PROTOCOL_VERSION(me_util, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
+						//OPTIGA_UTIL_SET_COMMS_PROTECTION_LEVEL(me_util, OPTIGA_COMMS_RESPONSE_PROTECTION);        
+						OPTIGA_UTIL_SET_COMMS_PROTECTION_LEVEL(me_util, OPTIGA_COMMS_RESPONSE_PROTECTION|OPTIGA_COMMS_RE_ESTABLISH);
+					}
+					
 					optiga_lib_status = OPTIGA_LIB_BUSY;
 					return_status = optiga_util_write_data(me_util,
 															optiga_oid,
@@ -272,6 +293,14 @@ int main (int argc, char **argv)
 			bytes_to_read = 0x01; 
 			read_data_buffer[0] = 0;
 			offset = 0;
+
+            if(uOptFlag.flags.bypass != 1)
+            {
+                // OPTIGA Comms Shielded connection settings to enable the protection
+                OPTIGA_UTIL_SET_COMMS_PROTOCOL_VERSION(me_util, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
+                //OPTIGA_UTIL_SET_COMMS_PROTECTION_LEVEL(me_util, OPTIGA_COMMS_RESPONSE_PROTECTION);        
+                OPTIGA_UTIL_SET_COMMS_PROTECTION_LEVEL(me_util, OPTIGA_COMMS_RESPONSE_PROTECTION|OPTIGA_COMMS_RE_ESTABLISH);
+            }
 
 			optiga_lib_status = OPTIGA_LIB_BUSY;
 			return_status = optiga_util_write_data(me_util,

@@ -46,7 +46,7 @@ typedef struct _OPTFLAG {
 	uint16_t	lcsterminate: 1;
 	uint16_t	lcsexecute	: 1;
 	uint16_t	custom		: 1;
-	uint16_t	dummy8		: 1;
+	uint16_t	bypass		: 1;
 	uint16_t	dummy9		: 1;
 	uint16_t	dummy10		: 1;
 	uint16_t	dummy11		: 1;
@@ -72,6 +72,7 @@ static void _helpmenu(void)
 	printf("                             t:disable change on termination,\n");
 	printf("                             f:<input file for complex setting>)\n");
 	printf("-R <data> : Set Read mode (a:allow read,\n"); 
+	printf("                           n:disable read,\n"); 
 	printf("                           t:disable read on termination\n");
 	printf("                           f:<input file for complex setting>)\n");
 	printf("-E <data> : Set Change mode (a:allow execute,\n"); 
@@ -81,7 +82,8 @@ static void _helpmenu(void)
 	printf("-F <file> : Custom input\n"); 
 	printf("          : (Need to input the full Metadata to be written)\n"); 
 	printf("-L        : Lock OID metadata \n");
-	printf("-T        : TERMINATE OID \n");	
+	printf("-T        : TERMINATE OID \n");
+    printf("-X        : Bypass Shielded Communication \n");		
 	printf("-h        : Print this help \n");
 }
 
@@ -98,6 +100,8 @@ int main (int argc, char **argv)
     uint8_t *lcsExecute = NULL;
     uint8_t *customSetting = NULL;
     uint8_t tempData[20];
+
+    char	messagebuf[500];
      
  	int option = 0;                    // Command line option.
 
@@ -120,7 +124,7 @@ int main (int argc, char **argv)
         opterr = 0; // Disable getopt error messages in case of unknown parameters
 
         // Loop through parameters with getopt.
-        while (-1 != (option = getopt(argc, argv, "r:w:C:R:E:LTF:h")))
+        while (-1 != (option = getopt(argc, argv, "r:w:C:R:E:LTF:Xh")))
         {
 			switch (option)
             {
@@ -146,7 +150,7 @@ int main (int argc, char **argv)
 					uOptFlag.flags.lcsread = 1;
 					lcsRead = (uint8_t *)optarg;
 					if((lcsRead[0] != 'a')&&(lcsRead[0] != 't')&&
-						(lcsRead[0] != 'f'))
+						(lcsRead[0] != 'n')&&(lcsRead[0] != 'f'))
 					{
 						_helpmenu();
 						exit(0);						
@@ -172,7 +176,10 @@ int main (int argc, char **argv)
 					uOptFlag.flags.custom = 1;
 					customSetting = (uint8_t *)optarg;
 					break;					
-					
+				case 'X': // Bypass Shielded Communication
+					uOptFlag.flags.bypass = 1;
+					printf("Bypass Shielded Communication. \n");
+					break; 					
 				case 'h': // Print Help Menu
 				default:  // Any other command Print Help Menu
 					_helpmenu();
@@ -186,116 +193,24 @@ int main (int argc, char **argv)
  * Example 
  **************************************************************/
 	return_status = trustm_Open();
-	if (return_status != OPTIGA_LIB_SUCCESS)
-		exit(1);
+	if (return_status != OPTIGA_LIB_SUCCESS) {exit(1);}
 	
-	printf("========================================================\n");	
-
-	switch (optiga_oid)
-	{
-				case 0xE0C0:
-					printf("Global Life Cycle Status    [0x%.4X] ", optiga_oid);
-					break;
-				case 0xE0C1:
-					printf("Global Security Status      [0x%.4X] ", optiga_oid);
-					break;
-				case 0xE0C2:
-					printf("UID                         [0x%.4X] ", optiga_oid);
-					break;
-				case 0xE0C3:
-					printf("Sleep Mode Activation Delay [0x%.4X] ", optiga_oid);
-					break;
-				case 0xE0C4:
-					printf("Current Limitation          [0x%.4X] ", optiga_oid);
-					break;
-				case 0xE0C5:
-					printf("Security Event Counter      [0x%.4X] ", optiga_oid);
-					break;
-				case 0xE0C6:
-					printf("Max Com Buffer Size         [0x%.4X] ", optiga_oid);
-					break;
-				case 0xE0E0:
-					printf("Device Public Key IFX       [0x%.4X] ", optiga_oid);
-					break;
-				case 0xE0E1:
-				case 0xE0E2:
-				case 0xE0E3:
-					printf("Device Public Key           [0x%.4X] ", optiga_oid);
-					break;
-				case 0xE0E8:
-					printf("Root CA Public Key Cert1    [0x%.4X] ", optiga_oid);
-					break;
-				case 0xE0E9:
-					printf("Root CA Public Key Cert2    [0x%.4X] ", optiga_oid);
-					break;
-				case 0xE0EF:
-					printf("Root CA Public Key Cert8    [0x%.4X] ", optiga_oid);
-					break;
-				case 0xE0F0:
-					printf("Device EC Privte Key 1         [0x%.4X] ", optiga_oid);
-					break;
-				case 0xE0F1:
-				case 0xE0F2:
-					printf("Device EC Privte Key x         [0x%.4X] ", optiga_oid);
-					break;
-				case 0xE0F3:
-					printf("Device EC Privte Key x         [0x%.4X] ", optiga_oid);
-					break;
-				case 0xE0FC:
-				case 0xE0FD:
-					printf("Device RSA Privte Key x         [0x%.4X] ", optiga_oid);
-					break;			
-				case 0xE100:
-				case 0xE101:
-				case 0xE102:
-				case 0xE103:
-					printf("Session Context x           [0x%.4X] ", optiga_oid);
-					break;					
-				case 0xE120:
-				case 0xE121:
-				case 0xE122:
-				case 0xE123:
-					printf("Monotonic Counter x         [0x%.4X] ", optiga_oid);
-					break;
-				case 0xE140:
-					printf("Shared Platform Binding Secret. [0x%.4x] ", optiga_oid);
-					break;
-				case 0xF1C0:
-					printf("Application Life Cycle Sts  [0x%.4X] ", optiga_oid);
-					break;					
-				case 0xF1C1:
-					printf("Application Security Sts    [0x%.4X] ", optiga_oid);
-					break;					
-				case 0xF1C2:
-					printf("Application Error Codes     [0x%.4X] ", optiga_oid);
-					break;					
-				case 0xF1D0:
-				case 0xF1D1:
-				case 0xF1D2:
-				case 0xF1D3:
-				case 0xF1D4:
-				case 0xF1D5:
-				case 0xF1D6:
-				case 0xF1D7:
-				case 0xF1D8:
-				case 0xF1D9:
-				case 0xF1DA:
-				case 0xF1DB:
-					printf("App DataStrucObj type 3     [0x%.4X] ", optiga_oid);
-					break;					
-				case 0xF1E0:
-				case 0xF1E1:
-					printf("App DataStrucObj type 2     [0x%.4X] ", optiga_oid);
-					break;						
-				default:
-					break;
-	}
+    trustmGetOIDName(optiga_oid, messagebuf);    
+    printf("========================================================\n");    
+    printf(messagebuf);
 
 	do
 	{
 		if(uOptFlag.flags.read == 1)
 		{
-		
+			if(uOptFlag.flags.bypass != 1)
+			{
+				// OPTIGA Comms Shielded connection settings to enable the protection
+				OPTIGA_UTIL_SET_COMMS_PROTOCOL_VERSION(me_util, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
+				//OPTIGA_UTIL_SET_COMMS_PROTECTION_LEVEL(me_util, OPTIGA_COMMS_RESPONSE_PROTECTION);        
+				OPTIGA_UTIL_SET_COMMS_PROTECTION_LEVEL(me_util, OPTIGA_COMMS_RESPONSE_PROTECTION|OPTIGA_COMMS_RE_ESTABLISH);
+			}		
+
 			bytes_to_read = sizeof(read_data_buffer);
 			optiga_lib_status = OPTIGA_LIB_BUSY;
 			return_status = optiga_util_read_metadata(me_util,
@@ -403,6 +318,10 @@ int main (int argc, char **argv)
 							memcpy((mode+modeLen),__bALW,sizeof(__bALW));
 							modeLen += sizeof(__bALW); 
 							break;
+						case 'n':
+							memcpy((mode+modeLen),__bNEV,sizeof(__bNEV));
+							modeLen += sizeof(__bNEV); 
+							break;							
 						case 't':
 							memcpy((mode+modeLen),__bON_TERMINATE,sizeof(__bON_TERMINATE));
 							modeLen += sizeof(__bON_TERMINATE); 
@@ -478,6 +397,14 @@ int main (int argc, char **argv)
 			trustmHexDump(mode,modeLen);
 			printf("\t");
 			trustmdecodeMetaData(mode);
+
+			if(uOptFlag.flags.bypass != 1)
+			{
+				// OPTIGA Comms Shielded connection settings to enable the protection
+				OPTIGA_UTIL_SET_COMMS_PROTOCOL_VERSION(me_util, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
+				//OPTIGA_UTIL_SET_COMMS_PROTECTION_LEVEL(me_util, OPTIGA_COMMS_RESPONSE_PROTECTION);        
+				OPTIGA_UTIL_SET_COMMS_PROTECTION_LEVEL(me_util, OPTIGA_COMMS_RESPONSE_PROTECTION|OPTIGA_COMMS_RE_ESTABLISH);
+			}
 
 			optiga_lib_status = OPTIGA_LIB_BUSY;
 			return_status = optiga_util_write_metadata(me_util,

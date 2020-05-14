@@ -121,6 +121,7 @@ uint16_t trustmWriteX509PEM(X509 *x509, const char *filename);
 uint16_t trustmReadX509PEM(X509 **x509, const char *filename);
 
 void trustmPrintErrorCode(uint16_t errcode);
+void trustmGetOIDName(uint16_t optiga_oid, char *name);
 
 optiga_lib_status_t trustm_readUID(utrustm_UID_t *UID);
 optiga_lib_status_t trustmReadMetadata(uint16_t optiga_oid, trustm_metadata_t *oidMetadata);

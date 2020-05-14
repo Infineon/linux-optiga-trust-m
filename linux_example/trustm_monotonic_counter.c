@@ -42,7 +42,7 @@ typedef struct _OPTFLAG {
     uint16_t    update      : 1;
     uint16_t    invalue     : 1;
     uint16_t    steps       : 1;
-    uint16_t    dummy5      : 1;
+    uint16_t    bypass      : 1;
     uint16_t    dummy6      : 1;
     uint16_t    dummy7      : 1;
     uint16_t    dummy8      : 1;
@@ -69,6 +69,7 @@ static void _helpmenu(void)
     printf("-u <OID>      : Update Counter [0xE120-0xE123] \n");
     printf("-i <value>    : Input Value \n");
     printf("-s <value>    : Increment Steps \n");
+    printf("-X            : Bypass Shielded Communication \n");
     printf("-h            : Print this help \n");
 }
 
@@ -81,7 +82,7 @@ int main (int argc, char **argv)
     uint8_t read_data_buffer[8];
     uint32_t bytes_to_read = sizeof(read_data_buffer);
     uint8_t mode = OPTIGA_UTIL_ERASE_AND_WRITE;
-  
+ 
     int option = 0;                    // Command line option.
 
 /***************************************************************
@@ -103,7 +104,7 @@ int main (int argc, char **argv)
         opterr = 0; // Disable getopt error messages in case of unknown parameters
 
         // Loop through parameters with getopt.
-        while (-1 != (option = getopt(argc, argv, "r:w:i:s:u:h")))
+        while (-1 != (option = getopt(argc, argv, "r:w:i:s:u:Xh")))
         {
             switch (option)
             {
@@ -141,7 +142,11 @@ int main (int argc, char **argv)
                 case 's': // output Increment Steps
                     uOptFlag.flags.steps = 1;
                     steps = trustmHexorDec(optarg);               
-                    break;                                        
+                    break;
+				case 'X': // Bypass Shielded Communication
+					uOptFlag.flags.bypass = 1;
+					printf("Bypass Shielded Communication. \n");
+					break;  
                 case 'h': // Print Help Menu
                 default:  // Any other command Print Help Menu
                     _helpmenu();
@@ -155,8 +160,7 @@ int main (int argc, char **argv)
  * Example 
  **************************************************************/
     return_status = trustm_Open();
-    if (return_status != OPTIGA_LIB_SUCCESS)
-        exit(1);
+    if (return_status != OPTIGA_LIB_SUCCESS) {exit(1);}
     
     printf("========================================================\n");    
 
@@ -171,6 +175,14 @@ int main (int argc, char **argv)
             }
             
             printf("Steps Value : %d [0x%.8X]\n", steps, steps);
+
+            if(uOptFlag.flags.bypass != 1)
+            {
+                // OPTIGA Comms Shielded connection settings to enable the protection
+                OPTIGA_UTIL_SET_COMMS_PROTOCOL_VERSION(me_util, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
+                //OPTIGA_UTIL_SET_COMMS_PROTECTION_LEVEL(me_util, OPTIGA_COMMS_RESPONSE_PROTECTION);        
+                OPTIGA_UTIL_SET_COMMS_PROTECTION_LEVEL(me_util, OPTIGA_COMMS_RESPONSE_PROTECTION|OPTIGA_COMMS_RE_ESTABLISH);
+            }
                         
             optiga_lib_status = OPTIGA_LIB_BUSY;
             return_status = optiga_util_update_count(me_util,
@@ -206,6 +218,14 @@ int main (int argc, char **argv)
             read_data_buffer[7] = (uint8_t) inValue & 0x000000ff;
             
             trustmHexDump(read_data_buffer, bytes_to_read);
+
+            if(uOptFlag.flags.bypass != 1)
+            {
+                // OPTIGA Comms Shielded connection settings to enable the protection
+                OPTIGA_UTIL_SET_COMMS_PROTOCOL_VERSION(me_util, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
+                //OPTIGA_UTIL_SET_COMMS_PROTECTION_LEVEL(me_util, OPTIGA_COMMS_RESPONSE_PROTECTION);        
+                OPTIGA_UTIL_SET_COMMS_PROTECTION_LEVEL(me_util, OPTIGA_COMMS_RESPONSE_PROTECTION|OPTIGA_COMMS_RE_ESTABLISH);
+            }
             
             optiga_lib_status = OPTIGA_LIB_BUSY;
             return_status = optiga_util_write_data(me_util,
@@ -228,44 +248,49 @@ int main (int argc, char **argv)
         
         if(uOptFlag.flags.read == 1)
         {
+       
+            if(uOptFlag.flags.bypass != 1)
+            {
                 // OPTIGA Comms Shielded connection settings to enable the protection
                 OPTIGA_UTIL_SET_COMMS_PROTOCOL_VERSION(me_util, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
-                OPTIGA_UTIL_SET_COMMS_PROTECTION_LEVEL(me_util, OPTIGA_COMMS_RESPONSE_PROTECTION);        
+                //OPTIGA_UTIL_SET_COMMS_PROTECTION_LEVEL(me_util, OPTIGA_COMMS_RESPONSE_PROTECTION);        
+                OPTIGA_UTIL_SET_COMMS_PROTECTION_LEVEL(me_util, OPTIGA_COMMS_RESPONSE_PROTECTION|OPTIGA_COMMS_RE_ESTABLISH);
+            }
                 
-                bytes_to_read = sizeof(read_data_buffer);
-                optiga_lib_status = OPTIGA_LIB_BUSY;
-                return_status = optiga_util_read_data(me_util,
-                                                    optiga_oid,
-                                                    0,
-                                                    read_data_buffer,
-                                                    (uint16_t *)&bytes_to_read);
-                if (OPTIGA_LIB_SUCCESS != return_status)
-                    break;			
-                //Wait until the optiga_util_read_metadata operation is completed
-                while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
-                return_status = optiga_lib_status;
-                if (return_status != OPTIGA_LIB_SUCCESS)
-                    break;
-                else
-                {
-                    inValue = (uint32_t)((read_data_buffer[4]<<24) + (read_data_buffer[5]<<16) 
-                                + (read_data_buffer[6]<<8) + (read_data_buffer[7]));
-                                
-                    printf("Monotonic Counter x : [0x%.4X]\n", optiga_oid);
-                    printf("Threshold           : 0x%.2X%.2X%.2X%.2X [%d]\n",read_data_buffer[4],
-                                                                            read_data_buffer[5],
-                                                                            read_data_buffer[6],
-                                                                            read_data_buffer[7],
-                                                                            inValue);
-                    inValue = (uint32_t)((read_data_buffer[0]<<24) + (read_data_buffer[1]<<16) 
-                                + (read_data_buffer[2]<<8) + (read_data_buffer[3]));
+            bytes_to_read = sizeof(read_data_buffer);
+            optiga_lib_status = OPTIGA_LIB_BUSY;
+            return_status = optiga_util_read_data(me_util,
+                                                optiga_oid,
+                                                0,
+                                                read_data_buffer,
+                                                (uint16_t *)&bytes_to_read);
+            if (OPTIGA_LIB_SUCCESS != return_status)
+                break;			
+            //Wait until the optiga_util_read_metadata operation is completed
+            while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+            return_status = optiga_lib_status;
+            if (return_status != OPTIGA_LIB_SUCCESS)
+                break;
+            else
+            {
+                inValue = (uint32_t)((read_data_buffer[4]<<24) + (read_data_buffer[5]<<16) 
+                            + (read_data_buffer[6]<<8) + (read_data_buffer[7]));
+                            
+                printf("Monotonic Counter x : [0x%.4X]\n", optiga_oid);
+                printf("Threshold           : 0x%.2X%.2X%.2X%.2X [%d]\n",read_data_buffer[4],
+                                                                        read_data_buffer[5],
+                                                                        read_data_buffer[6],
+                                                                        read_data_buffer[7],
+                                                                        inValue);
+                inValue = (uint32_t)((read_data_buffer[0]<<24) + (read_data_buffer[1]<<16) 
+                            + (read_data_buffer[2]<<8) + (read_data_buffer[3]));
 
-                    printf("Counter Value       : 0x%.2X%.2X%.2X%.2X [%d]\n",read_data_buffer[0],
-                                                                            read_data_buffer[1],
-                                                                            read_data_buffer[2],
-                                                                            read_data_buffer[3],
-                                                                            inValue);
-                }    
+                printf("Counter Value       : 0x%.2X%.2X%.2X%.2X [%d]\n",read_data_buffer[0],
+                                                                        read_data_buffer[1],
+                                                                        read_data_buffer[2],
+                                                                        read_data_buffer[3],
+                                                                        inValue);
+            }    
        }   
     } while(FALSE);
     

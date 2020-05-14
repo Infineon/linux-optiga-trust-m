@@ -1121,3 +1121,106 @@ void trustmPrintErrorCode(uint16_t errcode)
             break; 
     }   
 }
+
+void trustmGetOIDName(uint16_t optiga_oid, char *name)
+{
+    switch (optiga_oid)
+    {
+        case 0xE0C0:
+            sprintf(name,"Global Life Cycle Status    [0x%.4X] ", optiga_oid);
+            break;
+        case 0xE0C1:
+            sprintf(name,"Global Security Status      [0x%.4X] ", optiga_oid);
+            break;
+        case 0xE0C2:
+            sprintf(name,"UID                         [0x%.4X] ", optiga_oid);
+            break;
+        case 0xE0C3:
+            sprintf(name,"Sleep Mode Activation Delay [0x%.4X] ", optiga_oid);
+            break;
+        case 0xE0C4:
+            sprintf(name,"Current Limitation          [0x%.4X] ", optiga_oid);
+            break;
+        case 0xE0C5:
+            sprintf(name,"Security Event Counter      [0x%.4X] ", optiga_oid);
+            break;
+        case 0xE0C6:
+            sprintf(name,"Max Com Buffer Size         [0x%.4X] ", optiga_oid);
+            break;
+        case 0xE0E0:
+            sprintf(name,"Device Public Key IFX       [0x%.4X] ", optiga_oid);
+            break;
+        case 0xE0E1:
+        case 0xE0E2:
+        case 0xE0E3:
+            sprintf(name,"Device Public Key           [0x%.4X] ", optiga_oid);
+            break;
+        case 0xE0E8:
+            sprintf(name,"Root CA Public Key Cert1    [0x%.4X] ", optiga_oid);
+            break;
+        case 0xE0E9:
+            sprintf(name,"Root CA Public Key Cert2    [0x%.4X] ", optiga_oid);
+            break;
+        case 0xE0EF:
+            sprintf(name,"Root CA Public Key Cert8    [0x%.4X] ", optiga_oid);
+            break;
+        case 0xE0F0:
+            sprintf(name,"Device EC Privte Key 1         [0x%.4X] ", optiga_oid);
+            break;
+        case 0xE0F1:
+        case 0xE0F2:
+        case 0xE0F3:
+            sprintf(name,"Device EC Privte Key x         [0x%.4X] ", optiga_oid);
+            break;
+        case 0xE0FC:
+        case 0xE0FD:
+            sprintf(name,"Device RSA Privte Key x         [0x%.4X] ", optiga_oid);
+            break;            
+        case 0xE100:
+        case 0xE101:
+        case 0xE102:
+        case 0xE103:
+            sprintf(name,"Session Context x           [0x%.4X] ", optiga_oid);
+            break;                    
+        case 0xE120:
+        case 0xE121:
+        case 0xE122:
+        case 0xE123:
+            sprintf(name,"Monotonic Counter x         [0x%.4X] ", optiga_oid);
+            break;
+        case 0xE140:
+            sprintf(name,"Shared Platform Binding Secret. [0x%.4x] ", optiga_oid);
+            break;
+        case 0xF1C0:
+            sprintf(name,"Application Life Cycle Sts  [0x%.4X] ", optiga_oid);
+            break;                    
+        case 0xF1C1:
+            sprintf(name,"Application Security Sts    [0x%.4X] ", optiga_oid);
+            break;                    
+        case 0xF1C2:
+            sprintf(name,"Application Error Codes     [0x%.4X] ", optiga_oid);
+            break;                    
+        case 0xF1D0:
+        case 0xF1D1:
+        case 0xF1D2:
+        case 0xF1D3:
+        case 0xF1D4:
+        case 0xF1D5:
+        case 0xF1D6:
+        case 0xF1D7:
+        case 0xF1D8:
+        case 0xF1D9:
+        case 0xF1DA:
+        case 0xF1DB:
+            sprintf(name,"App DataStrucObj type 3     [0x%.4X] ", optiga_oid);
+            break;                    
+        case 0xF1E0:
+        case 0xF1E1:
+            sprintf(name,"App DataStrucObj type 2     [0x%.4X] ", optiga_oid);
+            break;                        
+        default:
+            name = NULL;
+            break;
+    }    
+}
+
