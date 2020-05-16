@@ -324,7 +324,7 @@ void trustmdecodeMetaData(uint8_t * metaData)
                             case 0xe1: // LcsO
                                 printf("%s",__decodeAC(*(metaData+(i++))));
                                 printf("%s",__decodeAC(*(metaData+(i++))));
-                                printf("%d",*(metaData+(i++)));
+                                printf("0x%.2X",*(metaData+(i++)));
                                 j += 2;
                                 if ((len-j) < 3)
                                     printf(", ");                           
@@ -1219,7 +1219,7 @@ void trustmGetOIDName(uint16_t optiga_oid, char *name)
             sprintf(name,"App DataStrucObj type 2     [0x%.4X] ", optiga_oid);
             break;                        
         default:
-            name = NULL;
+            *name = 0x00;
             break;
     }    
 }

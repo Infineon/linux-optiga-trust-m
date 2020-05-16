@@ -33,21 +33,24 @@
 
 static const uint8_t __bALW[] = {0x01,0x00}; // alway read or write
 static const uint8_t __bNEV[] = {0x01,0xff}; // disable read or write
-static const uint8_t __bON_TERMINATE[] = {0x03,0xE1,0xFC,0x09}; // disable on terminate
-static const uint8_t __bLOCK[] = {0x01,0x07}; // lock LcsO
-static const uint8_t __bTERMINATE[] = {0x01,0x0F}; // terminate LcsO
+static const uint8_t __bON_IN[] = {0x03,0xE1,0xFC,0x03}; // disable on IN
+static const uint8_t __bON_OP[] = {0x03,0xE1,0xFC,0x07}; // disable on OP
+static const uint8_t __bON_TE[] = {0x03,0xE1,0xFC,0xFF}; // disable on TE
+static const uint8_t __bIN[] = {0x01,0x03}; // Set LcsO to Initialzation State
+static const uint8_t __bOP[] = {0x01,0x07}; // Set LcsO to Operational State
+static const uint8_t __bTE[] = {0x01,0x0F}; // Set LcsO to Termination State
 
 typedef struct _OPTFLAG {
     uint16_t    read        : 1;
     uint16_t    write       : 1;
     uint16_t    lcschange   : 1;
     uint16_t    lcsread     : 1;
-    uint16_t    lcslock     : 1;
-    uint16_t    lcsterminate: 1;
     uint16_t    lcsexecute  : 1;
+    uint16_t    lcsin       : 1;
+    uint16_t    lcsop       : 1;
+    uint16_t    lcste       : 1;
     uint16_t    custom      : 1;
     uint16_t    bypass      : 1;
-    uint16_t    dummy9      : 1;
     uint16_t    dummy10     : 1;
     uint16_t    dummy11     : 1;
     uint16_t    dummy12     : 1;
@@ -67,22 +70,29 @@ static void _helpmenu(void)
     printf("option:- \n");
     printf("-r <OID>  : Read metadata of OID 0xNNNN \n");
     printf("-w <OID>  : Write metadata of OID\n");
-    printf("-C <data> : Set Change mode (a:allow change,\n");
-    printf("                             n:disable change,\n");
-    printf("                             t:disable change on termination,\n");
+    printf("-C <data> : Set Change mode (a:ALW,\n");
+    printf("                             n:NEV,\n");
+    printf("                             i:Lsc0 < 0x03,\n");
+    printf("                             o:Lsc0 < 0x07,\n");
+    printf("                             t:Lsc0 < 0xFF,\n");
     printf("                             f:<input file for complex setting>)\n");
-    printf("-R <data> : Set Read mode (a:allow read,\n");
-    printf("                           n:disable read,\n");
-    printf("                           t:disable read on termination\n");
-    printf("                           f:<input file for complex setting>)\n");
-    printf("-E <data> : Set Change mode (a:allow execute,\n");
-    printf("                             n:disable execute,\n");
-    printf("                             t:disable execute on termination,\n");
+    printf("-R <data> : Set Read mode   (a:ALW,\n");
+    printf("                             n:NEV,\n");
+    printf("                             i:Lsc0 < 0x03,\n");
+    printf("                             o:Lsc0 < 0x07,\n");
+    printf("                             t:Lsc0 < 0xFF,\n");
+    printf("                             f:<input file for complex setting>)\n");
+    printf("-E <data> : Set Change mode (a:ALW,\n");
+    printf("                             n:NEV,\n");
+    printf("                             i:Lsc0 < 0x03,\n");
+    printf("                             o:Lsc0 < 0x07,\n");
+    printf("                             t:Lsc0 < 0xFF,\n");
     printf("                             f:<input file for complex setting>)\n");
     printf("-F <file> : Custom input\n");
     printf("          : (Need to input the full Metadata to be written)\n");
-    printf("-L        : Lock OID (Set Lsc: 0x07) \n");
-    printf("-T        : TERMINATE OID (Set Lsc0: 0xFF)\n");
+    printf("-I        : Set Lsc0: 0x03\n");
+    printf("-O        : Set Lsc0: 0x07\n");
+    printf("-T        : Set Lsc0: 0xFF\n");
     printf("-X        : Bypass Shielded Communication \n");
     printf("-h        : Print this help \n");
 }
@@ -124,7 +134,7 @@ int main (int argc, char **argv)
         opterr = 0; // Disable getopt error messages in case of unknown parameters
 
         // Loop through parameters with getopt.
-        while (-1 != (option = getopt(argc, argv, "r:w:C:R:E:LTF:Xh")))
+        while (-1 != (option = getopt(argc, argv, "r:w:C:R:E:IOTF:Xh")))
         {
             switch (option)
             {
@@ -140,6 +150,7 @@ int main (int argc, char **argv)
                     uOptFlag.flags.lcschange = 1;
                     lcsChange = (uint8_t *)optarg;
                     if((lcsChange[0] != 'a')&&(lcsChange[0] != 'n')&&
+                        (lcsChange[0] != 'i')&&(lcsChange[0] != 'o')&&
                         (lcsChange[0] != 't')&&(lcsChange[0] != 'f'))
                     {
                         _helpmenu();
@@ -150,6 +161,7 @@ int main (int argc, char **argv)
                     uOptFlag.flags.lcsread = 1;
                     lcsRead = (uint8_t *)optarg;
                     if((lcsRead[0] != 'a')&&(lcsRead[0] != 't')&&
+                        (lcsRead[0] != 'i')&&(lcsRead[0] != 'o')&&
                         (lcsRead[0] != 'n')&&(lcsRead[0] != 'f'))
                     {
                         _helpmenu();
@@ -160,17 +172,21 @@ int main (int argc, char **argv)
                     uOptFlag.flags.lcsexecute = 1;
                     lcsExecute = (uint8_t *)optarg;
                     if((lcsExecute[0] != 'a')&&(lcsExecute[0] != 'n')&&
+                        (lcsExecute[0] != 'i')&&(lcsExecute[0] != 'o')&&
                         (lcsExecute[0] != 't')&&(lcsExecute[0] != 'f'))
                     {
                         _helpmenu();
                         exit(0);
                     }
                     break;
-                case 'L': // Lock
-                    uOptFlag.flags.lcslock = 1;
+                case 'I': // IN
+                    uOptFlag.flags.lcsin = 1;
                     break;
-                case 'T': // Terminate
-                    uOptFlag.flags.lcsterminate = 1;
+                case 'O': // OP
+                    uOptFlag.flags.lcsop = 1;
+                    break;
+                case 'T': // TE
+                    uOptFlag.flags.lcste = 1;
                     break;
                 case 'F': // Custom Setting
                     uOptFlag.flags.custom = 1;
@@ -201,6 +217,11 @@ int main (int argc, char **argv)
 
     do
     {
+        if((uOptFlag.flags.read != 1)&&(uOptFlag.flags.write != 1))
+        {
+            printf("Must at least contain input -r  or -w\n");
+        }
+        
         if(uOptFlag.flags.read == 1)
         {
             if(uOptFlag.flags.bypass != 1)
@@ -235,9 +256,11 @@ int main (int argc, char **argv)
 
         if(uOptFlag.flags.write == 1)
         {
-            if (!(uOptFlag.all & 0x008C))
+            if ((uOptFlag.flags.lcsin != 1)&&(uOptFlag.flags.lcsop != 1)&&(uOptFlag.flags.lcste != 1)&&
+                (uOptFlag.flags.custom != 1)&&(uOptFlag.flags.lcschange != 1)&&
+                (uOptFlag.flags.lcsexecute != 1)&&(uOptFlag.flags.lcsread != 1))
             {
-                printf ("\nMust at least input -F -L,-T,-C,-R or -E!!! \n");
+                printf ("\nMust at least contain input -F,-I,-O,-T,-C,-R or -E!!! \n");
                 exit(1);
             }
 
@@ -252,18 +275,23 @@ int main (int argc, char **argv)
                 modeLen=0;
                 mode[modeLen++] = 0x20;
                 modeLen++; // skip the len input first
-                if ((uOptFlag.flags.lcslock == 1) || (uOptFlag.flags.lcsterminate == 1))
+                if ((uOptFlag.flags.lcsin == 1) || (uOptFlag.flags.lcsop == 1) || (uOptFlag.flags.lcste == 1))
                 {
                     mode[modeLen++] = 0xC0; // LcsO
-                    if(uOptFlag.flags.lcsterminate == 1)
+                    if(uOptFlag.flags.lcste == 1)
                     {
-                        memcpy((mode+modeLen),__bTERMINATE,sizeof(__bTERMINATE));
-                        modeLen += sizeof(__bTERMINATE);
+                        memcpy((mode+modeLen),__bTE,sizeof(__bTE));
+                        modeLen += sizeof(__bTE);
+                    }
+                    else if (uOptFlag.flags.lcsop == 1)
+                    {
+                        memcpy((mode+modeLen),__bOP,sizeof(__bOP));
+                        modeLen += sizeof(__bOP);
                     }
                     else
                     {
-                        memcpy((mode+modeLen),__bLOCK,sizeof(__bLOCK));
-                        modeLen += sizeof(__bLOCK);
+                        memcpy((mode+modeLen),__bIN,sizeof(__bIN));
+                        modeLen += sizeof(__bIN);                        
                     }
                 }
 
@@ -280,9 +308,17 @@ int main (int argc, char **argv)
                             memcpy((mode+modeLen),__bNEV,sizeof(__bNEV));
                             modeLen += sizeof(__bNEV);
                             break;
+                        case 'i':
+                            memcpy((mode+modeLen),__bON_IN,sizeof(__bON_IN));
+                            modeLen += sizeof(__bON_IN);
+                            break;
+                        case 'o':
+                            memcpy((mode+modeLen),__bON_OP,sizeof(__bON_OP));
+                            modeLen += sizeof(__bON_OP);
+                            break;
                         case 't':
-                            memcpy((mode+modeLen),__bON_TERMINATE,sizeof(__bON_TERMINATE));
-                            modeLen += sizeof(__bON_TERMINATE);
+                            memcpy((mode+modeLen),__bON_TE,sizeof(__bON_TE));
+                            modeLen += sizeof(__bON_TE);
                             break;
                         case 'f':
                             if (lcsChange[1] == ':')
@@ -321,9 +357,17 @@ int main (int argc, char **argv)
                             memcpy((mode+modeLen),__bNEV,sizeof(__bNEV));
                             modeLen += sizeof(__bNEV);
                             break;
+                        case 'i':
+                            memcpy((mode+modeLen),__bON_IN,sizeof(__bON_IN));
+                            modeLen += sizeof(__bON_IN);
+                            break;
+                        case 'o':
+                            memcpy((mode+modeLen),__bON_OP,sizeof(__bON_OP));
+                            modeLen += sizeof(__bON_OP);
+                            break;
                         case 't':
-                            memcpy((mode+modeLen),__bON_TERMINATE,sizeof(__bON_TERMINATE));
-                            modeLen += sizeof(__bON_TERMINATE);
+                            memcpy((mode+modeLen),__bON_TE,sizeof(__bON_TE));
+                            modeLen += sizeof(__bON_TE);
                             break;
                         case 'f':
                             if (lcsRead[1] == ':')
@@ -362,9 +406,17 @@ int main (int argc, char **argv)
                             memcpy((mode+modeLen),__bNEV,sizeof(__bNEV));
                             modeLen += sizeof(__bNEV);
                             break;
+                        case 'i':
+                            memcpy((mode+modeLen),__bON_IN,sizeof(__bON_IN));
+                            modeLen += sizeof(__bON_IN);
+                            break;
+                        case 'o':
+                            memcpy((mode+modeLen),__bON_OP,sizeof(__bON_OP));
+                            modeLen += sizeof(__bON_OP);
+                            break;
                         case 't':
-                            memcpy((mode+modeLen),__bON_TERMINATE,sizeof(__bON_TERMINATE));
-                            modeLen += sizeof(__bON_TERMINATE);
+                            memcpy((mode+modeLen),__bON_TE,sizeof(__bON_TE));
+                            modeLen += sizeof(__bON_TE);
                             break;
                         case 'f':
                             if (lcsExecute[1] == ':')
