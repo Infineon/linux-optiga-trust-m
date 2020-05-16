@@ -102,6 +102,7 @@ int main (int argc, char **argv)
     char name[100];
     FILE *fp = NULL;
     uint16_t filesize;
+    uint16_t i;
 
     int option = 0;                    // Command line option.
 
@@ -190,6 +191,17 @@ int main (int argc, char **argv)
         {
             printf("Error signature reading file!!!\n");
             break;
+        }
+        else // check for SEQUENCE/LENGTH
+        {
+            if ((signature[0] == 0x30)&&(signature[1] < 0x7F))  // SEQUENCE detected and Length < 0x7F
+            {
+                signatureLen = signature[1];
+                for (i = 0;i < signatureLen; i++)
+                {
+                    signature[i] = signature[i+2];
+                }
+            }
         }
 
         if(uOptFlag.flags.hash == 1)

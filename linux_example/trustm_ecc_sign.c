@@ -43,9 +43,9 @@ typedef struct _OPTFLAG {
     uint16_t    sign        : 1;
     uint16_t    input       : 1;
     uint16_t    output      : 1;
+    uint16_t    outputssl   : 1;
     uint16_t    hash        : 1;
     uint16_t    bypass      : 1;
-    uint16_t    dummy5      : 1;
     uint16_t    dummy6      : 1;
     uint16_t    dummy7      : 1;
     uint16_t    dummy8      : 1;
@@ -68,7 +68,8 @@ void _helpmenu(void)
     printf("\nHelp menu: trustm_ecc_sign <option> ...<option>\n");
     printf("option:- \n");
     printf("-k <OID Key>  : Select ECC key for signing OID (0xE0F0-0xE0F3) \n");
-    printf("-o <filename> : Output to file \n");
+    printf("-o <filename> : Output to file with header\n");
+    printf("-O <filename> : Output to file without header\n");    
     printf("-i <filename> : Input Data file\n");
     printf("-H            : Hash before sign\n");
     printf("-X            : Bypass Shielded Communication \n");
@@ -84,7 +85,7 @@ int main (int argc, char **argv)
     hash_data_from_host_t hash_data_host;
     uint8_t hash_context_buffer[2048];
 
-    uint8_t signature [110];     //To store the signture generated
+    uint8_t signature [300];     //To store the signture generated
     uint16_t signature_length = sizeof(signature);
     uint8_t digest[32];
     uint16_t digestLen = 0;
@@ -95,6 +96,7 @@ int main (int argc, char **argv)
     char *inFile = NULL;
     FILE *fp = NULL;
     uint16_t filesize;
+    int i;
 
     int option = 0;                    // Command line option.
 
@@ -118,7 +120,7 @@ int main (int argc, char **argv)
         opterr = 0; // Disable getopt error messages in case of unknown parameters
 
         // Loop through parameters with getopt.
-        while (-1 != (option = getopt(argc, argv, "k:o:i:HXh")))
+        while (-1 != (option = getopt(argc, argv, "k:o:O:i:HXh")))
         {
             switch (option)
             {
@@ -126,7 +128,11 @@ int main (int argc, char **argv)
                     uOptFlag.flags.sign = 1;
                     optiga_key_id = trustmHexorDec(optarg);
                     break;
-                case 'o': // Output
+                case 'o': // Output with header
+                    uOptFlag.flags.outputssl = 1;
+                    outFile = optarg;
+                    break;
+                case 'O': // Output without header
                     uOptFlag.flags.output = 1;
                     outFile = optarg;
                     break;
@@ -164,7 +170,7 @@ int main (int argc, char **argv)
     {
         if(uOptFlag.flags.sign == 1)
         {
-            if(uOptFlag.flags.output != 1)
+            if((uOptFlag.flags.output != 1) && (uOptFlag.flags.outputssl != 1))
             {
                 printf("Output filename missing!!!\n");
                 break;
@@ -316,6 +322,16 @@ int main (int argc, char **argv)
                 break;
             else
             {
+                if(uOptFlag.flags.outputssl == 1)
+                {
+                    for(i=signature_length-1; i >= 0; i--)
+                    {
+                        signature[i+2] = signature[i]; 
+                    }
+                    signature[0] = 0x30; // Insert SEQUENCE
+                    signature[1] = signature_length; // insert length
+                    signature_length += 2;
+                }
                 trustmwriteTo(signature, signature_length, outFile);
                 printf("Success\n");
             }
