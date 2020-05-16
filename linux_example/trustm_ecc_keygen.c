@@ -167,7 +167,7 @@ int main (int argc, char **argv)
                     printf("Bypass Shielded Communication. \n");
                     break;
                 case 'h': // Print Help Menu
-                        default:  // Any other command Print Help Menu
+                default:  // Any other command Print Help Menu
                         helpmenu();
                         exit(0);
                         break;
@@ -176,8 +176,7 @@ int main (int argc, char **argv)
     } while (FALSE); // End of DO WHILE FALSE loop.
 
     return_status = trustm_Open();
-    if (return_status != OPTIGA_LIB_SUCCESS)
-            exit(1);
+    if (return_status != OPTIGA_LIB_SUCCESS) {exit(1);}
 
     printf("========================================================\n");
 
@@ -209,13 +208,11 @@ int main (int argc, char **argv)
             printf("Generating Key to 0x%.4X\n",optiga_key_id);
             printf("Output File Name : %s \n", outFile);
 
-
-
             if(uOptFlag.flags.bypass != 1)
             {
                 // OPTIGA Comms Shielded connection settings to enable the protection
                 OPTIGA_CRYPT_SET_COMMS_PROTOCOL_VERSION(me_crypt, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
-                OPTIGA_CRYPT_SET_COMMS_PROTECTION_LEVEL(me_crypt, OPTIGA_COMMS_COMMAND_PROTECTION|OPTIGA_COMMS_RE_ESTABLISH);
+                OPTIGA_CRYPT_SET_COMMS_PROTECTION_LEVEL(me_crypt, OPTIGA_COMMS_FULL_PROTECTION|OPTIGA_COMMS_RE_ESTABLISH);
             }
             
             optiga_lib_status = OPTIGA_LIB_BUSY;
@@ -253,7 +250,7 @@ int main (int argc, char **argv)
             {
                 // OPTIGA Comms Shielded connection settings to enable the protection
                 OPTIGA_UTIL_SET_COMMS_PROTOCOL_VERSION(me_util, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
-                OPTIGA_UTIL_SET_COMMS_PROTECTION_LEVEL(me_util, OPTIGA_COMMS_RESPONSE_PROTECTION|OPTIGA_COMMS_RE_ESTABLISH);
+                OPTIGA_UTIL_SET_COMMS_PROTECTION_LEVEL(me_util, OPTIGA_COMMS_FULL_PROTECTION|OPTIGA_COMMS_RE_ESTABLISH);
             }
 
             optiga_lib_status = OPTIGA_LIB_BUSY;
