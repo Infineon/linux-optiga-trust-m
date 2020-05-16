@@ -146,6 +146,7 @@ option:-
 -o <filename>  	: Output certificate to file 
 -i <filename>  	: Input certificate to file 
 -c <Cert OID>   : Clear cert OID data to zero 
+-X              : Bypass Shielded Communication 
 -h              : Print this help 
 ```
 
@@ -227,10 +228,12 @@ option:-
 -r <OID>      : Read from OID 0xNNNN 
 -w <OID>      : Write to OID
 -i <filename> : Input file 
+-I <value>    : Input byte value 
 -o <filename> : Output file 
 -p <offset>   : Offset position 
 -e            : Erase and wirte 
--h            : Print this help 
+-X            : Bypass Shielded Communication 
+-h            : Print this help  
 ```
 
 Example : writing text file 1234.txt into OID 0xE0E1 and reading after writing
@@ -281,13 +284,14 @@ foo@bar:~$ ./bin/trustm_ecc_keygen
 Help menu: trustm_ecc_keygen <option> ...<option>
 option:- 
 -g <Key OID>    : Generate ECC Key in OID 0xNNNN 
--t <key type>  	: Key type Auth:0x01 Enc :0x02 HFWU:0x04
+-t <key type>   : Key type Auth:0x01 Enc :0x02 HFWU:0x04
                            DevM:0X08 Sign:0x10 Agmt:0x20
                            [default Auth]
 -k <key size>   : Key size ECC256:0x03 ECC384:0x04 [default ECC256]
--o <filename>  	: Output Pubkey to file in PEM format
+-o <filename>   : Output Pubkey to file in PEM format
 -s              : Save Pubkey in <Key OID + 0x10E0>
--h              : Print this help
+-X              : Bypass Shielded Communication 
+-h              : Print this help 
 ```
 
 Example : generate an ECC256 key with type Auth/Enc/Sign in OID 0xE0F3 and save pubkey in OID 0xF1D3.
@@ -299,29 +303,29 @@ Generating Key to 0xE0F3
 Output File Name : test_e0f3_pub.pem 
 Pubkey :
 	30 59 30 13 06 07 2A 86 48 CE 3D 02 01 06 08 2A 
-	86 48 CE 3D 03 01 07 03 42 00 04 DA 08 53 86 67 
-	D1 DA 47 6E 0C 7E 9D 96 99 D8 7F 7B 96 E9 80 3B 
-	1B 12 5E EB 8C 14 C0 77 8C D9 05 CE A2 EA EF 65 
-	94 25 BC 48 A2 8A 7E A0 65 69 90 BB F7 1E 29 B0 
-	A1 72 96 4B 85 E2 CC 60 3E 8F 68 
+	86 48 CE 3D 03 01 07 03 42 00 04 F1 55 65 CB 42 
+	FB 3E 58 DB C6 9F 67 E8 FC D3 48 F6 AA 5F 13 2D 
+	F6 3B A7 90 22 B4 B6 D3 4E 5B BB 98 AB 46 97 BD 
+	2A 03 A6 27 A5 4D FB 95 C2 BB 9A D3 AF A9 4E A7 
+	D6 A1 63 9F 93 B6 71 57 07 E6 00 
 Write Success to OID: 0xF1D3.
 ========================================================
 
 foo@bar:~$ cat test_e0f3_pub.pem 
 -----BEGIN PUBLIC KEY-----
-MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE2ghThmfR2kduDH6dlpnYf3uW6YA7
-GxJe64wUwHeM2QXOourvZZQlvEiiin6gZWmQu/ceKbChcpZLheLMYD6PaA==
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE8VVly0L7Pljbxp9n6PzTSPaqXxMt
+9junkCK0ttNOW7uYq0aXvSoDpielTfuVwrua06+pTqfWoWOfk7ZxVwfmAA==
 -----END PUBLIC KEY-----
 
 foo@bar:~$ ./bin/trustm_data -r 0xf1d3
 ========================================================
-App DataStrucObj type 1     [0xF1D3] [Size 0091] : 
+App DataStrucObj type 3     [0xF1D3] [Size 0091] : 
 	30 59 30 13 06 07 2A 86 48 CE 3D 02 01 06 08 2A 
-	86 48 CE 3D 03 01 07 03 42 00 04 DA 08 53 86 67 
-	D1 DA 47 6E 0C 7E 9D 96 99 D8 7F 7B 96 E9 80 3B 
-	1B 12 5E EB 8C 14 C0 77 8C D9 05 CE A2 EA EF 65 
-	94 25 BC 48 A2 8A 7E A0 65 69 90 BB F7 1E 29 B0 
-	A1 72 96 4B 85 E2 CC 60 3E 8F 68 
+	86 48 CE 3D 03 01 07 03 42 00 04 F1 55 65 CB 42 
+	FB 3E 58 DB C6 9F 67 E8 FC D3 48 F6 AA 5F 13 2D 
+	F6 3B A7 90 22 B4 B6 D3 4E 5B BB 98 AB 46 97 BD 
+	2A 03 A6 27 A5 4D FB 95 C2 BB 9A D3 AF A9 4E A7 
+	D6 A1 63 9F 93 B6 71 57 07 E6 00 
 ========================================================
 ```
 
@@ -329,14 +333,18 @@ App DataStrucObj type 1     [0xF1D3] [Size 0091] :
 
 Simple demo to show the process to sign using OPTIGA™ Trust M ECC key.
 
+*Note : to output OpenSSL signature format used -o*
+
 ```console
 foo@bar:~$ ./bin/trustm_ecc_sign 
 Help menu: trustm_ecc_sign <option> ...<option>
 option:- 
 -k <OID Key>  : Select ECC key for signing OID (0xE0F0-0xE0F3) 
--o <filename> : Output to file 
+-o <filename> : Output to file with header
+-O <filename> : Output to file without header
 -i <filename> : Input Data file
 -H            : Hash before sign
+-X            : Bypass Shielded Communication 
 -h            : Print this help 
 ```
 
@@ -349,23 +357,21 @@ OID Key          : 0xE0F3
 Output File Name : testsignature.bin 
 Input File Name  : helloworld.txt 
 Hash Success : SHA256
-	E0 EE B7 C6 63 CC 5F 6F 45 26 13 E2 D7 AE FF 45 
-	2A 26 95 A0 2F B4 AF 30 33 CC 5B C0 62 01 DE 70 
+	8C D0 7F 3A 5F F9 8F 2A 78 CF C3 66 C1 3F B1 23 
+	EB 8D 29 C1 CA 37 C7 9D F1 90 42 5D 5B 9E 42 4D 
 	
-filesize: 14
+filesize: 11
 Success
 ========================================================
 
 foo@bar:~$ hd testsignature.bin 
-00000000  02 20 13 29 0d 5c dd ef  42 d0 f4 6d e6 92 b0 ad  |. .).\..B..m....|
-00000010  fd ec 3e 59 41 40 f3 53  39 04 c9 05 91 b6 b1 91  |..>YA@.S9.......|
-00000020  19 49 02 21 00 d6 98 c6  25 8d 87 dd d1 af 7b 42  |.I.!....%.....{B|
-00000030  1a 15 32 c7 84 9f 9d fe  ce f3 15 8f d7 12 e1 fa  |..2.............|
-00000040  1b 41 19 c2 82                                    |.A...|
-00000045
+00000000  30 44 02 20 14 ea 77 98  ed 26 89 40 22 bb a0 60  |0D. ..w..&.@"..`|
+00000010  c5 1f 01 8f 65 21 7a 98  0d 63 73 03 4e ea 13 39  |....e!z..cs.N..9|
+00000020  0c ed 58 8a 02 20 2a 7b  fc 7a dd 2e 75 86 41 f5  |..X.. *{.z..u.A.|
+00000030  43 14 ec e8 14 34 6b 2a  20 68 23 eb 14 ec 59 2f  |C....4k* h#...Y/|
+00000040  37 04 37 44 62 c9                                 |7.7Db.|
+00000046
 ```
-
-
 
 ### <a name="trustm_ecc_verify"></a>trustm_ecc_verify
 
@@ -380,6 +386,7 @@ option:-
 -i <filename>  : Input Data file
 -s <signature> : Signature file
 -H             : Hash input before verify
+-X             : Bypass Shielded Communication 
 -h             : Print this help
 ```
 
@@ -392,21 +399,21 @@ Pubkey file         : test_e0f3_pub.pem
 Input File Name     : helloworld.txt 
 Signature File Name : testsignature.bin 
 Hash Digest : 
-	E0 EE B7 C6 63 CC 5F 6F 45 26 13 E2 D7 AE FF 45 
-	2A 26 95 A0 2F B4 AF 30 33 CC 5B C0 62 01 DE 70 
+	8C D0 7F 3A 5F F9 8F 2A 78 CF C3 66 C1 3F B1 23 
+	EB 8D 29 C1 CA 37 C7 9D F1 90 42 5D 5B 9E 42 4D 
 	
 Signature : 
-	02 20 13 29 0D 5C DD EF 42 D0 F4 6D E6 92 B0 AD 
-	FD EC 3E 59 41 40 F3 53 39 04 C9 05 91 B6 B1 91 
-	19 49 02 21 00 D6 98 C6 25 8D 87 DD D1 AF 7B 42 
-	1A 15 32 C7 84 9F 9D FE CE F3 15 8F D7 12 E1 FA 
-	1B 41 19 C2 82 
+	02 20 14 EA 77 98 ED 26 89 40 22 BB A0 60 C5 1F 
+	01 8F 65 21 7A 98 0D 63 73 03 4E EA 13 39 0C ED 
+	58 8A 02 20 2A 7B FC 7A DD 2E 75 86 41 F5 43 14 
+	EC E8 14 34 6B 2A 20 68 23 EB 14 EC 59 2F 37 04 
+	37 44 62 C9 
 Pub key : [256]
-	03 42 00 04 DA 08 53 86 67 D1 DA 47 6E 0C 7E 9D 
-	96 99 D8 7F 7B 96 E9 80 3B 1B 12 5E EB 8C 14 C0 
-	77 8C D9 05 CE A2 EA EF 65 94 25 BC 48 A2 8A 7E 
-	A0 65 69 90 BB F7 1E 29 B0 A1 72 96 4B 85 E2 CC 
-	60 3E 8F 68 
+	03 42 00 04 F1 55 65 CB 42 FB 3E 58 DB C6 9F 67 
+	E8 FC D3 48 F6 AA 5F 13 2D F6 3B A7 90 22 B4 B6 
+	D3 4E 5B BB 98 AB 46 97 BD 2A 03 A6 27 A5 4D FB 
+	95 C2 BB 9A D3 AF A9 4E A7 D6 A1 63 9F 93 B6 71 
+	57 07 E6 00 
 Verify Success.
 ========================================================
 ```
@@ -422,15 +429,15 @@ OID Cert            : 0xE0E3
 Input File Name     : helloworld.txt 
 Signature File Name : testsignature.bin 
 Hash Digest : 
-	E0 EE B7 C6 63 CC 5F 6F 45 26 13 E2 D7 AE FF 45 
-	2A 26 95 A0 2F B4 AF 30 33 CC 5B C0 62 01 DE 70 
+	8C D0 7F 3A 5F F9 8F 2A 78 CF C3 66 C1 3F B1 23 
+	EB 8D 29 C1 CA 37 C7 9D F1 90 42 5D 5B 9E 42 4D 
 	
 Signature : 
-	02 20 13 29 0D 5C DD EF 42 D0 F4 6D E6 92 B0 AD 
-	FD EC 3E 59 41 40 F3 53 39 04 C9 05 91 B6 B1 91 
-	19 49 02 21 00 D6 98 C6 25 8D 87 DD D1 AF 7B 42 
-	1A 15 32 C7 84 9F 9D FE CE F3 15 8F D7 12 E1 FA 
-	1B 41 19 C2 82 
+	02 20 14 EA 77 98 ED 26 89 40 22 BB A0 60 C5 1F 
+	01 8F 65 21 7A 98 0D 63 73 03 4E EA 13 39 0C ED 
+	58 8A 02 20 2A 7B FC 7A DD 2E 75 86 41 F5 43 14 
+	EC E8 14 34 6B 2A 20 68 23 EB 14 EC 59 2F 37 04 
+	37 44 62 C9 
 Verify Success.
 
 ========================================================
@@ -444,7 +451,7 @@ List all the known OPTIGA™ Trust M error code with description
 
 Modify OPTIGA™ Trust M OID metadata.
 
-*Warning : -L and -T option is not reversible. Lock set Lcs0 to 0x07 and Terminate set Lcs0 to 0x0F*
+*Warning : -I, -O and -T option is not reversible.*
 
 ```console
 foo@bar:~$ ./bin/trustm_metadata 
@@ -452,19 +459,30 @@ Help menu: trustm_metadata <option> ...<option>
 option:- 
 -r <OID>  : Read metadata of OID 0xNNNN 
 -w <OID>  : Write metadata of OID
--C <data> : Set Change mode (a:allow change,
-                             n:disable change,
-                             t:disable change on termination,
+-C <data> : Set Change mode (a:ALW,
+                             n:NEV,
+                             i:Lsc0 < 0x03,
+                             o:Lsc0 < 0x07,
+                             t:Lsc0 < 0xFF,
                              f:<input file for complex setting>)
--R <data> : Set Read mode (a:allow read,
-                           t:disable read on termination
-                           f:<input file for complex setting>)
--E <data> : Set Change mode (a:allow execute,
-                             n:disable execute,
-                             t:disable execute on termination,
+-R <data> : Set Read mode   (a:ALW,
+                             n:NEV,
+                             i:Lsc0 < 0x03,
+                             o:Lsc0 < 0x07,
+                             t:Lsc0 < 0xFF,
                              f:<input file for complex setting>)
--L        : Lock OID metadata 
--T        : TERMINATE OID 
+-E <data> : Set Change mode (a:ALW,
+                             n:NEV,
+                             i:Lsc0 < 0x03,
+                             o:Lsc0 < 0x07,
+                             t:Lsc0 < 0xFF,
+                             f:<input file for complex setting>)
+-F <file> : Custom input
+          : (Need to input the full Metadata to be written)
+-I        : Set Initialization State (Lsc0: 0x03)
+-O        : Set Operational State (Lsc0: 0x07)
+-T        : Set Termination State (Lsc0: 0xFF)
+-X        : Bypass Shielded Communication 
 -h        : Print this help 
 ```
 
@@ -529,7 +547,8 @@ option:-
 -u <OID>      : Update Counter [0xE120-0xE123] 
 -i <value>    : Input Value 
 -s <value>    : Increment Steps 
--h            : Print this help 
+-X            : Bypass Shielded Communication 
+-h            : Print this help
 ```
 
 Example : Setting the threshold value to 10 and resetting the counter to zero
@@ -617,6 +636,7 @@ option:-
 -k <OID Key>  : Select key to decrypt OID 0xNNNN 
 -o <filename> : Output to file 
 -i <filename> : Input Data file
+-X            : Bypass Shielded Communication 
 -h            : Print this help 
 ```
 
@@ -657,7 +677,8 @@ option:-
 -p <pubkey>   : Use Pubkey file
 -o <filename> : Output to file 
 -i <filename> : Input Data file
--h            : Print this help 
+-X            : Bypass Shielded Communication 
+-h            : Print this help
 ```
 
 Example : Encrypt using external pubkey
@@ -699,12 +720,13 @@ foo@bar:~$ ./bin/trustm_rsa_keygen
 Help menu: trustm_rsa_keygen <option> ...<option>
 option:- 
 -g <Key OID>    : Generate RSA Key in OID [0xE0FC-0xE0FD] 
--t <key type>  	: Key type Auth:0x01 Enc :0x02 HFWU:0x04
-                           DevM:0X08 Sign:0x10 Agmt:0x20
-                           [default Auth]
+-t <key type>   : Key type Auth:0x01 Enc :0x02 HFWU:0x04
+                  DevM:0X08 Sign:0x10 Agmt:0x20
+                  [default Auth]
 -k <key size>   : Key size RSA1024:0x41 RSA2048:0x42 [default RSA1024]
--o <filename>  	: Output Pubkey to file in PEM format
+-o <filename>   : Output Pubkey to file in PEM format
 -s              : Save Pubkey with header in <Key OID + 0x10E4>
+-X              : Bypass Shielded Communication 
 -h              : Print this help 
 ```
 
@@ -777,7 +799,8 @@ option:-
 -o <filename> : Output to file 
 -i <filename> : Input Data file
 -H            : Hash before sign
--h            : Print this help 
+-X            : Bypass Shielded Communication 
+-h            : Print this help
 ```
 
 Example : Hash and sign the file helloworld.txt with key OID 0xE0FC and output to testsignature.bin
@@ -821,7 +844,8 @@ option:-
 -i <filename>  : Input Data file
 -s <signature> : Signature file
 -H             : Hash input before verify
--h             : Print this help 
+-X             : Bypass Shielded Communication 
+-h             : Print this help
 ```
 
 Example : verifying a signature using external public key.
@@ -892,6 +916,8 @@ Verify Success.
 
 ## <a name="engine_usage"></a>OPTIGA™ Trust M1 OpenSSL Engine usage
 The Engine is tested base on OpenSSL version 1.1.1d
+
+*Note : The OPTIGA™ Trust M Engine shielded communication depends on the default reset protection level for OPTIGA CRYPT and UTIL APIs. If the setting is set to OPTIGA_COMMS_NO_PROTECTION than the engine will not have shielded communication protection.*
 
 ### <a name="rand"></a>rand
 
@@ -1475,10 +1501,14 @@ In the *simpleTest_Client.c* code ~ line number 53-63. List the macro for changi
 
 When sporadic hanging or segment fault is seem when using the OpenSSL engine (Especially after modification of the engine code). Ensure that the pal_os_event.c patch is implemented. In the engine code ensure that trustm_disarm_timer(); is call after any OPTIGA™ Trust M library API is used.
 
-### At time displace may shown miss-align
+### At time display may show misalignment
 
-Run the tools again to refresh the output
+Run the tools again to refresh the output.
 
-### Secure communication feature not enable
+### Secure communication bypass
 
-The I2C secure communication is not implemented in the CLI for OPTIGA™ Trust M
+The I2C secure communication bypass option for CLI only works if the default reset protection level for OPTIGA CRYPT and UTIL APIs is set to OPTIGA_COMMS_NO_PROTECTION.
+
+### OPTIGA™ Trust M Sporadic hang
+
+Check the hardware reset pin if it is connected with an active reset GPIO as assigned n the OPTIGA™ Trust M library. Alternatively, you could configure the library to use software reset.

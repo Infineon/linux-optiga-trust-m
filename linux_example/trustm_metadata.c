@@ -90,9 +90,9 @@ static void _helpmenu(void)
     printf("                             f:<input file for complex setting>)\n");
     printf("-F <file> : Custom input\n");
     printf("          : (Need to input the full Metadata to be written)\n");
-    printf("-I        : Set Lsc0: 0x03\n");
-    printf("-O        : Set Lsc0: 0x07\n");
-    printf("-T        : Set Lsc0: 0xFF\n");
+    printf("-I        : Set Initialization State (Lsc0: 0x03)\n");
+    printf("-O        : Set Operational State (Lsc0: 0x07)\n");
+    printf("-T        : Set Termination State (Lsc0: 0xFF)\n");
     printf("-X        : Bypass Shielded Communication \n");
     printf("-h        : Print this help \n");
 }
