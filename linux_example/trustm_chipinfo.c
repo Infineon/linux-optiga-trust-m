@@ -36,8 +36,7 @@ int main (int argc, char **argv)
     utrustm_UID_t UID;
 
     return_status = trustm_Open();
-    if (return_status != OPTIGA_LIB_SUCCESS)
-        exit(1);
+    if (return_status != OPTIGA_LIB_SUCCESS) {exit(1);}
 
     return_status = trustm_readUID(&UID);
     if (return_status != OPTIGA_LIB_SUCCESS)
