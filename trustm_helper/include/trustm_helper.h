@@ -51,33 +51,38 @@
 #define TRUSTM_HELPER_DBGFN(x, ...)
 #endif
 
+#define TRUSTM_HELPER_INFO(...)    printf(__VA_ARGS__)
 #define TRUSTM_HELPER_ERRFN(x, ...)    fprintf(stderr, "Error in %s:%d %s: " x "\n", __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
-#define TRUSTM_HELPER_RETCODEFN(y, x, ...)	   fprintf(stdout, "\nError [0x%.4X] : " x "\n", y, ##__VA_ARGS__)
+#define TRUSTM_HELPER_RETCODEFN(y, x, ...)   fprintf(stdout, "\nError [0x%.4X] : " x "\n", y, ##__VA_ARGS__)
+
+#define TRUSTM_CTX_FILENAME             ".trustm_ctx"
+#define TRUSTM_HIBERNATE_CTX_FILENAME   ".trustm_hibernate_ctx"
+
 
 // ********** typedef
 typedef struct _tag_trustm_UID {
-	uint8_t	bCimIdentifer;
-	uint8_t bPlatformIdentifier;
-	uint8_t bModelIdentifier;
-	uint8_t wROMCode[2];
-	uint8_t rgbChipType[6];
-	uint8_t rgbBatchNumber[6];
-	uint8_t wChipPositionX[2];
-	uint8_t wChipPositionY[2];
-	uint8_t dwFirmwareIdentifier[4];
-	uint8_t rgbESWBuild[2];
+    uint8_t bCimIdentifer;
+    uint8_t bPlatformIdentifier;
+    uint8_t bModelIdentifier;
+    uint8_t wROMCode[2];
+    uint8_t rgbChipType[6];
+    uint8_t rgbBatchNumber[6];
+    uint8_t wChipPositionX[2];
+    uint8_t wChipPositionY[2];
+    uint8_t dwFirmwareIdentifier[4];
+    uint8_t rgbESWBuild[2];
 } trustm_UID_t;
 
 typedef union _tag_utrustm_UID {
-	uint8_t b[27];
-	trustm_UID_t st;
+    uint8_t b[27];
+    trustm_UID_t st;
 } utrustm_UID_t;
 
 typedef enum _tag_trustm_LifeCycStatus {
-	CREATION 	= 0x01,
-	INITIALIZATION 	= 0x03,
-	OPERATION	= 0x07,
-	TERMINATION	= 0x0f
+    CREATION    = 0x01,
+    INITIALIZATION  = 0x03,
+    OPERATION   = 0x07,
+    TERMINATION = 0x0f
 } trustm_eLifeCycStatus_t;
 
 typedef struct trustm_metadata_str
@@ -130,4 +135,4 @@ uint32_t trustmHexorDec(const char *aArg);
 uint16_t trustmwriteTo(uint8_t *buf, uint32_t len, const char *filename);
 uint16_t trustmreadFrom(uint8_t *data, uint8_t *filename);
 
-#endif	// _TRUSTM_HELPER_H_
+#endif  // _TRUSTM_HELPER_H_

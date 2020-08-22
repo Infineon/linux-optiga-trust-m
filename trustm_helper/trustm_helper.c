@@ -1,7 +1,7 @@
 /**
 * MIT License
 *
-* Copyright (c) 2019 Infineon Technologies AG
+* Copyright (c) 2020 Infineon Technologies AG
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -99,6 +99,63 @@ static char __SIGN[] = "Sign";
 static char __AGREE[] = "Agreement";
 static char __E1[100];
 
+static void __delay (int cnt)
+{
+    uint32_t wait;
+    
+    
+    for(wait=0;wait<(0xfffffff*cnt);wait++)
+    {}
+}
+
+/**********************************************************************
+* trustm_readUID()
+**********************************************************************/
+static uint8_t __trustm_secCnt(void)
+{
+    uint16_t offset, bytes_to_read;
+    uint16_t optiga_oid;
+    uint8_t read_data_buffer[5];
+
+    optiga_lib_status_t return_status;
+
+    do
+    {
+        //Read device Security Event ounter
+        optiga_oid = 0xE0C5;
+        offset = 0x00;
+        bytes_to_read = sizeof(read_data_buffer);
+
+        optiga_lib_status = OPTIGA_LIB_BUSY;
+        return_status = optiga_util_read_data(me_util,
+                                              optiga_oid,
+                                              offset,
+                                              read_data_buffer,
+                                              &bytes_to_read);
+
+        if (OPTIGA_LIB_SUCCESS != return_status)
+        {
+            //Reading the data object failed.
+            TRUSTM_HELPER_ERRFN("optiga_util_read_data : FAIL!!!\n");
+            read_data_buffer[0] = 0;
+            break;
+        }
+
+        while (OPTIGA_LIB_BUSY == optiga_lib_status) 
+        {
+            pal_os_timer_delay_in_milliseconds(10);
+        }
+
+        if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
+        {
+            read_data_buffer[0] = 0;
+            break;
+        }        
+
+    } while(FALSE);
+
+    return read_data_buffer[0];
+}
 
 static char* __decodeDataObj(uint8_t data)
 {
@@ -370,8 +427,8 @@ void trustmdecodeMetaData(uint8_t * metaData)
 
 optiga_lib_status_t trustmReadMetadata(uint16_t optiga_oid, trustm_metadata_t *oidMetadata)
 {
-	optiga_lib_status_t return_status;
-	uint16_t bytes_to_read;
+    optiga_lib_status_t return_status;
+    uint16_t bytes_to_read;
     uint8_t read_data_buffer[2048];
     uint16_t i,j;
 
@@ -391,7 +448,7 @@ optiga_lib_status_t trustmReadMetadata(uint16_t optiga_oid, trustm_metadata_t *o
                                                     read_data_buffer,
                                                     &bytes_to_read);
         if (OPTIGA_LIB_SUCCESS != return_status)
-            break;			
+            break;          
         //Wait until the optiga_util_read_metadata operation is completed
         while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
         return_status = optiga_lib_status;
@@ -459,7 +516,7 @@ optiga_lib_status_t trustmReadMetadata(uint16_t optiga_oid, trustm_metadata_t *o
     }while(FALSE);
 
     // Capture OPTIGA Trust M error
-	if (return_status != OPTIGA_LIB_SUCCESS)
+    if (return_status != OPTIGA_LIB_SUCCESS)
         trustmPrintErrorCode(return_status);
         
     return return_status;
@@ -682,6 +739,7 @@ uint16_t trustmReadX509PEM(X509 **x509, const char *filename)
 
 }
 
+
 /**********************************************************************
 * trustm_readUID()
 **********************************************************************/
@@ -750,19 +808,22 @@ void optiga_crypt_callback(void * context, optiga_lib_status_t return_status)
     }
 }
 
+
+
 /**********************************************************************
 * trustm_Open()
 **********************************************************************/
 optiga_lib_status_t trustm_Open(void)
 {
     optiga_lib_status_t return_status;
+    FILE *fp;
 
     TRUSTM_HELPER_DBGFN(">");
     trustm_open_flag = 0;
     do
     {
-		pal_gpio_init(&optiga_reset_0);
-		pal_gpio_init(&optiga_vdd_0);
+        pal_gpio_init(&optiga_reset_0);
+        pal_gpio_init(&optiga_vdd_0);
         //Create an instance of optiga_util to open the application on OPTIGA.
         me_util = optiga_util_create(0, optiga_util_callback, NULL);
         if (NULL == me_util)
@@ -787,8 +848,19 @@ optiga_lib_status_t trustm_Open(void)
          * using optiga_util_open_application
          */        
         optiga_lib_status = OPTIGA_LIB_BUSY;
-        return_status = optiga_util_open_application(me_util, 0);
-
+        fp = fopen(TRUSTM_HIBERNATE_CTX_FILENAME,"rb");
+        if (!fp)
+        {
+            TRUSTM_HELPER_DBGFN("No hibernate ctx found. Skip restore\n");
+            return_status = optiga_util_open_application(me_util, 0); // skip restore
+        }
+        else
+        {
+            fclose(fp);
+            TRUSTM_HELPER_DBGFN("Hibernate ctx found. Restore ctx\n");
+            return_status = optiga_util_open_application(me_util, 1); // perform restore
+        }
+        
         if (OPTIGA_LIB_SUCCESS != return_status)
         {
             TRUSTM_HELPER_ERRFN("Fail : optiga_util_open_application[1] \n");
@@ -802,8 +874,8 @@ optiga_lib_status_t trustm_Open(void)
         {
             TRUSTM_HELPER_DBG(".");
             pal_os_timer_delay_in_milliseconds(50);
-			//i++;
-			//i++;
+            //i++;
+            //i++;
         }
         TRUSTM_HELPER_DBG("\n");
         TRUSTM_HELPER_DBGFN("count : %d \n",i);
@@ -833,26 +905,30 @@ optiga_lib_status_t trustm_Open(void)
 optiga_lib_status_t trustm_Close(void)
 {
     optiga_lib_status_t return_status;
+    uint8_t secCnt;
 
     TRUSTM_HELPER_DBGFN(">");
+    
+    remove(TRUSTM_HIBERNATE_CTX_FILENAME);
+    secCnt = __trustm_secCnt();
+    while (secCnt)
+    {
+        TRUSTM_HELPER_INFO("Security Event Counter : %d [waiting. Ctrl+c to abort.]\n",secCnt);
+        __delay(10);
+        secCnt = __trustm_secCnt();
+        if (secCnt == 0)
+            TRUSTM_HELPER_INFO("context saved.\n");
+    }
     
     do{
         if (trustm_open_flag != 1)
         {
             TRUSTM_HELPER_ERRFN("trustM is not open \n");
             break;
-        }
+        }      
         
         optiga_lib_status = OPTIGA_LIB_BUSY;
-        return_status = optiga_crypt_destroy(me_crypt);
-        if(OPTIGA_LIB_SUCCESS != return_status)
-        {
-            TRUSTM_HELPER_ERRFN("Fail : optiga_crypt_destroy \n");
-            break;
-        }
-        
-        optiga_lib_status = OPTIGA_LIB_BUSY;
-        return_status = optiga_util_close_application(me_util, 0);
+        return_status = optiga_util_close_application(me_util, 1);
         if (OPTIGA_LIB_SUCCESS != return_status)
         {
             TRUSTM_HELPER_ERRFN("Fail : optiga_util_close_application \n");
@@ -875,8 +951,8 @@ optiga_lib_status_t trustm_Close(void)
         }
 
         trustm_open_flag = 0;
-		pal_gpio_deinit(&optiga_reset_0);
-		pal_gpio_deinit(&optiga_vdd_0);
+        pal_gpio_deinit(&optiga_reset_0);
+        pal_gpio_deinit(&optiga_vdd_0);
         TRUSTM_HELPER_DBGFN("Success : optiga_util_close_application \n");
 
     }while(FALSE);
@@ -885,6 +961,15 @@ optiga_lib_status_t trustm_Close(void)
         trustmPrintErrorCode(return_status);
 
     // destroy util and crypt instances
+    //optiga_lib_status = OPTIGA_LIB_BUSY;
+    return_status = optiga_crypt_destroy(me_crypt);
+    if(OPTIGA_LIB_SUCCESS != return_status)
+    {
+        TRUSTM_HELPER_ERRFN("Fail : optiga_crypt_destroy \n");
+        //break;
+    }
+
+
     if (me_util != NULL)
         optiga_util_destroy(me_util);    
     
@@ -895,62 +980,62 @@ optiga_lib_status_t trustm_Close(void)
 
 uint32_t trustmHexorDec(const char *aArg)
 {
-	uint32_t value;
+    uint32_t value;
 
-	if ((strncmp(aArg, "0x",2) == 0) ||(strncmp(aArg, "0X",2) == 0))
-		sscanf(aArg,"%x",&value);
-	else
-		sscanf(aArg,"%d",&value);
+    if ((strncmp(aArg, "0x",2) == 0) ||(strncmp(aArg, "0X",2) == 0))
+        sscanf(aArg,"%x",&value);
+    else
+        sscanf(aArg,"%d",&value);
 
-	return value;
+    return value;
 }
 
 uint16_t trustmwriteTo(uint8_t *buf, uint32_t len, const char *filename)
 {
-	FILE *datafile;
+    FILE *datafile;
 
-	//create 
-	datafile = fopen(filename,"wb");
-	if (!datafile)
-	{
-		return 1;
-	}
+    //create 
+    datafile = fopen(filename,"wb");
+    if (!datafile)
+    {
+        return 1;
+    }
 
-	//Write to file
-	fwrite(buf, 1, len, datafile);
-	fclose(datafile);
+    //Write to file
+    fwrite(buf, 1, len, datafile);
+    fclose(datafile);
 
-	return 0;
+    return 0;
 
 }
 
 uint16_t trustmreadFrom(uint8_t *data, uint8_t *filename)
 {
-	
-	FILE *datafile;
-	uint16_t len;
-	uint8_t buf[2048];
-	uint16_t ret;
+    
+    FILE *datafile;
+    uint16_t len;
+    uint8_t buf[2048];
+    uint16_t ret;
 
-	//open 
-	datafile = fopen((const char *)filename,"rb");
-	if (!datafile)
-	{
-		printf("File open error!!!\n");
-		return 0;
-	}
+    //open 
+    datafile = fopen((const char *)filename,"rb");
+    if (!datafile)
+    {
+        printf("File open error!!!\n");
+        return 0;
+    }
 
-	//Read file
-	len = fread(buf, 1, sizeof(buf), datafile); 
-	if (len > 0)
-	{
-		ret = len;
-		memcpy(data,buf,len);
-	}
+    //Read file
+    len = fread(buf, 1, sizeof(buf), datafile); 
+    if (len > 0)
+    {
+        ret = len;
+        memcpy(data,buf,len);
+    }
 
-	fclose(datafile);
+    fclose(datafile);
 
-	return ret;
+    return ret;
 
 }
 

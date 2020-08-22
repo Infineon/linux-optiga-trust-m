@@ -144,6 +144,11 @@ workaround_patch:
 	@mv $(PALDIR)/pal_os_event.c $(PALDIR)/pal_os_event.org
 	@cp patch/pal_os_event.c $(PALDIR)/.
 
+	@echo "Applying workaround patch for pal_os_datastore.c"
+	@echo "Original file backup to $(PALDIR)/pal_os_datastore.org"
+	@mv $(PALDIR)/pal_os_datastore.c $(PALDIR)/pal_os_datastore.org
+	@cp patch/pal_os_datastore.c $(PALDIR)/.
+
 clean :
 	@echo "Removing *.o from $(LIBDIR)" 
 	@rm -rf $(LIBOBJ)

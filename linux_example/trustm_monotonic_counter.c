@@ -111,29 +111,29 @@ int main (int argc, char **argv)
                 case 'r': // Read
                     uOptFlag.flags.read = 1;
                     optiga_oid = trustmHexorDec(optarg);
-                    if((optiga_oid < 0xE120) || (optiga_oid > 0xE123))
-                    {
-                        printf("Invalid Monotonic Counter OID!!!\n");
-                        exit(0);
-                    }
+                    //if((optiga_oid < 0xE120) || (optiga_oid > 0xE123))
+                    //{
+                    //    printf("Invalid Monotonic Counter OID!!!\n");
+                    //    exit(0);
+                    //}
                     break;
                 case 'w': // Write
                     uOptFlag.flags.write = 1;
                     optiga_oid = trustmHexorDec(optarg);
-                    if((optiga_oid < 0xE120) || (optiga_oid > 0xE123))
-                    {
-                        printf("Invalid Monotonic Counter OID!!!\n");
-                        exit(0);
-                    }
+                    //if((optiga_oid < 0xE120) || (optiga_oid > 0xE123))
+                    //{
+                    //    printf("Invalid Monotonic Counter OID!!!\n");
+                    //    exit(0);
+                    //}
                     break;
                 case 'u': // Update
                     uOptFlag.flags.update = 1;
                     optiga_oid = trustmHexorDec(optarg);
-                    if((optiga_oid < 0xE120) || (optiga_oid > 0xE123))
-                    {
-                        printf("Invalid Monotonic Counter OID!!!\n");
-                        exit(0);
-                    }
+                    //if((optiga_oid < 0xE120) || (optiga_oid > 0xE123))
+                    //{
+                    //    printf("Invalid Monotonic Counter OID!!!\n");
+                    //    exit(0);
+                    //}
                     break;
                 case 'i': // Input Value
                     uOptFlag.flags.invalue = 1;
@@ -180,7 +180,7 @@ int main (int argc, char **argv)
             {
                 // OPTIGA Comms Shielded connection settings to enable the protection
                 OPTIGA_UTIL_SET_COMMS_PROTOCOL_VERSION(me_util, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
-                OPTIGA_UTIL_SET_COMMS_PROTECTION_LEVEL(me_util, OPTIGA_COMMS_FULL_PROTECTION|OPTIGA_COMMS_RE_ESTABLISH);
+                OPTIGA_UTIL_SET_COMMS_PROTECTION_LEVEL(me_util, OPTIGA_COMMS_FULL_PROTECTION);
             }
 
             optiga_lib_status = OPTIGA_LIB_BUSY;
@@ -222,7 +222,7 @@ int main (int argc, char **argv)
             {
                 // OPTIGA Comms Shielded connection settings to enable the protection
                 OPTIGA_UTIL_SET_COMMS_PROTOCOL_VERSION(me_util, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
-                OPTIGA_UTIL_SET_COMMS_PROTECTION_LEVEL(me_util, OPTIGA_COMMS_FULL_PROTECTION|OPTIGA_COMMS_RE_ESTABLISH);
+                OPTIGA_UTIL_SET_COMMS_PROTECTION_LEVEL(me_util, OPTIGA_COMMS_FULL_PROTECTION);
             }
 
             optiga_lib_status = OPTIGA_LIB_BUSY;
@@ -251,7 +251,7 @@ int main (int argc, char **argv)
             {
                 // OPTIGA Comms Shielded connection settings to enable the protection
                 OPTIGA_UTIL_SET_COMMS_PROTOCOL_VERSION(me_util, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
-                OPTIGA_UTIL_SET_COMMS_PROTECTION_LEVEL(me_util, OPTIGA_COMMS_FULL_PROTECTION|OPTIGA_COMMS_RE_ESTABLISH);
+                OPTIGA_UTIL_SET_COMMS_PROTECTION_LEVEL(me_util, OPTIGA_COMMS_FULL_PROTECTION);
             }
 
             bytes_to_read = sizeof(read_data_buffer);
