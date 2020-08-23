@@ -35,6 +35,7 @@ int main (int argc, char **argv)
     optiga_lib_status_t return_status;
     utrustm_UID_t UID;
 
+    trustm_hybernate_flag = 0; // Disable Hybernate Context Save
     return_status = trustm_Open();
     if (return_status != OPTIGA_LIB_SUCCESS) {exit(1);}
 
@@ -101,5 +102,6 @@ int main (int argc, char **argv)
 	printf("========================================================\n");    
 
     trustm_Close();
+    trustm_hybernate_flag = 0; // Disable Hybernate Context Save
     return 0;
 }

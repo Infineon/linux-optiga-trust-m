@@ -165,6 +165,11 @@ int main (int argc, char **argv)
         exit(1);
     }
 
+    if(uOptFlag.flags.bypass != 1)
+        trustm_hybernate_flag = 1; // Enable Hybernate Context Save
+    else
+        trustm_hybernate_flag = 0; // disable Hybernate Context Save
+
     return_status = trustm_Open();
     if (return_status != OPTIGA_LIB_SUCCESS)
         exit(1);
@@ -273,5 +278,6 @@ int main (int argc, char **argv)
     printf("========================================================\n");
 
     trustm_Close();
+    trustm_hybernate_flag = 0; // Disable Hybernate Context Save
     return 0;
 }

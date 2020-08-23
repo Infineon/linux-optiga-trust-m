@@ -31,50 +31,50 @@
 #include "trustm_helper.h"
 
 typedef struct _OPTFLAG {
-	uint16_t	bypass		: 1;
-	uint16_t	dummy1		: 1;
-	uint16_t	dummy2		: 1;
-	uint16_t	dummy3		: 1;
-	uint16_t	dummy4		: 1;
-	uint16_t	dummy5		: 1;
-	uint16_t	dummy6		: 1;
-	uint16_t	dummy7		: 1;
-	uint16_t	dummy8		: 1;
-	uint16_t	dummy9		: 1;
-	uint16_t	dummy10		: 1;
-	uint16_t	dummy11		: 1;
-	uint16_t	dummy12		: 1;
-	uint16_t	dummy13		: 1;
-	uint16_t	dummy14		: 1;
-	uint16_t	dummy15		: 1;
+    uint16_t    bypass      : 1;
+    uint16_t    dummy1      : 1;
+    uint16_t    dummy2      : 1;
+    uint16_t    dummy3      : 1;
+    uint16_t    dummy4      : 1;
+    uint16_t    dummy5      : 1;
+    uint16_t    dummy6      : 1;
+    uint16_t    dummy7      : 1;
+    uint16_t    dummy8      : 1;
+    uint16_t    dummy9      : 1;
+    uint16_t    dummy10     : 1;
+    uint16_t    dummy11     : 1;
+    uint16_t    dummy12     : 1;
+    uint16_t    dummy13     : 1;
+    uint16_t    dummy14     : 1;
+    uint16_t    dummy15     : 1;
 }OPTFLAG;
 
 union _uOptFlag {
-	OPTFLAG	flags;
-	uint16_t	all;
+    OPTFLAG flags;
+    uint16_t    all;
 } uOptFlag;
 
 void helpmenu(void)
 {
-	printf("\nHelp menu: trustm_readmetadata_private <option> ...<option>\n");
-	printf("option:- \n");
-	printf("-X : Bypass Shield Communication \n");
-	printf("-h : Print this help \n");
+    printf("\nHelp menu: trustm_readmetadata_private <option> ...<option>\n");
+    printf("option:- \n");
+    printf("-X : Bypass Shield Communication \n");
+    printf("-h : Print this help \n");
 }
 
 int main (int argc, char **argv)
 {
     optiga_lib_status_t return_status;
     uint16_t i;
-    
+
     uint16_t bytes_to_read;
     uint16_t optiga_oid;
     uint8_t read_data_buffer[1024];
 
-    char	messagebuf[500];
-    
+    char    messagebuf[500];
+
     uint16_t arrayOID[] = {0xE0F0,0xE0F1,0xE0F2,0xE0F3,
-							0xE0FC,0xE0FD};
+                            0xE0FC,0xE0FD};
 
     int option = 0;                    // Command line option.
 
@@ -89,43 +89,48 @@ int main (int argc, char **argv)
         // Loop through parameters with getopt.
         while (-1 != (option = getopt(argc, argv, "Xh")))
         {
-			switch (option)
-			{
-				case 'X': // Bypass Shielded Communication
-					uOptFlag.flags.bypass = 1;
-					printf("Bypass Shielded Communication. \n");
-					break;
-				case 'h': // Print Help Menu
-					helpmenu();
-					exit(0);
-				break;
-			}
-		}
+            switch (option)
+            {
+                case 'X': // Bypass Shielded Communication
+                    uOptFlag.flags.bypass = 1;
+                    printf("Bypass Shielded Communication. \n");
+                    break;
+                case 'h': // Print Help Menu
+                    helpmenu();
+                    exit(0);
+                break;
+            }
+        }
     } while (FALSE); // End of DO WHILE FALSE loop.
-    
+
+    if(uOptFlag.flags.bypass != 1)
+        trustm_hybernate_flag = 1; // Enable Hybernate Context Save
+    else
+        trustm_hybernate_flag = 0; // disable Hybernate Context Save
+
     return_status = trustm_Open();
     if (return_status != OPTIGA_LIB_SUCCESS)
         exit(1);
-        
-    for (i = 0; i < sizeof(arrayOID)/2; i++) 
+
+    for (i = 0; i < sizeof(arrayOID)/2; i++)
     {
-		do
-		{
+        do
+        {
             optiga_oid = arrayOID[i];
             trustmGetOIDName(optiga_oid,messagebuf);
 
             if(messagebuf != NULL)
             {
-                printf("========================================================\n");					
-                printf(messagebuf);               
-                
+                printf("========================================================\n");
+                printf(messagebuf);
+
                 if(uOptFlag.flags.bypass != 1)
                 {
                     // OPTIGA Comms Shielded connection settings to enable the protection
-                    OPTIGA_UTIL_SET_COMMS_PROTOCOL_VERSION(me_util, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);   
+                    OPTIGA_UTIL_SET_COMMS_PROTOCOL_VERSION(me_util, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
                     OPTIGA_UTIL_SET_COMMS_PROTECTION_LEVEL(me_util, OPTIGA_COMMS_FULL_PROTECTION);
                 }
-                                
+
                 bytes_to_read = sizeof(read_data_buffer);
                 optiga_lib_status = OPTIGA_LIB_BUSY;
                 return_status = optiga_util_read_metadata(me_util,
@@ -133,7 +138,7 @@ int main (int argc, char **argv)
                                                             read_data_buffer,
                                                             &bytes_to_read);
                 if (OPTIGA_LIB_SUCCESS != return_status)
-                    break;			
+                    break;
                 //Wait until the optiga_util_read_metadata operation is completed
                 while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
                 return_status = optiga_lib_status;
@@ -149,13 +154,14 @@ int main (int argc, char **argv)
                 }
             }
         }while(FALSE);
-    
+
         // Capture OPTIGA Trust M error
         if (return_status != OPTIGA_LIB_SUCCESS)
             trustmPrintErrorCode(return_status);
-    }    
-    printf("========================================================\n");       
+    }
+    printf("========================================================\n");
 
     trustm_Close();
+    trustm_hybernate_flag = 0; // Disable Hybernate Context Save
     return 0;
 }

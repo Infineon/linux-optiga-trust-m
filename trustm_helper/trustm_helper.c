@@ -47,6 +47,7 @@ optiga_util_t * me_util;
 optiga_crypt_t * me_crypt;
 optiga_lib_status_t optiga_lib_status;
 uint16_t trustm_open_flag = 0;
+uint8_t trustm_hybernate_flag = 0;
 /*************************************************************************
 *  functions
 *************************************************************************/
@@ -104,7 +105,7 @@ static void __delay (int cnt)
     uint32_t wait;
     
     
-    for(wait=0;wait<(0xfffffff*cnt);wait++)
+    for(wait=0;wait<(0x1fffffff*cnt);wait++)
     {}
 }
 
@@ -848,7 +849,8 @@ optiga_lib_status_t trustm_Open(void)
          */        
         optiga_lib_status = OPTIGA_LIB_BUSY;
         if ((access(TRUSTM_HIBERNATE_CTX_FILENAME,F_OK) != -1) &&
-            (access(TRUSTM_CTX_FILENAME,F_OK) != -1))
+            (access(TRUSTM_CTX_FILENAME,F_OK) != -1) &&
+            (trustm_hybernate_flag != 0))
         {
             TRUSTM_HELPER_DBGFN("Hibernate ctx found. Restore ctx\n");
             return_status = optiga_util_open_application(me_util, 1); // perform restore
@@ -906,27 +908,42 @@ optiga_lib_status_t trustm_Close(void)
     uint8_t secCnt;
 
     TRUSTM_HELPER_DBGFN(">");
-    
-    remove(TRUSTM_HIBERNATE_CTX_FILENAME);
-    secCnt = __trustm_secCnt();
-    while (secCnt)
-    {
-        TRUSTM_HELPER_INFO("Security Event Counter : %d [waiting. Ctrl+c to abort.]\n",secCnt);
-        __delay(10);
-        secCnt = __trustm_secCnt();
-        if (secCnt == 0)
-            TRUSTM_HELPER_INFO("context saved.\n");
-    }
-    
+
     do{
         if (trustm_open_flag != 1)
         {
             TRUSTM_HELPER_ERRFN("trustM is not open \n");
             break;
         }      
-        
-        optiga_lib_status = OPTIGA_LIB_BUSY;
-        return_status = optiga_util_close_application(me_util, 1);
+
+        if (trustm_hybernate_flag != 0)
+        {
+            if (access(TRUSTM_HIBERNATE_CTX_FILENAME,F_OK) != -1)
+                remove(TRUSTM_HIBERNATE_CTX_FILENAME);
+
+            secCnt = __trustm_secCnt();
+            while (secCnt)
+            {
+                TRUSTM_HELPER_INFO("Security Event Counter : %d [waiting. Ctrl+c to abort.]\n",secCnt);
+                __delay(2);
+                secCnt = __trustm_secCnt();
+                if (secCnt == 0)
+                    TRUSTM_HELPER_INFO("context saved.\n");
+            }
+            optiga_lib_status = OPTIGA_LIB_BUSY;
+            return_status = optiga_util_close_application(me_util, 1);
+        }
+        else
+        {
+            if (access(TRUSTM_HIBERNATE_CTX_FILENAME,F_OK) != -1)
+                remove(TRUSTM_HIBERNATE_CTX_FILENAME);
+            if (access(TRUSTM_CTX_FILENAME,F_OK) != -1)
+                remove(TRUSTM_CTX_FILENAME);
+
+            optiga_lib_status = OPTIGA_LIB_BUSY;
+            return_status = optiga_util_close_application(me_util, 0);
+        }
+            
         if (OPTIGA_LIB_SUCCESS != return_status)
         {
             TRUSTM_HELPER_ERRFN("Fail : optiga_util_close_application \n");
