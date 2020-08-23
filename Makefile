@@ -162,7 +162,9 @@ clean :
 	@rm -rf $(APPS)
 	@echo "Removing all application from $(BINDIR)"	
 	@rm -rf bin/*
-	
+	@echo "Removing all hidden files"	
+	@rm -rf .trustm_*
+
 $(BINDIR)/$(ENG): %: $(ENGOBJ) $(INCSRC) $(BINDIR)/$(LIB)
 	@echo "******* Linking $@ "
 	@mkdir -p bin
