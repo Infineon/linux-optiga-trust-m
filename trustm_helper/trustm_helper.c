@@ -816,7 +816,6 @@ void optiga_crypt_callback(void * context, optiga_lib_status_t return_status)
 optiga_lib_status_t trustm_Open(void)
 {
     optiga_lib_status_t return_status;
-    FILE *fp;
 
     TRUSTM_HELPER_DBGFN(">");
     trustm_open_flag = 0;
@@ -848,17 +847,16 @@ optiga_lib_status_t trustm_Open(void)
          * using optiga_util_open_application
          */        
         optiga_lib_status = OPTIGA_LIB_BUSY;
-        fp = fopen(TRUSTM_HIBERNATE_CTX_FILENAME,"rb");
-        if (!fp)
+        if ((access(TRUSTM_HIBERNATE_CTX_FILENAME,F_OK) != -1) &&
+            (access(TRUSTM_CTX_FILENAME,F_OK) != -1))
         {
-            TRUSTM_HELPER_DBGFN("No hibernate ctx found. Skip restore\n");
-            return_status = optiga_util_open_application(me_util, 0); // skip restore
+            TRUSTM_HELPER_DBGFN("Hibernate ctx found. Restore ctx\n");
+            return_status = optiga_util_open_application(me_util, 1); // perform restore
         }
         else
         {
-            fclose(fp);
-            TRUSTM_HELPER_DBGFN("Hibernate ctx found. Restore ctx\n");
-            return_status = optiga_util_open_application(me_util, 1); // perform restore
+            TRUSTM_HELPER_DBGFN("No hibernate ctx found. Skip restore\n");
+            return_status = optiga_util_open_application(me_util, 0); // skip restore
         }
         
         if (OPTIGA_LIB_SUCCESS != return_status)

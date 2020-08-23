@@ -110,6 +110,8 @@ Applying patch to workaround the known pal_os_event.c issue
 foo@bar:~/cli-optiga-trust-m$ make workaround_patch 
 Applying workaround patch for pal_os_event.c
 Original file backup to trustm_lib/pal/linux/pal_os_event.org
+Applying workaround patch for pal_os_datastore.c
+Original file backup to trustm_lib/pal/linux/pal_os_datastore.org
 ```
 
 ### <a name="build_lib"></a>First time building the library
@@ -1512,3 +1514,11 @@ The I2C secure communication bypass option for CLI only works if the default res
 ### OPTIGA™ Trust M Sporadic hang
 
 Check the hardware reset pin if it is connected with an active reset GPIO as assigned n the OPTIGA™ Trust M library. Alternatively, you could configure the library to use software reset.
+
+### Security Event Counter : x [waiting. Ctrl+c to abort.] message when command line ends
+
+The CLI at this point is waiting for the Security Event Counter [0xE0C5] to countdown to zero before it can save the context. You can either wait till the counter return to zero which my take some time depending on the counter value. Alternatively, you can press Ctrl-c to break the program. Note that if you break the program using Ctrl-c, the next CLI command will still wait for the countdown as long as the Security Event Counter is not zero.
+
+### After replacing OPTIGA™ Trust M Error message "Error in trustm_helper/trustm_helper.c:884 trustm_Open: Fail : optiga_util_open_application" occurs
+
+This is due to the context mis-match. Delete the hidden file .trustm_ctx and .trustm_hybernate_ctx to resolve the issue.

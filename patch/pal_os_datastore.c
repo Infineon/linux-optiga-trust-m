@@ -96,12 +96,12 @@ pal_status_t pal_os_datastore_write(uint16_t datastore_id,
             // the manage context information in non-volatile memory 
             // to reuse for later during hard reset scenarios where the 
             // RAM gets flushed out.
-            
+            //printf("pal_os_datastore_write : %s!!\n",TRUSTM_CTX_FILENAME);            
             FILE *fp;           
             fp = fopen(TRUSTM_CTX_FILENAME,"wb");
             if (!fp)
             {
-                printf("error creating file!!\n");
+                printf("error creating file : %s!!\n",TRUSTM_CTX_FILENAME);
             }
             fwrite(p_buffer, 1, length, fp);                
             fclose(fp);
@@ -116,12 +116,12 @@ pal_status_t pal_os_datastore_write(uint16_t datastore_id,
             // the application context information in non-volatile memory 
             // to reuse for later during hard reset scenarios where the 
             // RAM gets flushed out.
-            
+            //printf("pal_os_datastore_write : %s!!\n",TRUSTM_HIBERNATE_CTX_FILENAME);
             FILE *fp;           
             fp = fopen(TRUSTM_HIBERNATE_CTX_FILENAME,"wb");
             if (!fp)
             {
-                printf("error creating file!!\n");
+                printf("error creating file : %s!!\n",TRUSTM_HIBERNATE_CTX_FILENAME);
             }
             fwrite(p_buffer, 1, length, fp);                
             fclose(fp);
@@ -170,14 +170,14 @@ pal_status_t pal_os_datastore_read(uint16_t datastore_id,
             // This has to be enhanced by user only,
             // if manage context information is stored in NVM during the hibernate, 
             // else this is not required to be enhance
-
+            //printf("pal_os_datastore_read : %s!!\n",TRUSTM_CTX_FILENAME);
             FILE *fp;
             uint8_t data[256];
             int tempLen;           
             fp = fopen(TRUSTM_CTX_FILENAME,"rb");
             if (!fp)
             {
-                printf("error creating file!!\n");
+                printf("error reading file : %s!!\n",TRUSTM_CTX_FILENAME);
             }
 
             tempLen = fread(data, 1, sizeof(data), fp); 
@@ -200,14 +200,14 @@ pal_status_t pal_os_datastore_read(uint16_t datastore_id,
             // This has to be enhanced by user only,
             // if application context information is stored in NVM during the hibernate, 
             // else this is not required to be enhanced.
-
+            //printf("pal_os_datastore_read : %s!!\n",TRUSTM_HIBERNATE_CTX_FILENAME);
             FILE *fp;
             uint8_t data[256];
             int tempLen;           
             fp = fopen(TRUSTM_HIBERNATE_CTX_FILENAME,"rb");
             if (!fp)
             {
-                printf("error creating file!!\n");
+                printf("error reading file : %s!!\n",TRUSTM_HIBERNATE_CTX_FILENAME);
             }
 
             tempLen = fread(data, 1, sizeof(data), fp); 
