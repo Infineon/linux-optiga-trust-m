@@ -108,7 +108,7 @@ typedef struct trustm_metadata_str
 extern optiga_util_t * me_util;
 extern optiga_crypt_t * me_crypt;
 extern optiga_lib_status_t optiga_lib_status;
-extern uint8_t trustm_hybernate_flag;
+extern uint8_t trustm_hibernate_flag;
 
 // Function Prototype
 optiga_lib_status_t trustm_Open(void);

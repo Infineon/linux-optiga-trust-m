@@ -47,7 +47,7 @@ optiga_util_t * me_util;
 optiga_crypt_t * me_crypt;
 optiga_lib_status_t optiga_lib_status;
 uint16_t trustm_open_flag = 0;
-uint8_t trustm_hybernate_flag = 0;
+uint8_t trustm_hibernate_flag = 0;
 /*************************************************************************
 *  functions
 *************************************************************************/
@@ -850,7 +850,7 @@ optiga_lib_status_t trustm_Open(void)
         optiga_lib_status = OPTIGA_LIB_BUSY;
         if ((access(TRUSTM_HIBERNATE_CTX_FILENAME,F_OK) != -1) &&
             (access(TRUSTM_CTX_FILENAME,F_OK) != -1) &&
-            (trustm_hybernate_flag != 0))
+            (trustm_hibernate_flag != 0))
         {
             TRUSTM_HELPER_DBGFN("Hibernate ctx found. Restore ctx\n");
             return_status = optiga_util_open_application(me_util, 1); // perform restore
@@ -916,7 +916,7 @@ optiga_lib_status_t trustm_Close(void)
             break;
         }      
 
-        if (trustm_hybernate_flag != 0)
+        if (trustm_hibernate_flag != 0)
         {
             if (access(TRUSTM_HIBERNATE_CTX_FILENAME,F_OK) != -1)
                 remove(TRUSTM_HIBERNATE_CTX_FILENAME);

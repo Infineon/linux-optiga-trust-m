@@ -1521,4 +1521,4 @@ The CLI at this point is waiting for the Security Event Counter [0xE0C5] to coun
 
 ### After replacing OPTIGA™ Trust M Error message "Error in trustm_helper/trustm_helper.c:884 trustm_Open: Fail : optiga_util_open_application" occurs
 
-This is due to the context mis-match. Delete the hidden file .trustm_ctx and .trustm_hybernate_ctx to resolve the issue.
+This is due to the context mis-match. Delete the hidden file .trustm_ctx and .trustm_hibernate_ctx to resolve the issue.
