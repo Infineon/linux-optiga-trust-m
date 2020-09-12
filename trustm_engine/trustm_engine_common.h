@@ -26,6 +26,7 @@
 #define _TRUSTM_ENGINE_COMMON_H_
 
 #include <stdio.h>
+#include <pthread.h>
 #include <openssl/engine.h>
 
 #include "optiga_lib_common.h"
@@ -63,6 +64,26 @@
 #define TRUSTM_ENGINE_MSGFN(x, ...)    fprintf(stderr, "Message:%s:%d %s: " x "\n", __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
 
 #endif
+
+#define TRUSTM_ENGINE_APP_OPEN         pthread_mutex_lock(&lock); \
+                                       if (trustm_ctx.appOpen == 0) \
+                                          {trustm_hibernate_flag = 1; \
+                                           return_status = trustmEngine_App_Open(); \
+                                          }else{trustm_ctx.appOpen = 2;}
+
+#define TRUSTM_ENGINE_APP_OPEN_RET(x,y)  pthread_mutex_lock(&lock); \
+                                         if (trustm_ctx.appOpen == 0) \
+                                           {trustm_hibernate_flag = 1; \
+                                            return_status = trustmEngine_App_Open(); \
+                                            if (return_status != OPTIGA_LIB_SUCCESS) { \
+                                               TRUSTM_ENGINE_ERRFN("Fail to open trustM!!"); \
+                                               x = y;return x;} \
+                                           }else{trustm_ctx.appOpen = 2;}
+
+#define TRUSTM_ENGINE_APP_CLOSE        if (trustm_ctx.appOpen == 1) \
+                                          {trustmEngine_App_Close(); \
+                                          }else{trustm_ctx.appOpen = 1;} \
+                                       pthread_mutex_unlock(&lock);
 
 //Macro define
 /// Definition for false
@@ -131,6 +152,11 @@ extern trustm_ctx_t trustm_ctx;
 int  trustmEngine_init(void);
 void trustmEngine_close(void);
 
+optiga_lib_status_t trustmEngine_Open(void);
+optiga_lib_status_t trustmEngine_App_Open(void);
+optiga_lib_status_t trustmEngine_Close(void);
+optiga_lib_status_t trustmEngine_App_Close(void);
+
 uint16_t trustmEngine_init_rand(ENGINE *e);
 uint16_t trustmEngine_init_rsa(ENGINE *e);
 uint16_t trustmEngine_init_ec(ENGINE *e);
@@ -138,5 +164,7 @@ uint16_t trustmEngine_init_ec(ENGINE *e);
 EVP_PKEY *trustm_rsa_loadkey(void);
 EVP_PKEY *trustm_ec_loadkey(void);
 EVP_PKEY *trustm_ec_loadkeyE0E0(void);
+
+pthread_mutex_t lock;
 
 #endif // _TRUSTM_ENGINE_COMMON_H_

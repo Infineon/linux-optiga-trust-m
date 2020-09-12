@@ -108,11 +108,13 @@ typedef struct trustm_metadata_str
 extern optiga_util_t * me_util;
 extern optiga_crypt_t * me_crypt;
 extern optiga_lib_status_t optiga_lib_status;
+extern uint16_t trustm_open_flag;
 extern uint8_t trustm_hibernate_flag;
 
 // Function Prototype
 optiga_lib_status_t trustm_Open(void);
 optiga_lib_status_t trustm_Close(void);
+void optiga_util_callback(void * context, optiga_lib_status_t return_status);
 void optiga_crypt_callback(void * context, optiga_lib_status_t return_status);
 
 void trustmHexDump(uint8_t *pdata, uint32_t len);

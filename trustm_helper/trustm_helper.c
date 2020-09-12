@@ -110,7 +110,7 @@ static void __delay (int cnt)
 }
 
 /**********************************************************************
-* trustm_readUID()
+* __trustm_secCnt()
 **********************************************************************/
 static uint8_t __trustm_secCnt(void)
 {
@@ -877,8 +877,8 @@ optiga_lib_status_t trustm_Open(void)
             //i++;
             //i++;
         }
-        TRUSTM_HELPER_DBG("\n");
-        TRUSTM_HELPER_DBGFN("count : %d \n",i);
+        TRUSTM_HELPER_DBG("++\n");
+        //TRUSTM_HELPER_DBGFN("count : %d \n",i);
 
         if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
         {
