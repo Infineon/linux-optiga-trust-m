@@ -868,17 +868,12 @@ optiga_lib_status_t trustm_Open(void)
         }
 
 
-        TRUSTM_HELPER_DBGFN("waiting (max count: 50)");
+        TRUSTM_HELPER_DBGFN("waiting...");
         //Wait until the optiga_util_open_application is completed
         while (optiga_lib_status == OPTIGA_LIB_BUSY )
         {
-            TRUSTM_HELPER_DBG(".");
-            pal_os_timer_delay_in_milliseconds(50);
-            //i++;
-            //i++;
         }
-        TRUSTM_HELPER_DBG("++\n");
-        //TRUSTM_HELPER_DBGFN("count : %d \n",i);
+        TRUSTM_HELPER_DBG("++done\n");
 
         if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
         {
@@ -952,9 +947,6 @@ optiga_lib_status_t trustm_Close(void)
 
         while (optiga_lib_status == OPTIGA_LIB_BUSY)
         {
-            //Wait until the optiga_util_close_application is completed
-            //printf("Waiting : optiga_util_close_application \n");
-            //printf(".");
         }
         
         if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
