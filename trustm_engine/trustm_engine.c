@@ -23,6 +23,8 @@
 
 */
 #include <string.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
 #include <openssl/engine.h>
 
 #include "optiga/pal/pal_ifx_i2c_config.h"
@@ -42,6 +44,91 @@ extern void pal_os_event_disarm(void);
 
 static const char *engine_id   = "trustm_engine";
 static const char *engine_name = "Infineon OPTIGA TrustM Engine";
+
+//Globe Variable
+// for IPC
+// ---- InterCom
+#define IPC_FLAGSIZE    1
+
+key_t ipc_FlagInterKey;
+int   ipc_FlagInterShmid;
+unsigned char ipc_queue;
+unsigned char ipc_value;
+unsigned char ipc_temp;
+long ipc_task;
+
+/**********************************************************************
+* __trustmEngine_removeshm()
+**********************************************************************/
+static void __trustmEngine_removeshm(int shmid)
+{
+        shmctl(shmid, IPC_RMID, 0);
+        TRUSTM_ENGINE_DBGFN("Shared memory segment removed");
+        //TRUSTM_HELPER_ERRFN("Shared memory segment removed");
+}
+
+/**********************************************************************
+* __trustmEngine_writeshm()
+**********************************************************************/
+static void __trustmEngine_writeshm(int shmid,char data)
+{
+    char  *Flag_segptr;
+
+    /* Attach (map) the shared memory segment into the current process */
+     if((Flag_segptr = (char *)shmat(shmid, 0, 0)) == (char *)-1)
+     {
+             perror("write flag shmat");
+             exit(1);
+     }
+
+     *Flag_segptr=data;
+     shmdt(Flag_segptr);
+}
+
+/**********************************************************************
+* __trustmEngine_readshm()
+**********************************************************************/
+static char __trustmEngine_readshm(int shmid)
+{   char  *Flag_segptr;
+    char Flag;
+    /* Attach (map) the shared memory segment into the current process */
+     if((Flag_segptr = (char *)shmat(shmid, 0, 0)) == (char *)-1)
+     {
+             perror("read flag shmat");
+             exit(1);
+     }
+     Flag = *Flag_segptr;
+     shmdt(Flag_segptr);
+
+    return Flag;
+}
+
+/**********************************************************************
+* __trustmEngine_ipcInit()
+**********************************************************************/
+static void __trustmEngine_ipcInit(void)
+{
+	/* Unique Key for InterCom */
+    ipc_FlagInterKey = 0x11111120;
+
+  	/* Open the shared memory segment - create if necessary */
+    if((ipc_FlagInterShmid = shmget(ipc_FlagInterKey, IPC_FLAGSIZE, IPC_CREAT|IPC_EXCL|0666)) == -1)
+    {
+        TRUSTM_ENGINE_DBGFN("Shared memory segment exists - opening as client");
+        /* Segment probably already exists - try as a client */
+        if((ipc_FlagInterShmid = shmget(ipc_FlagInterKey, IPC_FLAGSIZE, 0)) == -1)
+        {
+            perror("Init shmget");
+            exit(1);
+        }
+    }
+    else
+    {
+        // First created so init queue
+        TRUSTM_ENGINE_DBGFN("Init Queue");
+        __trustmEngine_writeshm(ipc_FlagInterShmid,0x0);
+    }
+}
 
 /**********************************************************************
 * __trustmEngine_delay()
@@ -156,6 +243,30 @@ optiga_lib_status_t trustmEngine_App_Open(void)
     trustm_ctx.appOpen = 0;
     do
     {
+        //Init IPC
+        if (trustm_ctx.ipcInit == 0)
+        {
+            __trustmEngine_ipcInit();
+            trustm_ctx.ipcInit = 1;
+        }
+
+        /// IPC Check
+        ipc_queue = __trustmEngine_readshm(ipc_FlagInterShmid);
+        TRUSTM_ENGINE_DBGFN("Check if TrustM Open");
+
+        ipc_value = ipc_queue + 1;
+        __trustmEngine_writeshm(ipc_FlagInterShmid,ipc_value);
+        TRUSTM_ENGINE_DBGFN("Take queue no : %d\n", ipc_queue);
+
+        /// Wait
+        while (ipc_queue != 0)
+        {
+            ipc_temp = __trustmEngine_readshm(ipc_FlagInterShmid);
+            if (ipc_value > ipc_temp)
+                ipc_queue--;
+            ipc_value = ipc_temp;
+        }
+        
         /**
          * Open the application on OPTIGA which is a precondition to perform any other operations
          * using optiga_util_open_application
@@ -255,9 +366,10 @@ optiga_lib_status_t trustmEngine_Close(void)
         optiga_util_destroy(me_util);    
 
     TRUSTM_WORKAROUND_TIMER_DISARM;
-    
-    pal_gpio_deinit(&optiga_reset_0);
-    pal_gpio_deinit(&optiga_vdd_0);
+
+    // No point deinit the GPIO as it is a fix pin
+    //pal_gpio_deinit(&optiga_reset_0);
+    //pal_gpio_deinit(&optiga_vdd_0);
         
     TRUSTM_ENGINE_DBGFN("TrustM Closed.\n");
     TRUSTM_ENGINE_DBGFN("<");
@@ -337,6 +449,19 @@ optiga_lib_status_t trustmEngine_App_Close(void)
 
     if (return_status != OPTIGA_LIB_SUCCESS)
         trustmPrintErrorCode(return_status);
+        
+    /// IPC Release 
+    ipc_value = __trustmEngine_readshm(ipc_FlagInterShmid);
+    if (ipc_value != 0)
+        ipc_value--;
+    __trustmEngine_writeshm(ipc_FlagInterShmid,ipc_value);
+
+    /// Release IPC
+    if (ipc_value == 0)
+    {
+        __trustmEngine_removeshm(ipc_FlagInterShmid);
+        trustm_ctx.ipcInit = 0;
+    }
 
     TRUSTM_ENGINE_DBGFN("<");
     return return_status;
@@ -808,6 +933,7 @@ static int engine_init(ENGINE *e)
         trustm_ctx.pubkeyHeaderLen = 0;
         
         trustm_ctx.appOpen = 0;
+        trustm_ctx.ipcInit = 0;
 
         // Init Random Method
         ret = trustmEngine_init_rand(e);

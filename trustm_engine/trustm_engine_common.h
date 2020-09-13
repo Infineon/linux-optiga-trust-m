@@ -65,14 +65,12 @@
 
 #endif
 
-#define TRUSTM_ENGINE_APP_OPEN         pthread_mutex_lock(&lock); \
-                                       if (trustm_ctx.appOpen == 0) \
+#define TRUSTM_ENGINE_APP_OPEN         if (trustm_ctx.appOpen == 0) \
                                           {trustm_hibernate_flag = 1; \
                                            return_status = trustmEngine_App_Open(); \
                                           }else{trustm_ctx.appOpen = 2;}
 
-#define TRUSTM_ENGINE_APP_OPEN_RET(x,y)  pthread_mutex_lock(&lock); \
-                                         if (trustm_ctx.appOpen == 0) \
+#define TRUSTM_ENGINE_APP_OPEN_RET(x,y)  if (trustm_ctx.appOpen == 0) \
                                            {trustm_hibernate_flag = 1; \
                                             return_status = trustmEngine_App_Open(); \
                                             if (return_status != OPTIGA_LIB_SUCCESS) { \
@@ -82,8 +80,7 @@
 
 #define TRUSTM_ENGINE_APP_CLOSE        if (trustm_ctx.appOpen == 1) \
                                           {trustmEngine_App_Close(); \
-                                          }else{trustm_ctx.appOpen = 1;} \
-                                       pthread_mutex_unlock(&lock);
+                                          }else{trustm_ctx.appOpen = 1;}
 
 //Macro define
 /// Definition for false
@@ -142,6 +139,7 @@ typedef struct trustm_ctx_str
   uint8_t   pubkeyHeaderLen;
   uint16_t  pubkeyStore;
   uint8_t   appOpen;
+  uint8_t   ipcInit;
   
 } trustm_ctx_t;
 
