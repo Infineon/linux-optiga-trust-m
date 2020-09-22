@@ -27,6 +27,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include <sys/ipc.h>
+#include <sys/shm.h>
+
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
 #include <openssl/bio.h>
@@ -48,6 +51,18 @@ optiga_crypt_t * me_crypt;
 optiga_lib_status_t optiga_lib_status;
 uint16_t trustm_open_flag = 0;
 uint8_t trustm_hibernate_flag = 0;
+
+//Globe Variable
+// for IPC
+// ---- InterCom
+#define IPC_FLAGSIZE    1
+
+key_t ipc_FlagInterKey;
+int   ipc_FlagInterShmid;
+unsigned char ipc_queue;
+unsigned char ipc_value;
+unsigned char ipc_temp;
+long ipc_task;
 /*************************************************************************
 *  functions
 *************************************************************************/
@@ -99,6 +114,79 @@ static char __DM[] = "DM";
 static char __SIGN[] = "Sign";
 static char __AGREE[] = "Agreement";
 static char __E1[100];
+
+/**********************************************************************
+* __trustm_removeshm()
+**********************************************************************/
+//static void __trustm_removeshm(int shmid)
+//{
+//        shmctl(shmid, IPC_RMID, 0);
+//        TRUSTM_HELPER_ERRFN("Shared memory segment removed");
+//}
+
+/**********************************************************************
+* __trustm_writeshm()
+**********************************************************************/
+static void __trustm_writeshm(int shmid,char data)
+{
+    char  *Flag_segptr;
+
+    /* Attach (map) the shared memory segment into the current process */
+     if((Flag_segptr = (char *)shmat(shmid, 0, 0)) == (char *)-1)
+     {
+             perror("write flag shmat");
+             exit(1);
+     }
+
+     *Flag_segptr=data;
+     shmdt(Flag_segptr);
+}
+
+/**********************************************************************
+* __trustm_readshm()
+**********************************************************************/
+static char __trustm_readshm(int shmid)
+{   char  *Flag_segptr;
+    char Flag;
+    /* Attach (map) the shared memory segment into the current process */
+     if((Flag_segptr = (char *)shmat(shmid, 0, 0)) == (char *)-1)
+     {
+             perror("read flag shmat");
+             exit(1);
+     }
+     Flag = *Flag_segptr;
+     shmdt(Flag_segptr);
+
+    return Flag;
+}
+
+/**********************************************************************
+* __trustm_ipcInit()
+**********************************************************************/
+static void __trustm_ipcInit(void)
+{
+	/* Unique Key for InterCom */
+    ipc_FlagInterKey = 0x11111120;
+
+  	/* Open the shared memory segment - create if necessary */
+    if((ipc_FlagInterShmid = shmget(ipc_FlagInterKey, IPC_FLAGSIZE, IPC_CREAT|IPC_EXCL|0666)) == -1)
+    {
+        TRUSTM_HELPER_DBGFN("Shared memory segment exists - opening as client");
+        /* Segment probably already exists - try as a client */
+        if((ipc_FlagInterShmid = shmget(ipc_FlagInterKey, IPC_FLAGSIZE, 0)) == -1)
+        {
+            perror("Init shmget");
+            exit(1);
+        }
+    }
+    else
+    {
+        // First created so init queue
+        TRUSTM_HELPER_DBGFN("Init Queue");
+        __trustm_writeshm(ipc_FlagInterShmid,0x0);
+    }
+}
+
 
 static void __delay (int cnt)
 {
@@ -822,6 +910,26 @@ optiga_lib_status_t trustm_Open(void)
     trustm_open_flag = 0;
     do
     {
+        //Init IPC
+        __trustm_ipcInit();
+
+        /// IPC Check
+        ipc_queue = __trustm_readshm(ipc_FlagInterShmid);
+        TRUSTM_HELPER_DBGFN("Check if TrustM Open");
+
+        ipc_value = ipc_queue + 1;
+        __trustm_writeshm(ipc_FlagInterShmid,ipc_value);
+        TRUSTM_HELPER_DBGFN("Take queue no : %d\n", ipc_queue);
+
+        /// Wait
+        while (ipc_queue != 0)
+        {
+            ipc_temp = __trustm_readshm(ipc_FlagInterShmid);
+            if (ipc_value > ipc_temp)
+                ipc_queue--;
+            ipc_value = ipc_temp;
+        }
+        
         pal_gpio_init(&optiga_reset_0);
         pal_gpio_init(&optiga_vdd_0);
         //Create an instance of optiga_util to open the application on OPTIGA.
@@ -976,9 +1084,20 @@ optiga_lib_status_t trustm_Close(void)
         //break;
     }
 
-
     if (me_util != NULL)
         optiga_util_destroy(me_util);    
+
+    /// IPC Release 
+    ipc_value = __trustm_readshm(ipc_FlagInterShmid);
+    if (ipc_value != 0)
+        ipc_value--;
+    __trustm_writeshm(ipc_FlagInterShmid,ipc_value);
+
+    /// Release IPC
+    //if (ipc_value == 0)
+    //{
+    //    __trustm_removeshm(ipc_FlagInterShmid);
+    //}
     
     TRUSTM_HELPER_DBGFN("TrustM Closed.\n");
     TRUSTM_HELPER_DBGFN("<");
