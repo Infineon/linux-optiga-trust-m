@@ -490,6 +490,7 @@ static uint32_t parseKeyParams(const char *aArg)
     uint8_t read_data_buffer[2048];
           
     TRUSTM_ENGINE_DBGFN(">");
+    TRUSTM_WORKAROUND_TIMER_ARM;
 
     TRUSTM_ENGINE_APP_OPEN;
     do
@@ -689,6 +690,7 @@ static uint32_t parseKeyParams(const char *aArg)
         ret = value;
     }while(FALSE);
     TRUSTM_ENGINE_APP_CLOSE;
+    TRUSTM_WORKAROUND_TIMER_DISARM;
 
     TRUSTM_ENGINE_DBGFN("<");
 

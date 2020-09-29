@@ -90,7 +90,7 @@ EVP_PKEY *trustm_ec_generatekey(void)
                                 0x2B,0x81,0x04,0x00,0x22};
 
     TRUSTM_ENGINE_DBGFN(">");
-
+    TRUSTM_WORKAROUND_TIMER_ARM;
     TRUSTM_ENGINE_APP_OPEN_RET(key,NULL);
     do
     {
@@ -194,6 +194,7 @@ EVP_PKEY *trustm_ec_loadkeyE0E0(void)
     
     optiga_lib_status_t return_status;
 
+    TRUSTM_WORKAROUND_TIMER_ARM; 
     TRUSTM_ENGINE_APP_OPEN_RET(key,NULL);
     do
     {
@@ -247,6 +248,7 @@ EVP_PKEY *trustm_ec_loadkeyE0E0(void)
 
     } while(FALSE);
     TRUSTM_ENGINE_APP_CLOSE;
+    TRUSTM_WORKAROUND_TIMER_DISARM;
     
     // Capture OPTIGA Error
     if (return_status != OPTIGA_LIB_SUCCESS)

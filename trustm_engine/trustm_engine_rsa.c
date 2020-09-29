@@ -98,7 +98,7 @@ static EVP_PKEY *trustm_rsa_generatekey(void)
                 0x2A,0x86,0x48,0x86,0xF7,0x0D,0x01,0x01,0x01,0x05,0x00};
 
     TRUSTM_ENGINE_DBGFN(">");
-
+    TRUSTM_WORKAROUND_TIMER_ARM;
     TRUSTM_ENGINE_APP_OPEN_RET(key,NULL);
     do
     {
@@ -170,6 +170,7 @@ static EVP_PKEY *trustm_rsa_generatekey(void)
         key = d2i_PUBKEY(NULL,(const unsigned char **)&data,public_key_length+i);
     } while (FALSE);
     TRUSTM_ENGINE_APP_CLOSE;
+    TRUSTM_WORKAROUND_TIMER_DISARM;
     
     // Capture OPTIGA Error
     if (return_status != OPTIGA_LIB_SUCCESS)
@@ -253,7 +254,7 @@ static int trustmEngine_rsa_priv_enc(int flen,
     TRUSTM_ENGINE_DBGFN("padding : %d", padding);
     TRUSTM_ENGINE_DBGFN("oid : 0x%X\n",trustm_ctx.key_oid);
     trustmHexDump((uint8_t *)from,flen);
-
+    TRUSTM_WORKAROUND_TIMER_ARM;
     TRUSTM_ENGINE_APP_OPEN_RET(ret,TRUSTM_ENGINE_FAIL);
     do
     {
@@ -278,7 +279,7 @@ static int trustmEngine_rsa_priv_enc(int flen,
         ret = templen;
     }while(FALSE);
     TRUSTM_ENGINE_APP_CLOSE;
-
+    TRUSTM_WORKAROUND_TIMER_DISARM;
     // Capture OPTIGA Error
     if (return_status != OPTIGA_LIB_SUCCESS)
     trustmPrintErrorCode(return_status);
@@ -312,7 +313,7 @@ static int trustmEngine_rsa_priv_dec(int flen,
     TRUSTM_ENGINE_DBGFN(">");
     //TRUSTM_ENGINE_DBGFN("From len : %d",flen);
     //trustmHexDump((uint8_t *)from,flen);
-
+    TRUSTM_WORKAROUND_TIMER_ARM; 
     TRUSTM_ENGINE_APP_OPEN_RET(ret,TRUSTM_ENGINE_FAIL);
     do
     {
@@ -343,6 +344,7 @@ static int trustmEngine_rsa_priv_dec(int flen,
 
     } while (FALSE);
     TRUSTM_ENGINE_APP_CLOSE;
+    TRUSTM_WORKAROUND_TIMER_DISARM;
 
     // Capture OPTIGA Error
     if (return_status != OPTIGA_LIB_SUCCESS)
@@ -379,7 +381,7 @@ static int trustmEngine_rsa_pub_enc(int flen,
     TRUSTM_ENGINE_DBGFN(">");
     //TRUSTM_ENGINE_DBGFN("From len : %d",flen);
     //trustmHexDump((uint8_t *)from,flen);
-
+    TRUSTM_WORKAROUND_TIMER_ARM; 
     TRUSTM_ENGINE_APP_OPEN_RET(ret,TRUSTM_ENGINE_FAIL);
     do
     {
@@ -423,7 +425,7 @@ static int trustmEngine_rsa_pub_enc(int flen,
 
     } while (FALSE);
     TRUSTM_ENGINE_APP_CLOSE;
-
+    TRUSTM_WORKAROUND_TIMER_DISARM;
     // Capture OPTIGA Error
     if (return_status != OPTIGA_LIB_SUCCESS)
     trustmPrintErrorCode(return_status);
@@ -506,6 +508,7 @@ static int trustmEngine_rsa_sign(int type,
         ret = TRUSTM_ENGINE_SUCCESS;
     }while(FALSE);
     TRUSTM_ENGINE_APP_CLOSE;
+    TRUSTM_WORKAROUND_TIMER_DISARM;
 
     // Capture OPTIGA Error
     if (return_status != OPTIGA_LIB_SUCCESS)
@@ -540,7 +543,7 @@ int trustmEngine_rsa_verify(int dtype,
     //trustmHexDump((uint8_t *)sigbuf,siglen);
 
     //trustmHexDump(trustm_ctx.pubkey,trustm_ctx.pubkeylen);
-
+    TRUSTM_WORKAROUND_TIMER_ARM;
     TRUSTM_ENGINE_APP_OPEN_RET(ret,TRUSTM_ENGINE_FAIL);
     do
     {
@@ -579,6 +582,7 @@ int trustmEngine_rsa_verify(int dtype,
         ret = TRUSTM_ENGINE_SUCCESS;
     }while(FALSE);
     TRUSTM_ENGINE_APP_CLOSE;
+    TRUSTM_WORKAROUND_TIMER_DISARM;
 
     // Capture OPTIGA Error
     if (return_status != OPTIGA_LIB_SUCCESS)
