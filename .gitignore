@@ -1,0 +1,8 @@
+
+# Object files
+*.o
+*.obj
+
+
+# Shared objects (inc. Windows DLLs)
+*.so

@@ -30,6 +30,11 @@
 #include <openssl/engine.h>
 
 #include "optiga_lib_common.h"
+#include "sys/types.h"
+#include "unistd.h"
+#include <signal.h>
+#include <time.h>
+#include <errno.h>   
 
 // SETTINGS
 #define OBJ_MAX_LEN          (128) /* Maximum length for key object paths or passwords */
@@ -51,10 +56,10 @@
 
 #ifdef TRUSTM_ENGINE_DEBUG
 
-#define TRUSTM_ENGINE_DBG(x, ...)      fprintf(stderr, "%s:%d " x "\n", __FILE__, __LINE__, ##__VA_ARGS__)
-#define TRUSTM_ENGINE_DBGFN(x, ...)    fprintf(stderr, "%s:%d %s: " x "\n", __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
-#define TRUSTM_ENGINE_ERRFN(x, ...)    fprintf(stderr, "Error in %s:%d %s: " x "\n", __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
-#define TRUSTM_ENGINE_MSGFN(x, ...)    fprintf(stderr, "Message:%s:%d %s: " x "\n", __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
+#define TRUSTM_ENGINE_DBG(x, ...)      fprintf(stderr, "%d:%s:%d " x "\n", getpid(),__FILE__, __LINE__, ##__VA_ARGS__)
+#define TRUSTM_ENGINE_DBGFN(x, ...)    fprintf(stderr, "%d:%s:%d %s: " x "\n", getpid(),__FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
+#define TRUSTM_ENGINE_ERRFN(x, ...)    fprintf(stderr, "%d:Error in %s:%d %s: " x "\n",getpid(), __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
+#define TRUSTM_ENGINE_MSGFN(x, ...)    fprintf(stderr, "%d:Message:%s:%d %s: " x "\n",getpid(), __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
 
 #else
 
