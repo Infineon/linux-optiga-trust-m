@@ -55,11 +55,13 @@ uint8_t trustm_hibernate_flag = 0;
 //Globe Variable
 // for IPC
 // ---- InterCom
-#define IPC_FLAGSIZE    1
+#define IPC_FLAGSIZE    sizeof(pid_t)
+#define IPC_SLEEP_STEPS 1
+#define MAX_IPC_TIME 16
 
 key_t ipc_FlagInterKey;
 int   ipc_FlagInterShmid;
-unsigned char ipc_queue;
+pid_t ipc_queue;
 unsigned char ipc_value;
 unsigned char ipc_temp;
 long ipc_task;
@@ -115,6 +117,31 @@ static char __SIGN[] = "Sign";
 static char __AGREE[] = "Agreement";
 static char __E1[100];
 
+
+/**********************************************************************
+* mssleep()
+**********************************************************************/
+int mssleep(long msec)
+{
+    struct timespec ts;
+    int res;
+
+    if (msec < 0)
+    {
+        errno = EINVAL;
+        return -1;
+    }
+
+    ts.tv_sec = msec / 1000;
+    ts.tv_nsec = (msec % 1000) * 1000000;
+
+    do {
+        res = nanosleep(&ts, &ts);
+    } while (res && errno == EINTR);
+
+    return res;
+}
+
 /**********************************************************************
 * __trustm_removeshm()
 **********************************************************************/
@@ -127,12 +154,12 @@ static char __E1[100];
 /**********************************************************************
 * __trustm_writeshm()
 **********************************************************************/
-static void __trustm_writeshm(int shmid,char data)
+static void __trustm_writeshm(int shmid,pid_t data)
 {
-    char  *Flag_segptr;
+    pid_t  *Flag_segptr;
 
     /* Attach (map) the shared memory segment into the current process */
-     if((Flag_segptr = (char *)shmat(shmid, 0, 0)) == (char *)-1)
+     if((Flag_segptr = (pid_t *)shmat(shmid, 0, 0)) == (pid_t *)-1)
      {
              perror("write flag shmat");
              exit(1);
@@ -145,11 +172,11 @@ static void __trustm_writeshm(int shmid,char data)
 /**********************************************************************
 * __trustm_readshm()
 **********************************************************************/
-static char __trustm_readshm(int shmid)
-{   char  *Flag_segptr;
-    char Flag;
+static pid_t __trustm_readshm(int shmid)
+{   pid_t  *Flag_segptr;
+    pid_t Flag;
     /* Attach (map) the shared memory segment into the current process */
-     if((Flag_segptr = (char *)shmat(shmid, 0, 0)) == (char *)-1)
+     if((Flag_segptr = (pid_t *)shmat(shmid, 0, 0)) == (pid_t *)-1)
      {
              perror("read flag shmat");
              exit(1);
@@ -166,7 +193,8 @@ static char __trustm_readshm(int shmid)
 static void __trustm_ipcInit(void)
 {
 	/* Unique Key for InterCom */
-    ipc_FlagInterKey = 0x11111120;
+    ipc_FlagInterKey = 0x11111123;
+    pid_t pid;
 
   	/* Open the shared memory segment - create if necessary */
     if((ipc_FlagInterShmid = shmget(ipc_FlagInterKey, IPC_FLAGSIZE, IPC_CREAT|IPC_EXCL|0666)) == -1)
@@ -182,8 +210,11 @@ static void __trustm_ipcInit(void)
     else
     {
         // First created so init queue
-        TRUSTM_HELPER_DBGFN("Init Queue");
-        __trustm_writeshm(ipc_FlagInterShmid,0x0);
+        pid=getpid();
+        TRUSTM_HELPER_DBGFN("Init Queue %d", pid);
+        
+        //~ __trustm_writeshm(ipc_FlagInterShmid,0x1);
+        __trustm_writeshm(ipc_FlagInterShmid,pid); // stores the current PID
     }
 }
 
@@ -905,6 +936,9 @@ void optiga_crypt_callback(void * context, optiga_lib_status_t return_status)
 optiga_lib_status_t trustm_Open(void)
 {
     optiga_lib_status_t return_status;
+    pid_t current_pid;
+    pid_t queue_pid;
+    int queue_delay;
 
     TRUSTM_HELPER_DBGFN(">");
     trustm_open_flag = 0;
@@ -914,21 +948,41 @@ optiga_lib_status_t trustm_Open(void)
         __trustm_ipcInit();
 
         /// IPC Check
-        ipc_queue = __trustm_readshm(ipc_FlagInterShmid);
-        TRUSTM_HELPER_DBGFN("Check if TrustM Open");
-
-        ipc_value = ipc_queue + 1;
-        __trustm_writeshm(ipc_FlagInterShmid,ipc_value);
-        TRUSTM_HELPER_DBGFN("Take queue no : %d\n", ipc_queue);
-
-        /// Wait
-        while (ipc_queue != 0)
+        current_pid=getpid();
+        queue_delay= ((current_pid %MAX_IPC_TIME)+1)*IPC_SLEEP_STEPS;; // wait for 0 to 20ms at IPC_SLEEP_STEPS steps depends on process number
+        mssleep(queue_delay);
+        
+        queue_pid = __trustm_readshm(ipc_FlagInterShmid);
+        TRUSTM_HELPER_DBGFN("Check if TrustM Open:queue %d:current:%d:Delay %d", queue_pid,current_pid,queue_delay);
+        if (queue_pid ==0)
+        {    __trustm_writeshm(ipc_FlagInterShmid,current_pid); /*write pid into shared memory*/
+            queue_pid = __trustm_readshm(ipc_FlagInterShmid);
+            TRUSTM_HELPER_DBGFN("Resource seized by %d",current_pid);
+        }    
+       
+        while ( queue_pid !=current_pid)  /*Check if taken by other process and wait*/
         {
-            ipc_temp = __trustm_readshm(ipc_FlagInterShmid);
-            if (ipc_value > ipc_temp)
-                ipc_queue--;
-            ipc_value = ipc_temp;
+            queue_pid = __trustm_readshm(ipc_FlagInterShmid);
+            if (queue_pid ==0)
+            {    __trustm_writeshm(ipc_FlagInterShmid,current_pid); /*write pid into shared memory*/
+                //queue_pid=__trustm_readshm(ipc_FlagInterShmid);
+                TRUSTM_HELPER_DBGFN("Resource seized by %d",current_pid);
+            }
+            else if (kill(queue_pid,0) == -1) 
+            {
+              TRUSTM_HELPER_DBGFN("Process does not exist1:%d", queue_pid);
+              __trustm_writeshm(ipc_FlagInterShmid,current_pid);
+              //queue_pid=__trustm_readshm(ipc_FlagInterShmid);
+            }
+            queue_delay= ((current_pid %MAX_IPC_TIME)+1)*IPC_SLEEP_STEPS; // wait for 1 to MAX_IPC_TIME at IPC_SLEEP_STEPS steps depends on process number
+            mssleep(queue_delay);
+            queue_pid=__trustm_readshm(ipc_FlagInterShmid);
         }
+        
+
+        
+        TRUSTM_HELPER_DBGFN("Lock queue %d", queue_pid);
+
         
         pal_gpio_init(&optiga_reset_0);
         pal_gpio_init(&optiga_vdd_0);
@@ -1066,8 +1120,8 @@ optiga_lib_status_t trustm_Close(void)
         }
 
         trustm_open_flag = 0;
-        pal_gpio_deinit(&optiga_reset_0);
-        pal_gpio_deinit(&optiga_vdd_0);
+        //pal_gpio_deinit(&optiga_reset_0);
+        //pal_gpio_deinit(&optiga_vdd_0);
         TRUSTM_HELPER_DBGFN("Success : optiga_util_close_application \n");
 
     }while(FALSE);
@@ -1088,16 +1142,9 @@ optiga_lib_status_t trustm_Close(void)
         optiga_util_destroy(me_util);    
 
     /// IPC Release 
-    ipc_value = __trustm_readshm(ipc_FlagInterShmid);
-    if (ipc_value != 0)
-        ipc_value--;
-    __trustm_writeshm(ipc_FlagInterShmid,ipc_value);
+    mssleep(30);
+    __trustm_writeshm(ipc_FlagInterShmid,0);
 
-    /// Release IPC
-    //if (ipc_value == 0)
-    //{
-    //    __trustm_removeshm(ipc_FlagInterShmid);
-    //}
     
     TRUSTM_HELPER_DBGFN("TrustM Closed.\n");
     TRUSTM_HELPER_DBGFN("<");
@@ -1434,4 +1481,3 @@ void trustmGetOIDName(uint16_t optiga_oid, char *name)
             break;
     }    
 }
-

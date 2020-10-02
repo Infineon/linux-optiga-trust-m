@@ -38,22 +38,27 @@
 #include "optiga_util.h"
 #include "optiga_comms.h"
 #include "optiga_crypt.h"
+#include "sys/types.h"
+#include "unistd.h"
+#include <signal.h>
+#include <time.h>
+#include <errno.h>   
 
 //Debug Print
 //#define DEBUG_TRUSTM_HELPER =1
 
 #ifdef DEBUG_TRUSTM_HELPER
 
-#define TRUSTM_HELPER_DBG(x, ...)      fprintf(stderr, x,##__VA_ARGS__)
-#define TRUSTM_HELPER_DBGFN(x, ...)    fprintf(stderr, "%s:%d %s: " x "\n", __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
+#define TRUSTM_HELPER_DBG(x, ...)      fprintf(stderr, "%d:%s:%d " x "\n", getpid(),__FILE__, __LINE__, ##__VA_ARGS__)
+#define TRUSTM_HELPER_DBGFN(x, ...)    fprintf(stderr, "%d:%s:%d %s: " x "\n", getpid(),__FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
 #else
 #define TRUSTM_HELPER_DBG(x, ...)
 #define TRUSTM_HELPER_DBGFN(x, ...)
 #endif
 
 #define TRUSTM_HELPER_INFO(...)    printf(__VA_ARGS__)
-#define TRUSTM_HELPER_ERRFN(x, ...)    fprintf(stderr, "Error in %s:%d %s: " x "\n", __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
-#define TRUSTM_HELPER_RETCODEFN(y, x, ...)   fprintf(stdout, "\nError [0x%.4X] : " x "\n", y, ##__VA_ARGS__)
+#define TRUSTM_HELPER_ERRFN(x, ...)    fprintf(stderr, "%d:Error in %s:%d %s: " x "\n",getpid(), __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
+#define TRUSTM_HELPER_RETCODEFN(y, x, ...)   fprintf(stdout, "\n%d:Error [0x%.4X] : " x "\n",getpid(), y, ##__VA_ARGS__)
 
 #define TRUSTM_CTX_FILENAME             ".trustm_ctx"
 #define TRUSTM_HIBERNATE_CTX_FILENAME   ".trustm_hibernate_ctx"
