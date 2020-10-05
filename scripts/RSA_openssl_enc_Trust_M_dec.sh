@@ -1,4 +1,5 @@
-EXEPATH="../bin"
+#!/bin/bash
+source config.sh
 
 
 rm *.bin

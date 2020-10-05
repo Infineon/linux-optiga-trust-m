@@ -1,10 +1,12 @@
-EXEPATH="../bin"
+#!/bin/bash
+source config.sh
+
 CERT_OBJ_ID="0xe0e0"
 KEY_OBJ_ID="0xe0f0"
 DATA_IN="mydata.txt"
 
 
-for i in $(seq 1 3); do
+for i in $(seq 1 1); do
 echo "test $i"
 
 rm *.bin

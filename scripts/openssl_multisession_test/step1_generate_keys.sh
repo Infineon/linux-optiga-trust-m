@@ -1,11 +1,8 @@
-EXEPATH="../bin"
-CERT_PATH="/home/pi/Desktop/WIP1/TrustM/cli-optiga-trust-m/trustm_lib/certificates"
-
-
+#!/bin/bash
+source config.sh
 
 rm *.csr
 rm *.pem
-
 
 set -e
 
