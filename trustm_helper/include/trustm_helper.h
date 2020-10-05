@@ -46,6 +46,7 @@
 
 //Debug Print
 //#define DEBUG_TRUSTM_HELPER =1
+//#define HIBERNATE_ENABLE =1
 
 #ifdef DEBUG_TRUSTM_HELPER
 

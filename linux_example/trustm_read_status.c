@@ -105,7 +105,11 @@ int main (int argc, char **argv)
     } while (FALSE); // End of DO WHILE FALSE loop.
 
     if(uOptFlag.flags.bypass != 1)
+    #ifdef HIBERNATE_ENABLE
         trustm_hibernate_flag = 1; // Enable hibernate Context Save
+    #else
+        trustm_hibernate_flag = 0; // disable hibernate Context Save
+    #endif 
     else
         trustm_hibernate_flag = 0; // disable hibernate Context Save
         
