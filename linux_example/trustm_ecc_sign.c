@@ -204,7 +204,8 @@ int main (int argc, char **argv)
                     printf("error opening file : %s\n",inFile);
                     exit(1);
                 }
-
+		
+/*
                 hash_context.context_buffer = hash_context_buffer;
                 hash_context.context_buffer_length = sizeof(hash_context_buffer);
                 hash_context.hash_algo = (uint8_t)OPTIGA_HASH_TYPE_SHA_256;
@@ -282,10 +283,22 @@ int main (int argc, char **argv)
                     break;
                 else
                 {
+*/
+    SHA256_CTX sha256;
+    SHA256_Init(&sha256);
+    const int bufSize = 32768;
+    char* buffer = malloc(bufSize);
+    int bytesRead = 0;
+    if(!buffer) return -1;
+    while((bytesRead = fread(buffer, 1, bufSize, fp)))
+    {
+        SHA256_Update(&sha256, buffer, bytesRead);
+    }
+    SHA256_Final(digest, &sha256);
                     digestLen = sizeof(digest);
                     printf("Hash Success : SHA256\n");
                     trustmHexDump(digest,digestLen);
-                }
+                //}
 
                 printf("filesize: %d\n",filesize);
 
