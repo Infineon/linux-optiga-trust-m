@@ -81,21 +81,21 @@ int main (int argc, char **argv)
     optiga_lib_status_t return_status;
 
     optiga_key_id_t optiga_key_id;
-    optiga_hash_context_t hash_context;
-    hash_data_from_host_t hash_data_host;
-    uint8_t hash_context_buffer[2048];
+    //optiga_hash_context_t hash_context;
+    //hash_data_from_host_t hash_data_host;
+    //uint8_t hash_context_buffer[2048];
 
     uint8_t signature [300];     //To store the signture generated
     uint16_t signature_length = sizeof(signature);
     uint8_t digest[32];
     uint16_t digestLen = 0;
-    uint8_t data[2048];
-    uint16_t dataLen = 0;
+   // uint8_t data[2048];
+    //uint16_t dataLen = 0;
 
     char *outFile = NULL;
     char *inFile = NULL;
     FILE *fp = NULL;
-    uint16_t filesize;
+    
     int i;
 
     int option = 0;                    // Command line option.
@@ -205,85 +205,7 @@ int main (int argc, char **argv)
                     exit(1);
                 }
 		
-/*
-                hash_context.context_buffer = hash_context_buffer;
-                hash_context.context_buffer_length = sizeof(hash_context_buffer);
-                hash_context.hash_algo = (uint8_t)OPTIGA_HASH_TYPE_SHA_256;
-                filesize = 0;
 
-                if(uOptFlag.flags.bypass != 1)
-                {
-                    // OPTIGA Comms Shielded connection settings to enable the protection
-                    OPTIGA_CRYPT_SET_COMMS_PROTOCOL_VERSION(me_crypt, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
-                    OPTIGA_CRYPT_SET_COMMS_PROTECTION_LEVEL(me_crypt, OPTIGA_COMMS_FULL_PROTECTION);
-                }
-            
-                optiga_lib_status = OPTIGA_LIB_BUSY;
-                return_status = optiga_crypt_hash_start(me_crypt, &hash_context);
-                if (OPTIGA_LIB_SUCCESS != return_status)
-                    break;
-                //Wait until the optiga_util_read_metadata operation is completed
-                while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
-                return_status = optiga_lib_status;
-                if (return_status != OPTIGA_LIB_SUCCESS)
-                    break;
-
-                while((dataLen = fread(data,1,sizeof(data),fp)) > 0)
-                {
-                    hash_data_host.buffer = data;
-                    hash_data_host.length = dataLen;
-
-                    if(uOptFlag.flags.bypass != 1)
-                    {
-                        // OPTIGA Comms Shielded connection settings to enable the protection
-                        OPTIGA_CRYPT_SET_COMMS_PROTOCOL_VERSION(me_crypt, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
-                        OPTIGA_CRYPT_SET_COMMS_PROTECTION_LEVEL(me_crypt, OPTIGA_COMMS_FULL_PROTECTION);
-                    }
-                
-                    optiga_lib_status = OPTIGA_LIB_BUSY;
-                    return_status = optiga_crypt_hash_update(me_crypt,
-                                                             &hash_context,
-                                                             OPTIGA_CRYPT_HOST_DATA,
-                                                             &hash_data_host);
-                    if (OPTIGA_LIB_SUCCESS != return_status)
-                        break;
-                    //Wait until the optiga_util_read_metadata operation is completed
-                    while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
-                    return_status = optiga_lib_status;
-                    if (return_status != OPTIGA_LIB_SUCCESS)
-                        break;
-
-                    filesize += dataLen;
-                }
-
-                // Capture OPTIGA Trust M error
-                if (return_status != OPTIGA_LIB_SUCCESS)
-                {
-                    trustmPrintErrorCode(return_status);
-                    break;
-                }
-
-                if(uOptFlag.flags.bypass != 1)
-                {
-                    // OPTIGA Comms Shielded connection settings to enable the protection
-                    OPTIGA_CRYPT_SET_COMMS_PROTOCOL_VERSION(me_crypt, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
-                    OPTIGA_CRYPT_SET_COMMS_PROTECTION_LEVEL(me_crypt, OPTIGA_COMMS_FULL_PROTECTION);
-                }
-                
-                optiga_lib_status = OPTIGA_LIB_BUSY;
-                return_status = optiga_crypt_hash_finalize(me_crypt,
-                                                           &hash_context,
-                                                           digest);
-                if (OPTIGA_LIB_SUCCESS != return_status)
-                    break;
-                //Wait until the optiga_util_read_metadata operation is completed
-                while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
-                return_status = optiga_lib_status;
-                if (return_status != OPTIGA_LIB_SUCCESS)
-                    break;
-                else
-                {
-*/
                   SHA256_CTX sha256;
                   SHA256_Init(&sha256);
                   const int bufSize = 32768;
@@ -300,7 +222,7 @@ int main (int argc, char **argv)
                   trustmHexDump(digest,digestLen);
                 //}
 
-                printf("filesize: %d\n",filesize);
+                
 
             } else
             {
