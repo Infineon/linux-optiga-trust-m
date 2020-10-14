@@ -71,6 +71,7 @@ ifdef LIBDIR
 	        LIBSRC += $(PALDIR)/pal_os_event.c
         	LIBSRC += $(PALDIR)/pal_os_lock.c
 	        LIBSRC += $(PALDIR)/pal_os_timer.c
+	        LIBSRC += $(PALDIR)/pal_os_memory.c
 			LIBSRC += $(TRUSTM)/pal/pal_crypt_openssl.c
 	        ifeq ($(BUILD_FOR_RPI), YES)
 	                LIBSRC += $(PALDIR)/target/rpi3/pal_ifx_i2c_config.c
@@ -188,4 +189,3 @@ $(LIBOBJ): %.o: %.c $(INCSRC)
 %.o: %.c $(INCSRC)
 	@echo "------- Generating application objects: $< "
 	@$(CC) $(CFLAGS) $< -o $@
-	
