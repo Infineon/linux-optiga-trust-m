@@ -1,4 +1,8 @@
-# Command Line Interface (CLI) & OpenSSL Engine for OPTIGA™ Trust M1 security solution
+---
+typora-copy-images-to: pictures
+---
+
+# Command Line Interface (CLI) & OpenSSL Engine for OPTIGA™ Trust M1/M3 security solution
 
 1. [About](#about)
     * [Prerequisites](#prerequisites)
@@ -51,8 +55,14 @@ Following is the software component to build the tools :
 * pthread
 * rt
 
-Tested platforms:
+Hardware platforms and boards:
 * Raspberry PI 3 on Linux kernel 4.19
+
+* [OPTIGA™ Trust M](https://www.infineon.com/cms/en/product/evaluation-boards/s2go-security-optiga-m/)
+
+* [Shield2Go Adapter for Raspberry Pi](https://www.infineon.com/cms/en/product/evaluation-boards/s2go-adapter-rasp-pi-iot/)
+
+  ![](.\pictures\coonection_diagram1.png)
 
 ### <a name="contents_of_package"></a>Contents of Package
 
@@ -104,14 +114,20 @@ Getting the initial code from Github with submodules
 foo@bar:~$ git clone --recurse-submodules https://github.com/Infineon/cli-optiga-trust-m.git
 ```
 
-Applying patch to workaround the known pal_os_event.c issue
+Check out the development branch as needed
+
+```
+foo@bar:~$ git checkout development_v3
+foo@bar:~$ git submodule update
+```
+
+Change the reset type to use software reset as follow in the header file at "**cli-optiga-trust-m/trustm_lib/optiga/include/optiga/**"
+
+- optiga_lib_config_m_v3.h for OPTIGA™ Trust M3 or 
+- optiga_lib_config_m_v3.h for OPTIGA™ Trust M1
 
 ```console
-foo@bar:~/cli-optiga-trust-m$ make workaround_patch 
-Applying workaround patch for pal_os_event.c
-Original file backup to trustm_lib/pal/linux/pal_os_event.org
-Applying workaround patch for pal_os_datastore.c
-Original file backup to trustm_lib/pal/linux/pal_os_datastore.org
+#define OPTIGA_COMMS_DEFAULT_RESET_TYPE     (1U)
 ```
 
 ### <a name="build_lib"></a>First time building the library
