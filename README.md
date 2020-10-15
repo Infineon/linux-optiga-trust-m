@@ -62,7 +62,7 @@ Hardware platforms and boards:
 
 * [Shield2Go Adapter for Raspberry Pi](https://www.infineon.com/cms/en/product/evaluation-boards/s2go-adapter-rasp-pi-iot/)
 
-  ![](.\pictures\coonection_diagram1.png)
+  ![](/pictures/coonection_diagram1.png)
 
 ### <a name="contents_of_package"></a>Contents of Package
 
