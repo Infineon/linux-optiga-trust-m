@@ -84,7 +84,7 @@ int main (int argc, char **argv)
     uint8_t hash_context_buffer[2048];
 
     uint16_t optiga_oid;
-    uint8_t signature [100];     //To store the signture generated
+    uint8_t signature [300];     //To store the signture generated
     uint16_t signatureLen = sizeof(signature);
     uint8_t digest[32];
     uint16_t digestLen = 0;
@@ -211,6 +211,13 @@ int main (int argc, char **argv)
                     signature[i] = signature[i+2];
                 }
             }
+            else{
+                signatureLen = signature[2];
+                for (i = 0;i < signatureLen; i++)
+                {
+                    signature[i] = signature[i+3];
+                }
+                }
         }
 
         if(uOptFlag.flags.hash == 1)
@@ -387,11 +394,14 @@ int main (int argc, char **argv)
 
             printf("Pub key : [%d]\n",pubkeySize);
             trustmHexDump((pubkey),pubkeyLen);
-
-            if(pubkeySize == 256)
+            if(pubkeySize == 256){
                 pubkeySize = OPTIGA_ECC_CURVE_NIST_P_256;
-            else
+            }
+            else if(pubkeySize == 384){
                 pubkeySize = OPTIGA_ECC_CURVE_NIST_P_384;
+            }
+            else{
+                pubkeySize = OPTIGA_ECC_CURVE_NIST_P_521;}
 
             public_key_details.public_key = pubkey;
             public_key_details.length = pubkeyLen;

@@ -106,6 +106,7 @@ static char __UPDATSEC[] = "UPDATSEC";
 
 static char __ECC256[] = "ECC256";
 static char __ECC384[] = "ECC384";
+static char __ECC521[] = "ECC521";
 static char __RSA1024[] = "RSA1024";
 static char __RSA2048[] = "RSA2048";
 static char __SHA256[] = "SHA256";
@@ -356,6 +357,9 @@ static char* __decodeAC(uint8_t data)
             break;
         case 0x04:
             ret = __ECC384;
+            break;
+        case 0x05:
+            ret = __ECC521;
             break;
         case 0x41:
             ret = __RSA1024;

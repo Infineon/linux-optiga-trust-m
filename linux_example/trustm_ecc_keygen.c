@@ -73,7 +73,7 @@ void helpmenu(void)
     printf("-t <key type>   : Key type Auth:0x01 Enc :0x02 HFWU:0x04\n");
     printf("                           DevM:0X08 Sign:0x10 Agmt:0x20\n");
     printf("                           [default Auth]\n");
-    printf("-k <key size>   : Key size ECC256:0x03 ECC384:0x04 [default ECC256]\n");
+    printf("-k <key size>   : Key size ECC256:0x03 ECC384:0x04 ECC521:0x05 [default ECC256]\n");
     printf("-o <filename>   : Output Pubkey to file in PEM format\n");
     printf("-s              : Save Pubkey in <Key OID + 0x10E0>\n");
     printf("-X              : Bypass Shielded Communication \n");
@@ -97,8 +97,14 @@ int main (int argc, char **argv)
                                 0x2A,0x86,0x48,0xCE,0x3D,0x02,0x01,
                                 0x06,0x05, // OID:1.3.132.0.34
                                 0x2B,0x81,0x04,0x00,0x22};
-
-    uint8_t pubKey[100];
+    uint8_t eccheader521[] = {0x30,0x81,0x9B, // SEQUENCE
+                                0x30,0x10, //SEQUENCE
+                                0x06,0x07, // OID:1.2.840.10045.2.1
+                                0x2A,0x86,0x48,0xCE,0x3D,0x02,0x01,
+                                0x06,0x05, // OID:1.3.132.0.35
+                                0x2B,0x81,0x04,0x00,0x23};                                
+                                                                                
+    uint8_t pubKey[200];
     uint16_t i;
 
     uint16_t pubKeyLen = sizeof(pubKey)+1000;
@@ -149,7 +155,7 @@ int main (int argc, char **argv)
                 case 'k': // Key Size
                         uOptFlag.flags.type = 1;
                         keySize = trustmHexorDec(optarg);
-                        if ((keySize != 0x03) && (keySize != 0x04))
+                        if ((keySize != 0x03) && (keySize != 0x04)&& (keySize != 0x05))
                         {
                                 printf("Key Size Error!!!\n");
                                 exit(0);
@@ -204,6 +210,14 @@ int main (int argc, char **argv)
                 for (i=0; i < sizeof(eccheader384);i++)
                 {
                     pubKey[i] = eccheader384[i];
+                }
+            }
+            
+            else if(keySize == 0x05)
+            {
+                for (i=0; i < sizeof(eccheader521);i++)
+                {
+                    pubKey[i] = eccheader521[i];
                 }
             }
             else
@@ -263,12 +277,21 @@ int main (int argc, char **argv)
             }
 
             optiga_lib_status = OPTIGA_LIB_BUSY;
-            return_status = optiga_util_write_data(me_util,
+            if(keySize == 0x05)
+            {
+                return_status = optiga_util_write_data(me_util,
+                                                   (optiga_key_id+0x10ED),
+                                                   OPTIGA_UTIL_ERASE_AND_WRITE,
+                                                   0,
+                                                   (pubKey),
+                                                   pubKeyLen+i);}
+            else{
+                return_status = optiga_util_write_data(me_util,
                                                    (optiga_key_id+0x10E0),
                                                    OPTIGA_UTIL_ERASE_AND_WRITE,
                                                    0,
                                                    (pubKey),
-                                                   pubKeyLen+i);
+                                                   pubKeyLen+i);}                                      
             if (OPTIGA_LIB_SUCCESS != return_status)
                 break;
             //Wait until the optiga_util_read_metadata operation is completed
@@ -276,8 +299,12 @@ int main (int argc, char **argv)
             return_status = optiga_lib_status;
             if (return_status != OPTIGA_LIB_SUCCESS)
                 break;
-            else
-                printf("Write Success to OID: 0x%.4X.\n",(optiga_key_id+0x10E0));
+            else{
+            if(keySize == 0x05){
+                printf("Write Success to OID: 0x%.4X.\n",(optiga_key_id+0x10ED));}
+            else{
+            printf("Write Success to OID: 0x%.4X.\n",(optiga_key_id+0x10E0));}
+                 }
         }
     }while(FALSE);
 

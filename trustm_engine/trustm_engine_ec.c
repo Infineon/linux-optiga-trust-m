@@ -63,6 +63,27 @@ unsigned char dummy_ec_public_key_384[] =
     0xE3,0xFE,0x89,0xB3,0x93,0x58,0x60,0xDC,0x0A,0xD5
 };
 
+unsigned char dummy_ec_public_key_521[] = 
+{
+    0x30,0x81,0x9B,0x30,0x10,0x06,0x07,0x2A,0x86,0x48,
+    0xCE,0x3D,0x02,0x01,0x06,0x05,0x2B,0x81,0x04,0x00,
+    0x23,0x03,0x81,0x86,0x00,0x04,0x01,0xEA,0xFE,0xBC,
+    0x27,0xA7,0x7C,0x3C,0xD6,0xE3,0x7C,0x0A,0x30,0x97,
+    0x7D,0xCD,0x60,0x24,0xA4,0x17,0xC4,0x1C,0xEF,0x44,
+    0x17,0x2C,0x5E,0x0E,0x3C,0xC8,0xE3,0x89,0x32,0x3F,
+    0xB3,0x86,0x5B,0xCE,0x26,0x04,0xD4,0x8F,0xB6,0x56,
+    0x7C,0x45,0x5B,0x13,0xA0,0x40,0x68,0x2E,0x2D,0xFD,
+    0xA2,0x41,0xA6,0xEB,0x0F,0xB6,0x77,0x01,0x56,0xDC,
+    0x59,0x75,0x00,0x02,0x05,0x4C,0x02,0xB7,0x52,0x59,
+    0x91,0xD5,0x47,0x83,0xAF,0xC1,0x90,0x08,0x37,0x46,
+    0x8E,0x92,0x3D,0x1A,0x6C,0x00,0x5F,0x15,0xB7,0x3D,
+    0xFC,0x3B,0x64,0xA9,0x62,0x7F,0x5B,0xE3,0x9D,0xC2,
+    0xEE,0x7D,0xF3,0x1A,0x14,0x7D,0xAE,0x95,0xAE,0x80,
+    0x14,0x2F,0x63,0xC5,0xD0,0xE0,0xBB,0x69,0x1E,0xCC,
+    0x93,0xD4,0xEE,0xB0,0x9A,0xBA,0x68,0xC2
+};
+
+
 EVP_PKEY *trustm_ec_generatekey(void)
 {
     EVP_PKEY    *key         = NULL;
@@ -88,6 +109,13 @@ EVP_PKEY *trustm_ec_generatekey(void)
                                 0x2A,0x86,0x48,0xCE,0x3D,0x02,0x01,
                                 0x06,0x05, // OID:1.3.132.0.34
                                 0x2B,0x81,0x04,0x00,0x22};
+                                
+    uint8_t eccheader521[] = {0x30,0x81,0x9B, // SEQUENCE
+                                0x30,0x10, //SEQUENCE
+                                0x06,0x07, // OID:1.2.840.10045.2.1
+                                0x2A,0x86,0x48,0xCE,0x3D,0x02,0x01,
+                                0x06,0x05, // OID:1.3.132.0.35
+                                0x2B,0x81,0x04,0x00,0x23};                                                                                       
 
     TRUSTM_ENGINE_DBGFN(">");
     TRUSTM_WORKAROUND_TIMER_ARM;
@@ -102,12 +130,20 @@ EVP_PKEY *trustm_ec_generatekey(void)
             public_key[i] = eccheader256[i];
             }
         } 
-        else    
+        else if(trustm_ctx.ec_key_curve == OPTIGA_ECC_CURVE_NIST_P_384)   
         {
             trustm_ctx.pubkeyHeaderLen = sizeof(eccheader384);
             for (i=0; i < trustm_ctx.pubkeyHeaderLen;i++)
             {
             public_key[i] = eccheader384[i];
+            }
+        }
+        else  
+        {
+            trustm_ctx.pubkeyHeaderLen = sizeof(eccheader521);
+            for (i=0; i < trustm_ctx.pubkeyHeaderLen;i++)
+            {
+            public_key[i] = eccheader521[i];
             }
         }
 
@@ -137,16 +173,27 @@ EVP_PKEY *trustm_ec_generatekey(void)
 
         if ((trustm_ctx.ec_flag & TRUSTM_ENGINE_FLAG_SAVEPUBKEY) == TRUSTM_ENGINE_FLAG_SAVEPUBKEY)
         {
-            TRUSTM_ENGINE_DBGFN("Save Pubkey to : 0x%.4X",(trustm_ctx.key_oid) + 0x10E0);
+            if(trustm_ctx.ec_key_curve == OPTIGA_ECC_CURVE_NIST_P_521){
+                TRUSTM_ENGINE_DBGFN("Save Pubkey to : 0x%.4X",(trustm_ctx.key_oid) + 0x10ED);}
+            else{TRUSTM_ENGINE_DBGFN("Save Pubkey to : 0x%.4X",(trustm_ctx.key_oid) + 0x10E0);}
 
             // Save pubkey without header
             optiga_lib_status = OPTIGA_LIB_BUSY;
-            return_status = optiga_util_write_data(me_util,
+            if(trustm_ctx.ec_key_curve == OPTIGA_ECC_CURVE_NIST_P_521){
+                return_status = optiga_util_write_data(me_util,
+                                (trustm_ctx.key_oid)+0x10ED,
+                                OPTIGA_UTIL_ERASE_AND_WRITE,
+                                0,
+                                public_key, 
+                                public_key_length+i);}
+            else{
+                return_status = optiga_util_write_data(me_util,
                                 (trustm_ctx.key_oid)+0x10E0,
                                 OPTIGA_UTIL_ERASE_AND_WRITE,
                                 0,
                                 public_key, 
-                                public_key_length+i);
+                                public_key_length+i);}
+                                
             if (OPTIGA_LIB_SUCCESS != return_status)
             break;          
             //Wait until the optiga_util_read_metadata operation is completed
@@ -289,10 +336,15 @@ EVP_PKEY *trustm_ec_loadkey(void)
                 data = dummy_ec_public_key_256;
                 len = sizeof(dummy_ec_public_key_256);
             }
-            else
+            else if(trustm_ctx.ec_key_curve == OPTIGA_ECC_CURVE_NIST_P_384)
             {
                 data = dummy_ec_public_key_384;
                 len = sizeof(dummy_ec_public_key_384);
+            }
+            else 
+            {
+                data = dummy_ec_public_key_521;
+                len = sizeof(dummy_ec_public_key_521);
             }
             key = d2i_PUBKEY(NULL,(const unsigned char **)&data,len);
             trustm_ctx.pubkeylen = 0;
@@ -335,7 +387,37 @@ static ECDSA_SIG* trustm_ecdsa_sign(
     do 
     {  
         optiga_lib_status = OPTIGA_LIB_BUSY;
+        if(trustm_ctx.ec_key_curve == OPTIGA_ECC_CURVE_NIST_P_521){
         return_status = optiga_crypt_ecdsa_sign(me_crypt,
+                            dgst,
+                            dgstlen,
+                            trustm_ctx.key_oid,
+                            (sig+3),
+                            &sig_len);
+        if (OPTIGA_LIB_SUCCESS != return_status)
+            break;          
+        //Wait until the optiga_util_read_metadata operation is completed
+        while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+        return_status = optiga_lib_status;
+        if (return_status != OPTIGA_LIB_SUCCESS)
+            break;
+        else
+        {
+            TRUSTM_ENGINE_DBGFN("Signature received : sig+3=%x, sig_len=0x%x=%d",
+            (unsigned int) sig+3,
+            sig_len, sig_len);
+
+            sig[0] = 0x30;
+            sig[1] = 0x81;
+            sig[2] = sig_len;
+            TRUSTM_ENGINE_DBGFN("ecc curve: 0x%.4x",trustm_ctx.ec_key_curve);
+            trustmHexDump(sig,sig_len+3);            
+            const unsigned char *p = sig;
+            ecdsa_sig = d2i_ECDSA_SIG(NULL, &p, sig_len+3);
+        }
+        }
+        else{
+            return_status = optiga_crypt_ecdsa_sign(me_crypt,
                             dgst,
                             dgstlen,
                             trustm_ctx.key_oid,
@@ -358,6 +440,7 @@ static ECDSA_SIG* trustm_ecdsa_sign(
             sig[1] = sig_len;
             const unsigned char *p = sig;
             ecdsa_sig = d2i_ECDSA_SIG(NULL, &p, sig_len+2);
+        }
         }
     }while(FALSE);
     TRUSTM_ENGINE_APP_CLOSE;
