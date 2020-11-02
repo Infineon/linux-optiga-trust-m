@@ -395,7 +395,7 @@ int main (int argc, char **argv)
 
             printf("Pub key : [%d]\n",pubkeySize);
             trustmHexDump((pubkey),pubkeyLen);
-            
+                      
             if(pubkeySize == 256){
             if(nid == NID_brainpoolP256r1){
                 pubkeySize = OPTIGA_ECC_CURVE_BRAIN_POOL_P_256R1;}
@@ -408,6 +408,8 @@ int main (int argc, char **argv)
             else{
                 pubkeySize = OPTIGA_ECC_CURVE_NIST_P_384;}
             }
+            else if(pubkeySize == 512){
+                pubkeySize = OPTIGA_ECC_CURVE_BRAIN_POOL_P_512R1;}
             else{
                 pubkeySize = OPTIGA_ECC_CURVE_NIST_P_521;}
 

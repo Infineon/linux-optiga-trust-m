@@ -114,6 +114,26 @@ unsigned char dummy_ec_public_key_BrainPool384[] =
     0x23,0x17,0xe0,0xf0
 };
 
+unsigned char dummy_ec_public_key_BrainPool512[] = 
+{
+    0x30,0x81,0x9b,0x30,0x14,0x06,0x07,0x2a,0x86,0x48,
+    0xce,0x3d,0x02,0x01,0x06,0x09,0x2b,0x24,0x03,0x03,
+    0x02,0x08,0x01,0x01,0x0d,0x03,0x81,0x82,0x00,0x04,
+    0x3f,0x7b,0x6b,0xe0,0x58,0x46,0x0d,0xa1,0xee,0x71,
+    0x82,0x18,0x96,0x59,0xd0,0x3e,0xc8,0x58,0x0b,0x9a,
+    0x29,0x16,0x68,0x21,0xde,0x66,0x00,0xda,0xd4,0xf3,
+    0x4b,0xd5,0x3a,0x2a,0x6c,0xcb,0x40,0x5d,0xe0,0xe7,
+    0xf9,0x37,0xdd,0xba,0x01,0xaa,0x37,0xd0,0x1f,0x14,
+    0xe9,0xd4,0x43,0x4b,0x14,0xbc,0x2c,0x52,0xb6,0x82,
+    0xae,0xa8,0xcf,0x0a,0x99,0xfd,0x51,0xde,0x4a,0x61,
+    0x43,0x93,0x5e,0xd4,0x53,0xea,0xed,0xad,0x0d,0xff,
+    0x8e,0x58,0x27,0x7d,0x3e,0xfb,0x09,0x99,0x72,0x13,
+    0xee,0x55,0xca,0x73,0x35,0x90,0x6a,0x53,0xeb,0xe9,
+    0x10,0xa2,0x32,0xcd,0xf0,0x6c,0x2c,0x33,0x7d,0xa8,
+    0x04,0x15,0x96,0x64,0x0e,0xc9,0x4b,0x62,0x8c,0xfd,
+    0x43,0xea,0xb2,0xbc,0x75,0xef,0x04,0xea
+};
+
 EVP_PKEY *trustm_ec_generatekey(void)
 {
     EVP_PKEY    *key         = NULL;
@@ -153,13 +173,18 @@ EVP_PKEY *trustm_ec_generatekey(void)
                                 0x2A,0x86,0x48,0xCE,0x3D,0x02,0x01,
                                 0x06,0x09, // OID:1.3.132.0.35
                                 0x2B,0x24,0x03,0x03,0x02,0x08,0x01,0x01,0x07}; 
-                                
     uint8_t eccheaderBrainPool384[] = {0x30,0x7A, // SEQUENCE
                                 0x30,0x14, //SEQUENCE
                                 0x06,0x07, // OID:1.2.840.10045.2.1
                                 0x2A,0x86,0x48,0xCE,0x3D,0x02,0x01,
                                 0x06,0x09, // OID:1.3.132.0.35
-                                0x2B,0x24,0x03,0x03,0x02,0x08,0x01,0x01,0x0B};                                                                                       
+                                0x2B,0x24,0x03,0x03,0x02,0x08,0x01,0x01,0x0B};   
+    uint8_t eccheaderBrainPool512[] = {0x30,0x81,0x9B, // SEQUENCE
+                                0x30,0x14, //SEQUENCE
+                                0x06,0x07, // OID:1.2.840.10045.2.1
+                                0x2A,0x86,0x48,0xCE,0x3D,0x02,0x01,
+                                0x06,0x09, // OID:1.3.36.3.3.2.8.1.1.13
+                                0x2B,0x24,0x03,0x03,0x02,0x08,0x01,0x01,0x0d};                                                                                    
 
     TRUSTM_ENGINE_DBGFN(">");
     TRUSTM_WORKAROUND_TIMER_ARM;
@@ -198,12 +223,20 @@ EVP_PKEY *trustm_ec_generatekey(void)
             public_key[i] = eccheaderBrainPool256[i];
             }
         }
-        else    
+        else if(trustm_ctx.ec_key_curve == OPTIGA_ECC_CURVE_BRAIN_POOL_P_384R1)    
         {
             trustm_ctx.pubkeyHeaderLen = sizeof(eccheaderBrainPool384);
             for (i=0; i < trustm_ctx.pubkeyHeaderLen;i++)
             {
             public_key[i] = eccheaderBrainPool384[i];
+            }
+        }
+        else    
+        {
+            trustm_ctx.pubkeyHeaderLen = sizeof(eccheaderBrainPool512);
+            for (i=0; i < trustm_ctx.pubkeyHeaderLen;i++)
+            {
+            public_key[i] = eccheaderBrainPool512[i];
             }
         }
 
@@ -233,13 +266,15 @@ EVP_PKEY *trustm_ec_generatekey(void)
 
         if ((trustm_ctx.ec_flag & TRUSTM_ENGINE_FLAG_SAVEPUBKEY) == TRUSTM_ENGINE_FLAG_SAVEPUBKEY)
         {
-            if(trustm_ctx.ec_key_curve == OPTIGA_ECC_CURVE_NIST_P_521){
+            if((trustm_ctx.ec_key_curve == OPTIGA_ECC_CURVE_NIST_P_521) ||
++          (trustm_ctx.ec_key_curve == OPTIGA_ECC_CURVE_BRAIN_POOL_P_512R1)){
                 TRUSTM_ENGINE_DBGFN("Save Pubkey to : 0x%.4X",(trustm_ctx.key_oid) + 0x10ED);}
             else{TRUSTM_ENGINE_DBGFN("Save Pubkey to : 0x%.4X",(trustm_ctx.key_oid) + 0x10E0);}
 
             // Save pubkey without header
             optiga_lib_status = OPTIGA_LIB_BUSY;
-            if(trustm_ctx.ec_key_curve == OPTIGA_ECC_CURVE_NIST_P_521){
+            if((trustm_ctx.ec_key_curve == OPTIGA_ECC_CURVE_NIST_P_521) ||
++          (trustm_ctx.ec_key_curve == OPTIGA_ECC_CURVE_BRAIN_POOL_P_512R1)){
                 return_status = optiga_util_write_data(me_util,
                                 (trustm_ctx.key_oid)+0x10ED,
                                 OPTIGA_UTIL_ERASE_AND_WRITE,
@@ -411,10 +446,15 @@ EVP_PKEY *trustm_ec_loadkey(void)
                 data = dummy_ec_public_key_BrainPool256;
                 len = sizeof(dummy_ec_public_key_BrainPool256);
             }
-            else
+            else if(trustm_ctx.ec_key_curve == OPTIGA_ECC_CURVE_BRAIN_POOL_P_384R1)
             {
                 data = dummy_ec_public_key_BrainPool384;
                 len = sizeof(dummy_ec_public_key_BrainPool384);
+            }
+            else
+            {
+                data = dummy_ec_public_key_BrainPool512;
+                len = sizeof(dummy_ec_public_key_BrainPool512);
             }
             key = d2i_PUBKEY(NULL,(const unsigned char **)&data,len);
             trustm_ctx.pubkeylen = 0;
@@ -457,7 +497,8 @@ static ECDSA_SIG* trustm_ecdsa_sign(
     do 
     {  
         optiga_lib_status = OPTIGA_LIB_BUSY;
-        if(trustm_ctx.ec_key_curve == OPTIGA_ECC_CURVE_NIST_P_521){
+        if((trustm_ctx.ec_key_curve == OPTIGA_ECC_CURVE_NIST_P_521) ||
++          (trustm_ctx.ec_key_curve == OPTIGA_ECC_CURVE_BRAIN_POOL_P_512R1)){
         return_status = optiga_crypt_ecdsa_sign(me_crypt,
                             dgst,
                             dgstlen,

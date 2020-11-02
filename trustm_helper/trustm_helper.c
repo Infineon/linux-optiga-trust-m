@@ -109,6 +109,7 @@ static char __ECC384[] = "ECC384";
 static char __ECC521[] = "ECC521";
 static char __ECCBRAINPOOL256[] = "ECCBRAINPOOL256";
 static char __ECCBRAINPOOL384[] = "ECCBRAINPOOL384";
+static char __ECCBRAINPOOL512[] = "ECCBRAINPOOL512";
 static char __RSA1024[] = "RSA1024";
 static char __RSA2048[] = "RSA2048";
 static char __SHA256[] = "SHA256";
@@ -367,6 +368,9 @@ static char* __decodeAC(uint8_t data)
             ret = __ECCBRAINPOOL256;
         case 0x15:
             ret = __ECCBRAINPOOL384;
+            break;
+        case 0x16:
+            ret = __ECCBRAINPOOL512;
             break;
         case 0x41:
             ret = __RSA1024;

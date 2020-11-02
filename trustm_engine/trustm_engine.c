@@ -606,7 +606,8 @@ static uint32_t parseKeyParams(const char *aArg)
                 trustm_ctx.rsa_key_usage = 0x00;
                 trustm_ctx.pubkeyStore = trustm_ctx.key_oid + 0x10E0;
             }
-            if ((oidMetadata.E0_algo == OPTIGA_ECC_CURVE_NIST_P_521))
+            if ((oidMetadata.E0_algo == OPTIGA_ECC_CURVE_NIST_P_521) ||
+                (oidMetadata.E0_algo == OPTIGA_ECC_CURVE_BRAIN_POOL_P_512R1))
             {
                 trustm_ctx.ec_key_curve = oidMetadata.E0_algo;
                 trustm_ctx.ec_key_usage = oidMetadata.E1_keyUsage;
