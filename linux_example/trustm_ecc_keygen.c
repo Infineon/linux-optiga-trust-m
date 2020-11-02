@@ -73,7 +73,7 @@ void helpmenu(void)
     printf("-t <key type>   : Key type Auth:0x01 Enc :0x02 HFWU:0x04\n");
     printf("                           DevM:0X08 Sign:0x10 Agmt:0x20\n");
     printf("                           [default Auth]\n");
-    printf("-k <key size>   : Key size ECC256:0x03 ECC384:0x04 ECC521:0x05 [default ECC256]\n");
+    printf("-k <key size>   : Key size ECC256:0x03 ECC384:0x04 ECC521:0x05 BRAINPOOL256:0x13 BRAINPOOL384:0x15 [default ECC256]\n");
     printf("-o <filename>   : Output Pubkey to file in PEM format\n");
     printf("-s              : Save Pubkey in <Key OID + 0x10E0>\n");
     printf("-X              : Bypass Shielded Communication \n");
@@ -102,7 +102,19 @@ int main (int argc, char **argv)
                                 0x06,0x07, // OID:1.2.840.10045.2.1
                                 0x2A,0x86,0x48,0xCE,0x3D,0x02,0x01,
                                 0x06,0x05, // OID:1.3.132.0.35
-                                0x2B,0x81,0x04,0x00,0x23};                                
+                                0x2B,0x81,0x04,0x00,0x23}; 
+    uint8_t eccheaderBrainPool256[] = {0x30,0x5A, // SEQUENCE
+                                0x30,0x14, //SEQUENCE
+                                0x06,0x07, // OID:1.2.840.10045.2.1
+                                0x2A,0x86,0x48,0xCE,0x3D,0x02,0x01,
+                                0x06,0x09, // OID:1.3.36.3.3.2.8.1.1.7
+                                0x2B,0x24,0x03,0x03,0x02,0x08,0x01,0x01,0x07};
+    uint8_t eccheaderBrainPool384[] = {0x30,0x7A, // SEQUENCE
+                                0x30,0x14, //SEQUENCE
+                                0x06,0x07, // OID:1.2.840.10045.2.1
+                                0x2A,0x86,0x48,0xCE,0x3D,0x02,0x01,
+                                0x06,0x09, // OID:1.3.36.3.3.2.8.1.1.11
+                                0x2B,0x24,0x03,0x03,0x02,0x08,0x01,0x01,0x0B};                                
                                                                                 
     uint8_t pubKey[200];
     uint16_t i;
@@ -155,7 +167,7 @@ int main (int argc, char **argv)
                 case 'k': // Key Size
                         uOptFlag.flags.type = 1;
                         keySize = trustmHexorDec(optarg);
-                        if ((keySize != 0x03) && (keySize != 0x04)&& (keySize != 0x05))
+                        if ((keySize != 0x03) && (keySize != 0x04)&& (keySize != 0x05)&& (keySize != 0x13)&& (keySize != 0x15))
                         {
                                 printf("Key Size Error!!!\n");
                                 exit(0);
@@ -220,6 +232,20 @@ int main (int argc, char **argv)
                     pubKey[i] = eccheader521[i];
                 }
             }
+            else if(keySize == 0x13)
+            {
+                for (i=0; i < sizeof(eccheaderBrainPool256);i++)
+                {
+                    pubKey[i] = eccheaderBrainPool256[i];
+                }
+            } 
+            else if(keySize == 0x15)
+            {
+                for (i=0; i < sizeof(eccheaderBrainPool384);i++)
+                {
+                    pubKey[i] = eccheaderBrainPool384[i];
+                }
+            } 
             else
             {
                 for (i=0; i < sizeof(eccheader256);i++)

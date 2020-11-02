@@ -103,6 +103,7 @@ int main (int argc, char **argv)
     FILE *fp = NULL;
     uint16_t filesize;
     uint16_t i;
+    uint16_t nid = 0;
 
     int option = 0;                    // Command line option.
 
@@ -366,7 +367,7 @@ int main (int argc, char **argv)
             printf("Input File Name     : %s \n", inFile);
             printf("Signature File Name : %s \n", signatureFile);
 
-            trustmReadPEM(pubkey, &pubkeyLen, pubkeyFile, name, &pubkeySize, &pubkeyType);
+            trustmReadPEM(pubkey, &pubkeyLen, pubkeyFile, name, &pubkeySize, &pubkeyType,&nid);
             if (pubkeyLen == 0)
             {
                 printf("Invalid Pubkey file \n");
@@ -394,11 +395,18 @@ int main (int argc, char **argv)
 
             printf("Pub key : [%d]\n",pubkeySize);
             trustmHexDump((pubkey),pubkeyLen);
+            
             if(pubkeySize == 256){
-                pubkeySize = OPTIGA_ECC_CURVE_NIST_P_256;
+            if(nid == NID_brainpoolP256r1){
+                pubkeySize = OPTIGA_ECC_CURVE_BRAIN_POOL_P_256R1;}
+            else{
+                pubkeySize = OPTIGA_ECC_CURVE_NIST_P_256;}
             }
             else if(pubkeySize == 384){
-                pubkeySize = OPTIGA_ECC_CURVE_NIST_P_384;
+            if(nid == NID_brainpoolP384r1){
+                pubkeySize = OPTIGA_ECC_CURVE_BRAIN_POOL_P_384R1;}
+            else{
+                pubkeySize = OPTIGA_ECC_CURVE_NIST_P_384;}
             }
             else{
                 pubkeySize = OPTIGA_ECC_CURVE_NIST_P_521;}

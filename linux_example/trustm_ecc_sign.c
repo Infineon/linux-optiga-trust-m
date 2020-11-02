@@ -293,12 +293,10 @@ int main (int argc, char **argv)
                     signature[2] = signature_length; // insert length
                     signature_length += 3;
 
-                    trustmwriteTo(signature, signature_length, "sign_b4_convert.bin");
                     sig_p1=signature;
                     ecdsa_sig = d2i_ECDSA_SIG(NULL, &sig_p1, signature_length+3);
                     sig_p2=signature;
                     sig_len=i2d_ECDSA_SIG(ecdsa_sig, &sig_p2);
-                    printf("sig leng:%.2X, %.2X, %.2X, %.2X \n",sig_len,signature[0],signature[1],signature[2] );
                     trustmwriteTo(signature, sig_len, outFile);
 
                 }

@@ -92,6 +92,7 @@ int main (int argc, char **argv)
     uint32_t pubkeyLen;
     uint16_t pubkeySize;
     uint16_t pubkeyType;
+    uint16_t nid = 0;
 
     uint8_t data[2048];
     uint16_t dataLen = 0;
@@ -353,7 +354,7 @@ int main (int argc, char **argv)
             printf("Input File Name     : %s \n", inFile);
             printf("Signature File Name : %s \n", signatureFile);
 
-            trustmReadPEM(pubkey, &pubkeyLen, pubkeyFile, name, &pubkeySize, &pubkeyType);
+            trustmReadPEM(pubkey, &pubkeyLen, pubkeyFile, name, &pubkeySize, &pubkeyType,&nid);
             if (pubkeyLen == 0)
             {
                 printf("Invalid Pubkey file \n");

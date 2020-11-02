@@ -82,6 +82,7 @@ int main (int argc, char **argv)
     uint32_t pubkeyLen;
     uint16_t pubkeySize;
     uint16_t pubkeyType;
+    uint16_t nid = 0;
 
     char *outFile = NULL;
     char *inFile = NULL;
@@ -242,7 +243,7 @@ int main (int argc, char **argv)
                 break;
             }
 
-            trustmReadPEM(pubkey, &pubkeyLen, pubkeyFile, name, &pubkeySize, &pubkeyType);
+            trustmReadPEM(pubkey, &pubkeyLen, pubkeyFile, name, &pubkeySize, &pubkeyType,&nid);
             if (pubkeyLen == 0)
             {
                 printf("Invalid Pubkey file \n");

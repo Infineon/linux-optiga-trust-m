@@ -596,7 +596,9 @@ static uint32_t parseKeyParams(const char *aArg)
             trustmReadMetadata(value, &oidMetadata);          
             
             if ((oidMetadata.E0_algo == OPTIGA_ECC_CURVE_NIST_P_256) ||
-                (oidMetadata.E0_algo == OPTIGA_ECC_CURVE_NIST_P_384))
+                (oidMetadata.E0_algo == OPTIGA_ECC_CURVE_NIST_P_384) ||
+                (oidMetadata.E0_algo == OPTIGA_ECC_CURVE_BRAIN_POOL_P_256R1) ||
+                (oidMetadata.E0_algo == OPTIGA_ECC_CURVE_BRAIN_POOL_P_384R1))
             {
                 trustm_ctx.ec_key_curve = oidMetadata.E0_algo;
                 trustm_ctx.ec_key_usage = oidMetadata.E1_keyUsage;

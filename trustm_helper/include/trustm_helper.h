@@ -127,7 +127,7 @@ void trustmHexDump(uint8_t *pdata, uint32_t len);
 uint16_t trustmWritePEM(uint8_t *buf, uint32_t len, const char *filename, char *name);
 uint16_t trustmWriteDER(uint8_t *buf, uint32_t len, const char *filename);
 
-uint16_t trustmReadPEM(uint8_t *buf, uint32_t *len, const char *filename, char *name, uint16_t *keySize, uint16_t *keyType);
+uint16_t trustmReadPEM(uint8_t *buf, uint32_t *len, const char *filename, char *name, uint16_t *keySize, uint16_t *keyType,uint16_t *nid);
 uint16_t trustmReadDER(uint8_t *buf, uint32_t *len, const char *filename);
 
 void trustmdecodeMetaData(uint8_t * metaData);

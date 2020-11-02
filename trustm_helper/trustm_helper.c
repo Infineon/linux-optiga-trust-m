@@ -107,6 +107,8 @@ static char __UPDATSEC[] = "UPDATSEC";
 static char __ECC256[] = "ECC256";
 static char __ECC384[] = "ECC384";
 static char __ECC521[] = "ECC521";
+static char __ECCBRAINPOOL256[] = "ECCBRAINPOOL256";
+static char __ECCBRAINPOOL384[] = "ECCBRAINPOOL384";
 static char __RSA1024[] = "RSA1024";
 static char __RSA2048[] = "RSA2048";
 static char __SHA256[] = "SHA256";
@@ -360,6 +362,11 @@ static char* __decodeAC(uint8_t data)
             break;
         case 0x05:
             ret = __ECC521;
+            break;
+        case 0x13:
+            ret = __ECCBRAINPOOL256;
+        case 0x15:
+            ret = __ECCBRAINPOOL384;
             break;
         case 0x41:
             ret = __RSA1024;
@@ -710,7 +717,7 @@ uint16_t trustmWriteDER(uint8_t *buf, uint32_t len, const char *filename)
     return 0;
 }
 
-uint16_t trustmReadPEM(uint8_t *buf, uint32_t *len, const char *filename, char *name, uint16_t *keySize, uint16_t *keyType)
+uint16_t trustmReadPEM(uint8_t *buf, uint32_t *len, const char *filename, char *name, uint16_t *keySize, uint16_t *keyType,uint16_t *nid)
 {
     FILE *fp;
     char *tempName;
@@ -746,8 +753,10 @@ uint16_t trustmReadPEM(uint8_t *buf, uint32_t *len, const char *filename, char *
     {
         ec_key = EVP_PKEY_get1_EC_KEY(pkey);
         ec_group = EC_KEY_get0_group(ec_key);
+        *nid = EC_GROUP_get_curve_name(ec_group);
         i = EC_GROUP_order_bits(ec_group);
         TRUSTM_HELPER_DBGFN("ec len id : %d [%X]\n",i,i);
+        TRUSTM_HELPER_DBGFN("ec curve name : %d [%X]\n",*nid,*nid);
     }
     *keySize = (uint16_t) i;
     
