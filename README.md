@@ -114,6 +114,11 @@ Applying workaround patch for pal_os_datastore.c
 Original file backup to trustm_lib/pal/linux/pal_os_datastore.org
 ```
 
+### <a name="install_dependency"></a>Install missing packages
+```console 
+foo@bar:~$ sudo apt-get install libssl-dev
+```
+
 ### <a name="build_lib"></a>First time building the library
 
 ```console 
