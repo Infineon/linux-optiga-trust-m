@@ -535,14 +535,17 @@ static uint32_t parseKeyParams(const char *aArg)
     uint16_t offset =0;
     uint32_t bytes_to_read;
     uint8_t read_data_buffer[2048];
-          
+    const char needle[3] = "0x";    
+    char *ptr;
     TRUSTM_ENGINE_DBGFN(">");
     TRUSTM_WORKAROUND_TIMER_ARM;
     TRUSTM_ENGINE_APP_OPEN;
     do
     {
-        strncpy(in, aArg,1024);
-        
+        strcpy(in, aArg);
+        ptr=strstr(in,needle);
+        strcpy((char *)aArg,ptr);
+                
         if (aArg == NULL)
         {
             TRUSTM_ENGINE_ERRFN("No input key parameters present. (key_oid:<pubkeyfile>)");
@@ -575,6 +578,8 @@ static uint32_t parseKeyParams(const char *aArg)
             ret = 0;
             break;
         }
+        
+        TRUSTM_ENGINE_DBGFN("---> token [0] = %s",token[0]);
         
         if (strncmp(token[0], "0x",2) == 0)
             sscanf(token[0],"%x",&value);
