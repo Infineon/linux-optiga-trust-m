@@ -112,6 +112,9 @@ static char __ECCBRAINPOOL384[] = "ECCBRAINPOOL384";
 static char __ECCBRAINPOOL512[] = "ECCBRAINPOOL512";
 static char __RSA1024[] = "RSA1024";
 static char __RSA2048[] = "RSA2048";
+static char __AES128[] = "AES128";
+static char __AES192[] = "AES192";
+static char __AES256[] = "AES256";
 static char __SHA256[] = "SHA256";
 static char __AUTH[] = "Auth";
 static char __ENC[] = "Enc";
@@ -377,7 +380,16 @@ static char* __decodeAC(uint8_t data)
             break;
         case 0x42:
             ret = __RSA2048;
+            break;  
+        case 0x81:
+            ret = __AES128;
             break;
+        case 0x82:
+            ret = __AES192;
+            break;
+        case 0x83:
+            ret = __AES256;
+            break;   
         case 0xE2:
             ret = __SHA256;
             break;
@@ -1465,6 +1477,9 @@ void trustmGetOIDName(uint16_t optiga_oid, char *name)
             break;
         case 0xE140:
             sprintf(name,"Shared Platform Binding Secret. [0x%.4x] ", optiga_oid);
+            break;
+        case 0xE200:
+            sprintf(name,"Symmetric Key [0x%.4x] ", optiga_oid);
             break;
         case 0xF1C0:
             sprintf(name,"Application Life Cycle Sts  [0x%.4X] ", optiga_oid);
