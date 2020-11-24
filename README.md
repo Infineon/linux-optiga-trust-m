@@ -1,7 +1,3 @@
----
-typora-copy-images-to: pictures
----
-
 # Command Line Interface (CLI) & OpenSSL Engine for OPTIGA™ Trust M1/M3 security solution
 
 1. [About](#about)
@@ -124,7 +120,7 @@ foo@bar:~$ git submodule update
 Change the reset type to use software reset as follow in the header file at "**cli-optiga-trust-m/trustm_lib/optiga/include/optiga/**"
 
 - optiga_lib_config_m_v3.h for OPTIGA™ Trust M3 or 
-- optiga_lib_config_m_v3.h for OPTIGA™ Trust M1
+- optiga_lib_config_m_v1.h for OPTIGA™ Trust M1
 
 ```console
 #define OPTIGA_COMMS_DEFAULT_RESET_TYPE     (1U)
@@ -305,9 +301,13 @@ option:-
 -t <key type>   : Key type Auth:0x01 Enc :0x02 HFWU:0x04
                            DevM:0X08 Sign:0x10 Agmt:0x20
                            [default Auth]
--k <key size>   : Key size ECC256:0x03 ECC384:0x04 [default ECC256]
+-k <key size>   : Key size ECC256:0x03 ECC384:0x04 ECC521:0x05
+                           BRAINPOOL256:0x13 BRAINPOOL384:0x15 BRAINPOOL512:0x16
+                           [default ECC256]
 -o <filename>   : Output Pubkey to file in PEM format
 -s              : Save Pubkey in <Key OID + 0x10E0>
+                  For ECC521/BRAINPOOL512: 
+                  Save Pubkey in <Key OID + 0x10ED>
 -X              : Bypass Shielded Communication 
 -h              : Print this help 
 ```
@@ -932,7 +932,7 @@ Verify Success.
 ========================================================
 ```
 
-## <a name="engine_usage"></a>OPTIGA™ Trust M1 OpenSSL Engine usage
+## <a name="engine_usage"></a>OPTIGA™ Trust M3 OpenSSL Engine usage
 The Engine is tested base on OpenSSL version 1.1.1d
 
 *Note : The OPTIGA™ Trust M Engine shielded communication depends on the default reset protection level for OPTIGA CRYPT and UTIL APIs. If the setting is set to OPTIGA_COMMS_NO_PROTECTION than the engine will not have shielded communication protection.*
@@ -975,8 +975,12 @@ where :
   - Generate new key pair in OPTIGA™ Trust M
 - Key size
   - ECC
-    - 0x03 = 256 key length
-    - 0x04 = 384 key length
+    - 0x03 = 256 key length  for NIST  256
+    - 0x04 = 384 key length  for NIST  384
+    - 0x05 = 521 key length  for NIST  521
+    - 0x13 = 256 key length  for brainpoolP256r1
+    - 0x15 = 384 key length  for brainpoolP384r1
+    - 0x16 = 512 key length  for brainpoolP512r1
   - RSA
     - 0x41 = 1024 key length
     - 0x42 = 2048 key length

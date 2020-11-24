@@ -73,9 +73,13 @@ void helpmenu(void)
     printf("-t <key type>   : Key type Auth:0x01 Enc :0x02 HFWU:0x04\n");
     printf("                           DevM:0X08 Sign:0x10 Agmt:0x20\n");
     printf("                           [default Auth]\n");
-    printf("-k <key size>   : Key size ECC256:0x03 ECC384:0x04 ECC521:0x05 BRAINPOOL256:0x13 BRAINPOOL384:0x15 BRAINPOOL512:0x16 [default ECC256]\n");
+    printf("-k <key size>   : Key size ECC256:0x03 ECC384:0x04 ECC521:0x05\n");
+    printf("                           BRAINPOOL256:0x13 BRAINPOOL384:0x15 BRAINPOOL512:0x16\n");
+    printf("                           [default ECC256]\n");
     printf("-o <filename>   : Output Pubkey to file in PEM format\n");
     printf("-s              : Save Pubkey in <Key OID + 0x10E0>\n");
+    printf("                  For ECC521/BRAINPOOL512: \n");
+    printf("                  Save Pubkey in <Key OID + 0x10ED>\n");
     printf("-X              : Bypass Shielded Communication \n");
     printf("-h              : Print this help \n");
 }
