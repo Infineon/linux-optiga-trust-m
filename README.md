@@ -25,6 +25,9 @@
    * [trustm_rsa_keygen](#trustm_rsa_keygen)
    * [trustm_rsa_sign](#trustm_rsa_sign)
    * [trustm_rsa_verify](#trustm_rsa_verify)
+   * [trustm_symmetric_keygen](#trustm_rsa_keygen)
+   * [trustm_symmetric_enc](#trustm_rsa_sign)
+   * [trustm_symmetric_dec](#trustm_rsa_verify)
 4. [Trust M1 OpenSSL Engine usage](#engine_usage)
     * [rand](#rand)
     * [req](#req)
@@ -613,7 +616,7 @@ Read all data object metadata listed below
 
 *oid : 0xE0E0-0xE0E3, 0xE0E8-0xE0E9, 0xE0EF,* 
 
-​         *0xE120-0xE123,* 
+​         *0xE120-0xE123,* *0xE200*,
 
 ​         *0xE140, 0xF1D0-0xF1DB, 0xF1E0-0xF1E1*
 
@@ -932,7 +935,112 @@ Verify Success.
 ========================================================
 ```
 
+###  <a name="trustm_symmetric_keygen"></a>trustm_symmetric_keygen
+
+Simple demo to show the process to generate symmetric key using OPTIGA™ Trust M library.
+
+```console
+foo@bar:~$ ./bin/trustm_symmetric_keygen 
+Help menu: trustm_symmetric_keygen <option> ...<option>
+option:- 
+-t <key type>   : Key type Auth:0x01 Enc :0x02 HFWU:0x04
+                           DevM:0X08 Sign:0x10 Agmt:0x20
+                           [default Enc]
+-k <key size>   : Key size AES128:0x81 AES192:0x82 AES256:0x83
+                           [default AES128]
+-X              : Bypass Shielded Communication 
+-h              : Print this help 
+```
+
+Example : generate an AES256 key with type Enc in OID 0xe200.
+
+```console
+foo@bar:~$ ./bin/trustm_symmetric_keygen -t 0x02 -k 0x83 
+========================================================
+Successfully Generated Symmetric Key in 0xE200 
+========================================================
+```
+
+###  <a name="trustm_symmetric_enc"></a>trustm_symmetric_enc
+
+Simple demo to show the process to encrypt using OPTIGA™ Trust M library.
+
+```console
+foo@bar:~$ ./bin/trustm_symmetric_enc 
+Help menu: trustm_symmetric_enc <option> ...<option>
+option:- 
+-m <mode>     : Mode CBC:0x09 CBC_MAC:0X0A CMAC:0X0B 
+                     [default CBC]
+-o <filename> : Output to file 
+-i <filename> : Input Data file
+-v <filename> : Input IV Value
+                Only needed for CBC mode
+-X            : Bypass Shielded Communication 
+-h            : Print this help 
+
+```
+
+Example : Encrypt mydata.txt using AES256 CBC mode.
+
+Note: Initialized value is only applicable for AES CBC mode.
+
+```console
+foo@bar:~$ ./bin/trustm_symmetric_enc -m 0x09 -v iv_aes256.bin -i mydata.txt -o aes256.enc 
+========================================================
+mode             : 0x0009 
+Output File Name : aes256.enc 
+Input File Name  : mydata.txt 
+Input data :    
+	6D 79 64 61 74 61 31 32 33 34 35 36 37 38 39 0A 
+	
+IV File Name  : iv_aes256.bin 
+Initialized value : 
+	69 6E 69 74 69 61 6C 69 7A 65 64 76 32 35 36 0A 
+	
+Success
+========================================================
+```
+
+###  <a name="trustm_symmetric_dec"></a>trustm_symmetric_dec
+
+Simple demo to show the process to decrypt using OPTIGA™ Trust M library.
+
+```console
+foo@bar:~$ ./bin/trustm_symmetric_dec
+Help menu: trustm_symmetric_dec <option> ...<option>
+option:- 
+-m <mode>     : Mode CBC:0x09 CBC_MAC:0X0A CMAC:0X0B 
+                     [default CBC]
+-o <filename> : Output to file 
+-i <filename> : Input Data file
+-v <filename> : Input IV Value
+-X            : Bypass Shielded Communication 
+-h            : Print this help 
+```
+
+Example : decrypt aes256.enc using AES256 CBC mode.
+
+Note: Initialized value is only applicable for AES CBC mode.
+
+```console
+foo@bar:~$ ./bin/trustm_symmetric_dec -m 0x09 -v iv_aes256.bin -i aes256.enc -o mydata.txt.dec
+========================================================
+mode             : 0x0009 
+Output File Name : mydata.txt.dec 
+Input File Name  : aes256.enc 
+Input data : 
+	E5 4E C6 9E 33 51 0F 3D 81 8C 0D 58 34 04 49 D6 
+	
+IV File Name  : iv_aes256.bin 
+Initialized value : 
+	69 6E 69 74 69 61 6C 69 7A 65 64 76 32 35 36 0A 
+	
+Success
+========================================================
+```
+
 ## <a name="engine_usage"></a>OPTIGA™ Trust M3 OpenSSL Engine usage
+
 The Engine is tested base on OpenSSL version 1.1.1d
 
 *Note : The OPTIGA™ Trust M Engine shielded communication depends on the default reset protection level for OPTIGA CRYPT and UTIL APIs. If the setting is set to OPTIGA_COMMS_NO_PROTECTION than the engine will not have shielded communication protection.*

@@ -66,12 +66,13 @@ union _uOptFlag {
 
 void helpmenu(void)
 {
-    printf("\nHelp menu: trustm_Symmetric_keygen <option> ...<option>\n");
+    printf("\nHelp menu: trustm_symmetric_keygen <option> ...<option>\n");
     printf("option:- \n");
     printf("-t <key type>   : Key type Auth:0x01 Enc :0x02 HFWU:0x04\n");
     printf("                           DevM:0X08 Sign:0x10 Agmt:0x20\n");
     printf("                           [default Enc]\n");
-    printf("-k <key size>   : Key size AES128:0x81 AES192:0x82 AES256:0x83 [default AES128]\n");
+    printf("-k <key size>   : Key size AES128:0x81 AES192:0x82 AES256:0x83\n");
+    printf("                           [default AES128]\n");
     printf("-X              : Bypass Shielded Communication \n");
     printf("-h              : Print this help \n");
 }
@@ -176,7 +177,7 @@ int main (int argc, char **argv)
                 break;
             else
             {
-                printf("symmetric key Generated\n");
+                printf("Successfully Generated Symmetric Key in 0xE200 \n");
             }
     }while(FALSE);
 

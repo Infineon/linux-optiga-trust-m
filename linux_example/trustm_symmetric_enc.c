@@ -58,11 +58,12 @@ void _helpmenu(void)
 {
     printf("\nHelp menu: trustm_symmetric_enc <option> ...<option>\n");
     printf("option:- \n");
-    printf("-m <mode>  :   mode:CBC:0x09 CBC_MAC:0X0A CMAC:0X0B \n");
-    printf("                    [default CBC]\n");
+    printf("-m <mode>     : Mode CBC:0x09 CBC_MAC:0X0A CMAC:0X0B \n");
+    printf("                     [default CBC]\n");
     printf("-o <filename> : Output to file \n");
     printf("-i <filename> : Input Data file\n");
     printf("-v <filename> : Input IV Value\n");
+    printf("                Only needed for CBC mode\n");
     printf("-X            : Bypass Shielded Communication \n");
     printf("-h            : Print this help \n");
 }
@@ -177,7 +178,7 @@ int main (int argc, char **argv)
                 break;
             }
 
-            printf("mode         : 0x%.4X \n",encryption_mode);
+            printf("mode             : 0x%.4X \n",encryption_mode);
             printf("Output File Name : %s \n", outFile);
             printf("Input File Name  : %s \n", inFile);
 
