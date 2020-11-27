@@ -1039,6 +1039,54 @@ Success
 ========================================================
 ```
 
+###  <a name="trustm_hkdf"></a>trustm_hkdf
+
+Simple demo to show the process to derive key using OPTIGA™ Trust M library.
+
+```console
+foo@bar:~$ ./bin/trustm_hkdf
+Help menu: trustm_hkdf <option> ...<option>
+option:- 
+-i <OID>      : Input secret OID 0xNNNN 
+                [default 0xF1D0]
+-H <SHA>      : SHA256:0x08 SHA384 :0x09 SHA512:0x0A
+                [default SHA256]
+-f <filename> : Import Info 
+-s <filename> : Import Salt 
+-o <filename> : Export Derived Key 
+-X            : Bypass Shielded Communication 
+-h            : Print this help 
+```
+
+Example : derive key using HKDF SHA256 with shared secret in 0xF1D0.
+
+Precondition: Write shared secret into the data object and change the metadata of this data object to PRESSEC.
+
+```console
+foo@bar:~$ ./bin/trustm_hkdf -i 0xF1D0 -H 0X08 -f info.bin -s salt.bin -o hkdf_f1d0_256.txt
+========================================================
+Run HKDF SHA256 command to derive the key
+
+Input Secret OID: 0xF1D0
+HKDF Type 0x0008
+Output Derived key. 
+========================================================
+HKDF Type        : 0x0008 
+Info File Name   : info.bin 
+Salt File Name   : salt.bin 
+Output File Name : hkdf_f1d0_256.txt 
+salt data : 
+	73 61 6C 74 31 32 33 34 35 36 37 38 39 61 62 31 
+	32 33 34 35 36 37 38 39 0A 
+Info data : 
+	69 6E 66 6F 76 61 6C 75 65 31 32 33 0A 
+Success
+Decryption Key :
+	D6 8B 57 18 C3 E8 F7 82 5F 1C A5 19 A7 59 26 8B 
+	
+========================================================
+```
+
 ## <a name="engine_usage"></a>OPTIGA™ Trust M3 OpenSSL Engine usage
 
 The Engine is tested base on OpenSSL version 1.1.1d

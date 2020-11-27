@@ -146,7 +146,7 @@ int main (int argc, char **argv)
                 case 'o': // export Derived Key
                         uOptFlag.flags.output = 1;
                         outFile = optarg;
-                        printf("Export Derived to Host. \n");
+                        printf("Output Derived key. \n");
                         break;
                 case 'X': // Bypass Shielded Communication
                         uOptFlag.flags.bypass = 1;
@@ -198,9 +198,9 @@ int main (int argc, char **argv)
                 break;
             }
 
-            printf("HKDF Type         : 0x%.4X \n",hkdf_type);
-            printf("Info File Name : %s \n", infoFile);
-            printf("Salt File Name : %s \n", saltFile);   
+            printf("HKDF Type        : 0x%.4X \n",hkdf_type);
+            printf("Info File Name   : %s \n", infoFile);
+            printf("Salt File Name   : %s \n", saltFile);   
             printf("Output File Name : %s \n", outFile);   
             
             saltlen = trustmreadFrom(salt, (uint8_t *) saltFile);
