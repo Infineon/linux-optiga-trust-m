@@ -25,9 +25,11 @@
    * [trustm_rsa_keygen](#trustm_rsa_keygen)
    * [trustm_rsa_sign](#trustm_rsa_sign)
    * [trustm_rsa_verify](#trustm_rsa_verify)
-   * [trustm_symmetric_keygen](#trustm_rsa_keygen)
-   * [trustm_symmetric_enc](#trustm_rsa_sign)
-   * [trustm_symmetric_dec](#trustm_rsa_verify)
+   * [trustm_symmetric_keygen](#trustm_symmetric_keygen)
+   * [trustm_symmetric_enc](#trustm_symmetric_enc)
+   * [trustm_symmetric_dec](#trustm_symmetric_dec)
+   * [trustm_hkdf](#trustm_hkdf)
+   * [trustm_hmac](#trustm_hmac)
 4. [Trust M1 OpenSSL Engine usage](#engine_usage)
     * [rand](#rand)
     * [req](#req)
@@ -1085,6 +1087,49 @@ Decryption Key :
 	D6 8B 57 18 C3 E8 F7 82 5F 1C A5 19 A7 59 26 8B 
 	
 ========================================================
+```
+
+###  <a name="trustm_hmac"></a>trustm_hmac
+
+Simple demo to show the process to generate the MAC for the given input data using the secret installed in OPTIGA™ Trust M.
+
+```console
+foo@bar:~$ ./bin/trustm_hmac
+Help menu: trustm_hmac <option> ...<option>
+option:- 
+-I <OID>      : Input secret OID 0xNNNN 
+                [default 0xF1D0]
+-H <SHA>      : hmac_SHA256:0x20 hmac_SHA384 :0x21 hmac_SHA512:0x22
+                [default hmac_SHA256]
+-o <filename> : Output MAC Data 
+-i <filename> : Input Data file
+-X            : Bypass Shielded Communication 
+-h            : Print this help  
+```
+
+Example : generate MAC value using HMAC SHA256 with shared secret in 0xF1D0.
+
+Precondition: Write shared secret into the data object and change the metadata of this data object to PRESSEC.
+
+```console
+foo@bar:~$ ./bin/trustm_hmac -I 0xF1D0 -H 0X20 -i hmac.txt -o hmac_data.txt
+========================================================
+Input Secret OID: 0xF1D0
+SHA Type 0x0020
+output the MAC data. 
+========================================================
+HMAC Type         : 0x0020 
+Output File Name : hmac_data.txt 
+Input File Name  : hmac.txt 
+Input data : 
+	68 6D 61 63 74 65 73 74 31 32 33 34 35 36 37 38 
+	0A 
+MAC data :
+	1A 36 BA 85 4F B1 CC A5 4C 83 98 CD 5B CB EB 67 
+	7D D5 07 B6 BD 9A E0 73 15 0D F6 63 6B 57 E1 6F 
+	
+========================================================
+
 ```
 
 ## <a name="engine_usage"></a>OPTIGA™ Trust M3 OpenSSL Engine usage
