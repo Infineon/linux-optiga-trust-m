@@ -122,7 +122,7 @@ LDFLAGS += -lrt
 LDFLAGS_1 = -L$(BINDIR) -Wl,-R$(BINDIR)
 LDFLAGS_1 += -ltrustm
 
-.Phony : install uninstall workaround_patch all clean
+.Phony : install uninstall all clean
 
 all : $(BINDIR)/$(LIB) $(APPS) $(BINDIR)/$(ENG)
 
@@ -138,17 +138,6 @@ uninstall: clean
 	@-rm $(ENGINE_INSTALL_DIR)/$(ENG)
 	@echo "Removing trustm_lib $(LIB_INSTALL_DIR)/$(LIB)"
 	@-rm $(LIB_INSTALL_DIR)/$(LIB)
-
-workaround_patch:
-	@echo "Applying workaround patch for pal_os_event.c"
-	@echo "Original file backup to $(PALDIR)/pal_os_event.org"
-	@mv $(PALDIR)/pal_os_event.c $(PALDIR)/pal_os_event.org
-	@cp patch/pal_os_event.c $(PALDIR)/.
-
-	@echo "Applying workaround patch for pal_os_datastore.c"
-	@echo "Original file backup to $(PALDIR)/pal_os_datastore.org"
-	@mv $(PALDIR)/pal_os_datastore.c $(PALDIR)/pal_os_datastore.org
-	@cp patch/pal_os_datastore.c $(PALDIR)/.
 
 clean :
 	@echo "Removing *.o from $(LIBDIR)" 
