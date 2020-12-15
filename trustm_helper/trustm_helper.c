@@ -161,6 +161,7 @@ int mssleep(long msec)
 /**********************************************************************
 * __trustm_writeshm()
 **********************************************************************/
+#ifndef OPTIGA_OPEN_CLOSE_DISABLED
 static void __trustm_writeshm(int shmid,pid_t data)
 {
     pid_t  *Flag_segptr;
@@ -175,10 +176,12 @@ static void __trustm_writeshm(int shmid,pid_t data)
      *Flag_segptr=data;
      shmdt(Flag_segptr);
 }
+#endif
 
 /**********************************************************************
 * __trustm_readshm()
 **********************************************************************/
+#ifndef OPTIGA_OPEN_CLOSE_DISABLED
 static pid_t __trustm_readshm(int shmid)
 {   pid_t  *Flag_segptr;
     pid_t Flag;
@@ -193,10 +196,12 @@ static pid_t __trustm_readshm(int shmid)
 
     return Flag;
 }
+#endif
 
 /**********************************************************************
 * __trustm_ipcInit()
 **********************************************************************/
+#ifndef OPTIGA_OPEN_CLOSE_DISABLED
 static void __trustm_ipcInit(void)
 {
 	/* Unique Key for InterCom */
@@ -224,8 +229,9 @@ static void __trustm_ipcInit(void)
         __trustm_writeshm(ipc_FlagInterShmid,pid); // stores the current PID
     }
 }
+#endif
 
-
+#ifndef OPTIGA_OPEN_CLOSE_DISABLED
 static void __delay (int cnt)
 {
     uint32_t wait;
@@ -234,10 +240,12 @@ static void __delay (int cnt)
     for(wait=0;wait<(0x1fffffff*cnt);wait++)
     {}
 }
+#endif
 
 /**********************************************************************
 * __trustm_secCnt()
 **********************************************************************/
+#ifndef OPTIGA_OPEN_CLOSE_DISABLED
 static uint8_t __trustm_secCnt(void)
 {
     uint16_t offset, bytes_to_read;
@@ -270,7 +278,8 @@ static uint8_t __trustm_secCnt(void)
 
         while (OPTIGA_LIB_BUSY == optiga_lib_status) 
         {
-            pal_os_timer_delay_in_milliseconds(10);
+            //~ pal_os_timer_delay_in_milliseconds(10);
+            mssleep(10);
         }
 
         if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
@@ -283,6 +292,7 @@ static uint8_t __trustm_secCnt(void)
 
     return read_data_buffer[0];
 }
+#endif
 
 static char* __decodeDataObj(uint8_t data)
 {
@@ -926,7 +936,9 @@ optiga_lib_status_t trustm_readUID(utrustm_UID_t *UID)
 
         while (OPTIGA_LIB_BUSY == optiga_lib_status) 
         {
-            pal_os_timer_delay_in_milliseconds(10);
+            //~ pal_os_timer_delay_in_milliseconds(10);
+            mssleep(10);
+            
         }
 
         if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
@@ -965,6 +977,30 @@ void optiga_crypt_callback(void * context, optiga_lib_status_t return_status)
 optiga_lib_status_t trustm_Open(void)
 {
     optiga_lib_status_t return_status;
+#ifdef OPTIGA_OPEN_CLOSE_DISABLED
+    do{
+        return_status= OPTIGA_LIB_SUCCESS; 
+        me_crypt = optiga_crypt_create(0, optiga_crypt_callback, NULL);
+        if (NULL == me_crypt)
+        {
+            TRUSTM_HELPER_ERRFN("Fail : optiga_crypt_create\n");
+            return_status= OPTIGA_LIB_BUSY; 
+            break;
+        }
+        TRUSTM_HELPER_DBGFN("TrustM crypt instance created. \n");
+        me_util = optiga_util_create(0, optiga_util_callback, NULL);
+        if (NULL == me_util)
+        {
+            TRUSTM_HELPER_ERRFN("Fail : optiga_util_create\n");
+            return_status= OPTIGA_LIB_BUSY; 
+            break;
+        }
+        TRUSTM_HELPER_DBGFN("TrustM util instance created. \n");
+        TRUSTM_HELPER_DBGFN("TrustM Open. \n");
+    }while(0);
+    TRUSTM_HELPER_DBGFN("<");
+    return return_status;
+#else    
     pid_t current_pid;
     pid_t queue_pid;
     int queue_delay;
@@ -1078,11 +1114,10 @@ optiga_lib_status_t trustm_Open(void)
         trustm_open_flag = 1;
         TRUSTM_HELPER_DBGFN("Success : optiga_util_open_application \n");
     }while(FALSE);      
-
-
-
     TRUSTM_HELPER_DBGFN("<");
     return return_status;
+#endif    
+
 }
 
 /**********************************************************************
@@ -1091,8 +1126,36 @@ optiga_lib_status_t trustm_Open(void)
 optiga_lib_status_t trustm_Close(void)
 {
     optiga_lib_status_t return_status;
+#ifdef OPTIGA_OPEN_CLOSE_DISABLED
+    //~ optiga_lib_status_t return_status=OPTIGA_LIB_SUCCESS;
+    trustm_open_flag = 0;
+    if(NULL != me_crypt)
+    {
+        return_status = OPTIGA_LIB_BUSY;
+        while(OPTIGA_LIB_BUSY == return_status)
+        {
+            return_status = optiga_crypt_destroy(me_crypt);
+            if (return_status != OPTIGA_LIB_SUCCESS)
+            {
+                printf("destroy instance failed...\n");
+            }
+        }
+    }
+    if(NULL != me_util)
+    {
+        return_status = OPTIGA_LIB_BUSY;
+        while(OPTIGA_LIB_BUSY == return_status)
+        {
+            return_status = optiga_util_destroy(me_util);
+            if (return_status != OPTIGA_LIB_SUCCESS)
+            {
+                printf("destroy instance failed...\n");
+            }
+        }
+    }
+    return OPTIGA_LIB_SUCCESS;
+#else    
     uint8_t secCnt;
-
     TRUSTM_HELPER_DBGFN(">");
 
     do{
@@ -1178,6 +1241,7 @@ optiga_lib_status_t trustm_Close(void)
     TRUSTM_HELPER_DBGFN("TrustM Closed.\n");
     TRUSTM_HELPER_DBGFN("<");
     return return_status;
+#endif    
 }
 
 uint32_t trustmHexorDec(const char *aArg)

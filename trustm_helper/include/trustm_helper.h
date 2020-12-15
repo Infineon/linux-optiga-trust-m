@@ -45,7 +45,7 @@
 #include <errno.h>   
 
 //Debug Print
-//#define DEBUG_TRUSTM_HELPER =1
+//#define DEBUG_TRUSTM_HELPER
 //#define HIBERNATE_ENABLE =1
 
 #ifdef DEBUG_TRUSTM_HELPER

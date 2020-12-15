@@ -23,18 +23,18 @@
 #
 #*/
 
-TRUSTM = trustm_lib
+TRUSTM =linux-driver-optiga-trust-m
 
 BUILD_FOR_RPI = YES
 BUILD_FOR_ULTRA96 = NO
 
-PALDIR =  $(TRUSTM)/pal/linux
-LIBDIR = $(TRUSTM)/optiga/util
-LIBDIR += $(TRUSTM)/optiga/crypt
-LIBDIR += $(TRUSTM)/optiga/comms
-LIBDIR += $(TRUSTM)/optiga/common
-LIBDIR += $(TRUSTM)/optiga/cmd
-#LIBDIR += $(TRUSTM)/externals/mbedtls
+#~ PALDIR =  $(TRUSTM)/pal/linux_driver
+#~ LIBDIR = $(TRUSTM)/optiga/util
+#~ LIBDIR += $(TRUSTM)/optiga/crypt
+#~ LIBDIR += $(TRUSTM)/optiga/comms
+#~ LIBDIR += $(TRUSTM)/optiga/common
+#~ LIBDIR += $(TRUSTM)/optiga/cmd
+#~ #LIBDIR += $(TRUSTM)/externals/mbedtls
 LIBDIR += trustm_helper
 
 #OTHDIR = $(TRUSTM)/examples/optiga
@@ -52,9 +52,12 @@ INCDIR += $(TRUSTM)/optiga/include/optiga/comms
 INCDIR += $(TRUSTM)/optiga/include/optiga/common
 INCDIR += $(TRUSTM)/optiga/include/optiga/cmd
 INCDIR += $(TRUSTM)/optiga/include/optiga/pal
-INCDIR += $(TRUSTM)/pal/linux
+INCDIR += $(TRUSTM)/pal/linux_driver
+INCDIR += $(TRUSTM)/pal/
 INCDIR += trustm_helper/include
 INCDIR += trustm_engine
+
+
 
 ifdef INCDIR
 INCSRC := $(shell find $(INCDIR) -name '*.h')
@@ -112,6 +115,8 @@ CFLAGS += -c
 CFLAGS += $(INCDIR)
 CFLAGS += -Wall
 CFLAGS += -DENGINE_DYNAMIC_SUPPORT
+CFLAGS += -DOPTIGA_LINUX_DRIVER_MODE
+CFLAGS += -DOPTIGA_OPEN_CLOSE_DISABLED
 #CFLAGS += -DMODULE_ENABLE_DTLS_MUTUAL_AUTH
 
 LDFLAGS += -lpthread
@@ -121,15 +126,17 @@ LDFLAGS += -lrt
 
 LDFLAGS_1 = -L$(BINDIR) -Wl,-R$(BINDIR)
 LDFLAGS_1 += -ltrustm
+LDFLAGS_1 += -loptiga_service_layer
 
 .Phony : install uninstall all clean
 
-all : $(BINDIR)/$(LIB) $(APPS) $(BINDIR)/$(ENG)
+#~ all : $(BINDIR)/$(LIB) $(APPS) $(BINDIR)/$(ENG)
+all : $(BINDIR)/$(LIB) $(APPS) 
 
 
 install:
 	@echo "Create symbolic link to the openssl engine $(ENGINE_INSTALL_DIR)/$(ENG)"
-	@ln -s $(realpath $(BINDIR)/$(ENG)) $(ENGINE_INSTALL_DIR)/$(ENG)
+#~ 	@ln -s $(realpath $(BINDIR)/$(ENG)) $(ENGINE_INSTALL_DIR)/$(ENG)
 	@echo "Create symbolic link to trustx_lib $(LIB_INSTALL_DIR)/$(LIB)"
 	@ln -s $(realpath $(BINDIR)/$(LIB)) $(LIB_INSTALL_DIR)/$(LIB)
 	
