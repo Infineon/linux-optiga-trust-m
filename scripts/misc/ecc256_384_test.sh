@@ -10,7 +10,7 @@ for i in $(seq 1 1); do
 echo "test $i"
 
 echo "Testing Brainpool256"
-$EXEPATH/trustm_ecc_keygen -g 0xe0f2 -t 0x10 -k 0x03 -o test_e0f2_pub.pem -s
+sudo $EXEPATH/trustm_ecc_keygen -g 0xe0f2 -t 0x10 -k 0x03 -o test_e0f2_pub.pem -s
 
 #~ echo "Brain Pool Signature256 by TrustM:"
 #~ $EXEPATH/trustm_ecc_sign -k 0xe0f1 -o testsignature_BP256.bin -i mydata.txt -H 
