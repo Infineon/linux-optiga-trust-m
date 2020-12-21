@@ -130,13 +130,13 @@ LDFLAGS_1 += -loptiga_service_layer
 
 .Phony : install uninstall all clean
 
-#~ all : $(BINDIR)/$(LIB) $(APPS) $(BINDIR)/$(ENG)
-all : $(BINDIR)/$(LIB) $(APPS) 
+all : $(BINDIR)/$(LIB) $(APPS) $(BINDIR)/$(ENG)
+#~ all : $(BINDIR)/$(LIB) $(APPS) 
 
 
 install:
 	@echo "Create symbolic link to the openssl engine $(ENGINE_INSTALL_DIR)/$(ENG)"
-#~ 	@ln -s $(realpath $(BINDIR)/$(ENG)) $(ENGINE_INSTALL_DIR)/$(ENG)
+	@ln -s $(realpath $(BINDIR)/$(ENG)) $(ENGINE_INSTALL_DIR)/$(ENG)
 	@echo "Create symbolic link to trustx_lib $(LIB_INSTALL_DIR)/$(LIB)"
 	@ln -s $(realpath $(BINDIR)/$(LIB)) $(LIB_INSTALL_DIR)/$(LIB)
 	

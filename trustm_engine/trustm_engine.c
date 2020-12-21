@@ -95,6 +95,7 @@ int mssleep(long msec)
 /**********************************************************************
 * __trustmEngine_writeshm()
 **********************************************************************/
+#ifndef OPTIGA_OPEN_CLOSE_DISABLED
 static void __trustmEngine_writeshm(int shmid,pid_t data)
 {
     pid_t  *Flag_segptr;
@@ -109,10 +110,12 @@ static void __trustmEngine_writeshm(int shmid,pid_t data)
      *Flag_segptr=data;
      shmdt(Flag_segptr);
 }
+#endif
 
 /**********************************************************************
 * __trustmEngine_readshm()
 **********************************************************************/
+#ifndef OPTIGA_OPEN_CLOSE_DISABLED
 static pid_t __trustmEngine_readshm(int shmid)
 {   pid_t  *Flag_segptr;
     pid_t Flag;
@@ -127,10 +130,12 @@ static pid_t __trustmEngine_readshm(int shmid)
 
     return Flag;
 }
+#endif
 
 /**********************************************************************
 * __trustmEngine_ipcInit()
 **********************************************************************/
+#ifndef OPTIGA_OPEN_CLOSE_DISABLED
 static void __trustmEngine_ipcInit(void)
 {
 	/* Unique Key for InterCom */
@@ -163,10 +168,12 @@ static void __trustmEngine_ipcInit(void)
         
     }
 }
+#endif
 
 /**********************************************************************
 * __trustmEngine_delay()
 **********************************************************************/
+#ifndef OPTIGA_OPEN_CLOSE_DISABLED
 static void __trustmEngine_delay (int cnt)
 {
     uint32_t wait;
@@ -174,10 +181,12 @@ static void __trustmEngine_delay (int cnt)
     for(wait=0;wait<(0x1fffffff*cnt);wait++)
     {}
 }
+#endif
 
 /**********************************************************************
 * __trustmEngine_secCnt()
 **********************************************************************/
+#ifndef OPTIGA_OPEN_CLOSE_DISABLED
 static uint8_t __trustmEngine_secCnt(void)
 {
     uint16_t offset, bytes_to_read;
@@ -225,19 +234,18 @@ static uint8_t __trustmEngine_secCnt(void)
     return read_data_buffer[0];
 }
 
+#endif
 /**********************************************************************
 * trustmEngine_Open()
 **********************************************************************/
 optiga_lib_status_t trustmEngine_Open(void)
 {
     optiga_lib_status_t return_status;
-
     TRUSTM_ENGINE_DBGFN(">");
-
     do
     {
-        pal_gpio_init(&optiga_reset_0);
-        pal_gpio_init(&optiga_vdd_0);
+        //pal_gpio_init(&optiga_reset_0);
+        //pal_gpio_init(&optiga_vdd_0);
         
         //Create an instance of optiga_util to open the application on OPTIGA.
         me_util = optiga_util_create(0, optiga_util_callback, NULL);
@@ -263,7 +271,7 @@ optiga_lib_status_t trustmEngine_Open(void)
     }while(FALSE);      
 
     TRUSTM_ENGINE_DBGFN("<");
-    return return_status;
+    return return_status;    
 }
 
 /**********************************************************************
@@ -272,12 +280,17 @@ optiga_lib_status_t trustmEngine_Open(void)
 optiga_lib_status_t trustmEngine_App_Open(void)
 {
     optiga_lib_status_t return_status;
+    TRUSTM_ENGINE_DBGFN(">");
+    trustm_ctx.appOpen = 0;
+    
+#ifdef OPTIGA_OPEN_CLOSE_DISABLED
+        return_status= OPTIGA_LIB_SUCCESS; 
+        TRUSTM_ENGINE_DBGFN("TrustM Opened already. \n");
+        return return_status;
+#else 
     pid_t current_pid;
     pid_t queue_pid;
     int queue_delay;
-
-    TRUSTM_ENGINE_DBGFN(">");
-    trustm_ctx.appOpen = 0;
     do
     {
         //Init IPC
@@ -399,6 +412,7 @@ optiga_lib_status_t trustmEngine_App_Open(void)
 
     TRUSTM_ENGINE_DBGFN("<");
     return return_status;
+ #endif       
 }
 
 /**********************************************************************
@@ -406,8 +420,7 @@ optiga_lib_status_t trustmEngine_App_Open(void)
 **********************************************************************/
 optiga_lib_status_t trustmEngine_Close(void)
 {
-    optiga_lib_status_t return_status;
-
+    optiga_lib_status_t return_status;  
     TRUSTM_HELPER_DBGFN(">");
 
     // destroy util and crypt instances
@@ -429,7 +442,7 @@ optiga_lib_status_t trustmEngine_Close(void)
         
     TRUSTM_ENGINE_DBGFN("TrustM Closed.\n");
     TRUSTM_ENGINE_DBGFN("<");
-    return return_status;
+    return return_status;  
 }
 
 /**********************************************************************
@@ -437,7 +450,37 @@ optiga_lib_status_t trustmEngine_Close(void)
 **********************************************************************/
 optiga_lib_status_t trustmEngine_App_Close(void)
 {
-    optiga_lib_status_t return_status;
+    optiga_lib_status_t return_status; 
+       
+#ifdef OPTIGA_OPEN_CLOSE_DISABLED
+    trustm_open_flag = 0;
+    trustm_ctx.appOpen = 0;
+    if(NULL != me_crypt)
+    {
+        return_status = OPTIGA_LIB_BUSY;
+        while(OPTIGA_LIB_BUSY == return_status)
+        {
+            return_status = optiga_crypt_destroy(me_crypt);
+            if (return_status != OPTIGA_LIB_SUCCESS)
+            {
+                 TRUSTM_ENGINE_ERRFN("destroy instance failed...\n");
+            }
+        }
+    }
+    if(NULL != me_util)
+    {
+        return_status = OPTIGA_LIB_BUSY;
+        while(OPTIGA_LIB_BUSY == return_status)
+        {
+            return_status = optiga_util_destroy(me_util);
+            if (return_status != OPTIGA_LIB_SUCCESS)
+            {
+                 TRUSTM_ENGINE_ERRFN("destroy instance failed...\n");
+            }
+        }
+    }
+    return OPTIGA_LIB_SUCCESS;
+#else    
     uint8_t secCnt;
 
     TRUSTM_HELPER_DBGFN(">");
@@ -512,6 +555,7 @@ optiga_lib_status_t trustmEngine_App_Close(void)
 
     TRUSTM_ENGINE_DBGFN("<");
     return return_status;
+#endif 
 }
 
 static uint32_t parseKeyParams(const char *aArg)
@@ -852,7 +896,7 @@ static EVP_PKEY * engine_load_privkey(ENGINE *e, const char *key_id, UI_METHOD *
             case 0xE0FC:
             case 0xE0FD:
                 //TRUSTM_ENGINE_DBGFN("RSA Private Key.");
-                key = trustm_rsa_loadkey();
+                //key = trustm_rsa_loadkey();
                 break;
             case 0xE100:
             case 0xE101:
@@ -999,18 +1043,18 @@ static int engine_init(ENGINE *e)
         trustm_ctx.ipcInit = 0;
 
         // Init Random Method
-        ret = trustmEngine_init_rand(e);
-        if (ret != TRUSTM_ENGINE_SUCCESS) {
-            TRUSTM_ENGINE_ERRFN("Init Rand Fail!!");
-            break;
-        }
+        //~ ret = trustmEngine_init_rand(e);
+        //~ if (ret != TRUSTM_ENGINE_SUCCESS) {
+            //~ TRUSTM_ENGINE_ERRFN("Init Rand Fail!!");
+            //~ break;
+        //~ }
 
-        // Init RSA Method
-        ret = trustmEngine_init_rsa(e);
-        if (ret != TRUSTM_ENGINE_SUCCESS) {
-            TRUSTM_ENGINE_ERRFN("Init RSA Fail!!");
-            break;
-        }
+        //~ // Init RSA Method
+        //~ ret = trustmEngine_init_rsa(e);
+        //~ if (ret != TRUSTM_ENGINE_SUCCESS) {
+            //~ TRUSTM_ENGINE_ERRFN("Init RSA Fail!!");
+            //~ break;
+        //~ }
 
         //Init EC Method
         ret = trustmEngine_init_ec(e);

@@ -41,7 +41,7 @@
 #define KEY_CONTEXT_MAX_LEN  (100)
 #define PARAM_MAX_LEN        (128)
 
-#define WORKAROUND 1
+//#define WORKAROUND 1
 //#define TRUSTM_ENGINE_DEBUG = 1
 
 #ifdef WORKAROUND
@@ -160,11 +160,11 @@ optiga_lib_status_t trustmEngine_App_Open(void);
 optiga_lib_status_t trustmEngine_Close(void);
 optiga_lib_status_t trustmEngine_App_Close(void);
 
-uint16_t trustmEngine_init_rand(ENGINE *e);
-uint16_t trustmEngine_init_rsa(ENGINE *e);
+//uint16_t trustmEngine_init_rand(ENGINE *e);
+//uint16_t trustmEngine_init_rsa(ENGINE *e);
 uint16_t trustmEngine_init_ec(ENGINE *e);
 
-EVP_PKEY *trustm_rsa_loadkey(void);
+//EVP_PKEY *trustm_rsa_loadkey(void);
 EVP_PKEY *trustm_ec_loadkey(void);
 EVP_PKEY *trustm_ec_loadkeyE0E0(void);
 

@@ -1137,7 +1137,7 @@ optiga_lib_status_t trustm_Close(void)
             return_status = optiga_crypt_destroy(me_crypt);
             if (return_status != OPTIGA_LIB_SUCCESS)
             {
-                printf("destroy instance failed...\n");
+                TRUSTM_HELPER_ERRFN("destroy instance failed...\n");
             }
         }
     }
@@ -1149,7 +1149,7 @@ optiga_lib_status_t trustm_Close(void)
             return_status = optiga_util_destroy(me_util);
             if (return_status != OPTIGA_LIB_SUCCESS)
             {
-                printf("destroy instance failed...\n");
+                TRUSTM_HELPER_ERRFN("destroy instance failed...\n");
             }
         }
     }
