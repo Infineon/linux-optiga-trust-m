@@ -27,7 +27,7 @@ TRUSTM =linux-driver-optiga-trust-m
 
 BUILD_FOR_RPI = YES
 BUILD_FOR_ULTRA96 = NO
-
+DRIVER_PROJECT_DIR= $(TRUSTM)/projects/linux_driver
 #~ PALDIR =  $(TRUSTM)/pal/linux_driver
 #~ LIBDIR = $(TRUSTM)/optiga/util
 #~ LIBDIR += $(TRUSTM)/optiga/crypt
@@ -128,23 +128,37 @@ LDFLAGS_1 = -L$(BINDIR) -Wl,-R$(BINDIR)
 LDFLAGS_1 += -ltrustm
 LDFLAGS_1 += -loptiga_service_layer
 
-.Phony : install uninstall all clean
+.Phony : install uninstall all clean all_with_driver uninstall_with_driver
 
 all : $(BINDIR)/$(LIB) $(APPS) $(BINDIR)/$(ENG)
 #~ all : $(BINDIR)/$(LIB) $(APPS) 
 
 
+all_with_driver: | make_lib install_driver set_driver_permission all
+uninstall_with_driver: | clear_driver_lib remove_driver uninstall
+
+clear_driver_lib: 
+	cd $(DRIVER_PROJECT_DIR) && make clean
+make_lib:
+	cd $(DRIVER_PROJECT_DIR) && make 
+install_driver:
+	cd $(DRIVER_PROJECT_DIR) && make install-optiga-linux-driver
+set_driver_permission:
+	sudo chown pi:pi /dev/optigatrustmv3	
+remove_driver:
+	cd $(DRIVER_PROJECT_DIR) && make uninstall-optiga-linux-driver
+	
 install:
-	@echo "Create symbolic link to the openssl engine $(ENGINE_INSTALL_DIR)/$(ENG)"
-	@ln -s $(realpath $(BINDIR)/$(ENG)) $(ENGINE_INSTALL_DIR)/$(ENG)
 	@echo "Create symbolic link to trustx_lib $(LIB_INSTALL_DIR)/$(LIB)"
 	@ln -s $(realpath $(BINDIR)/$(LIB)) $(LIB_INSTALL_DIR)/$(LIB)
+	@echo "Create symbolic link to the openssl engine $(ENGINE_INSTALL_DIR)/$(ENG)"
+	@ln -s $(realpath $(BINDIR)/$(ENG)) $(ENGINE_INSTALL_DIR)/$(ENG)
 	
 uninstall: clean
-	@echo "Removing openssl symbolic link from $(ENGINE_INSTALL_DIR)"	
-	@-rm $(ENGINE_INSTALL_DIR)/$(ENG)
 	@echo "Removing trustm_lib $(LIB_INSTALL_DIR)/$(LIB)"
 	@-rm $(LIB_INSTALL_DIR)/$(LIB)
+	@echo "Removing openssl symbolic link from $(ENGINE_INSTALL_DIR)"	
+	@-rm $(ENGINE_INSTALL_DIR)/$(ENG)
 
 clean :
 	@echo "Removing *.o from $(LIBDIR)" 
