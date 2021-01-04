@@ -160,7 +160,7 @@ optiga_lib_status_t trustmEngine_App_Open(void);
 optiga_lib_status_t trustmEngine_Close(void);
 optiga_lib_status_t trustmEngine_App_Close(void);
 
-//uint16_t trustmEngine_init_rand(ENGINE *e);
+uint16_t trustmEngine_init_rand(ENGINE *e);
 //uint16_t trustmEngine_init_rsa(ENGINE *e);
 uint16_t trustmEngine_init_ec(ENGINE *e);
 

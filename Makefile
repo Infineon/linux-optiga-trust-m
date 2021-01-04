@@ -23,11 +23,11 @@
 #
 #*/
 
-TRUSTM =linux-driver-optiga-trust-m
+TRUSTM =linux-driver-optiga-trust-m/optiga-trust-m
 
 BUILD_FOR_RPI = YES
 BUILD_FOR_ULTRA96 = NO
-DRIVER_PROJECT_DIR= $(TRUSTM)/projects/linux_driver
+DRIVER_PROJECT_DIR= linux-driver-optiga-trust-m
 #~ PALDIR =  $(TRUSTM)/pal/linux_driver
 #~ LIBDIR = $(TRUSTM)/optiga/util
 #~ LIBDIR += $(TRUSTM)/optiga/crypt
@@ -56,6 +56,8 @@ INCDIR += $(TRUSTM)/pal/linux_driver
 INCDIR += $(TRUSTM)/pal/
 INCDIR += trustm_helper/include
 INCDIR += trustm_engine
+INCDIR += $(DRIVER_PROJECT_DIR)
+
 
 
 

@@ -1043,11 +1043,11 @@ static int engine_init(ENGINE *e)
         trustm_ctx.ipcInit = 0;
 
         // Init Random Method
-        //~ ret = trustmEngine_init_rand(e);
-        //~ if (ret != TRUSTM_ENGINE_SUCCESS) {
-            //~ TRUSTM_ENGINE_ERRFN("Init Rand Fail!!");
-            //~ break;
-        //~ }
+        ret = trustmEngine_init_rand(e);
+        if (ret != TRUSTM_ENGINE_SUCCESS) {
+            TRUSTM_ENGINE_ERRFN("Init Rand Fail!!");
+            break;
+        }
 
         //~ // Init RSA Method
         //~ ret = trustmEngine_init_rsa(e);
