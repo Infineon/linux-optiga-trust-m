@@ -3,33 +3,38 @@
 1. [About](#about)
     * [Prerequisites](#prerequisites)
     * [Contents of the package](#contents_of_package)
+    
 2. [Getting Started](#getting_started)
     * [Getting the Code from Github](#getting_code)
     * [First time building the library](#build_lib)
+    * [Open/Close Trust M before/after running CLI Tools](#run_lib)
+    
 3. [CLI Tools Usage](#cli_usage)
-  * [trustm_cert](#trustm_cert)
-   * [trustm_chipinfo](#trustm_chipinfo)
-   * [trustm_data](#trustm_data)
-   * [trustm_ecc_keygen](#trustm_ecc_keygen)
-   * [trustm_ecc_sign](#trustm_ecc_sign)
-   * [trustm_ecc_verify](#trustm_ecc_verify)
-   * [trustm_errorcode](#trustm_errorcode)
-   * [trustm_metadata](#trustm_metadata)
-   * [trustm_monotonic_counter](#trustm_monotonic_counter)
-   * [trustm_readmetadata_data](#trustm_readmetadata_data)
-   * [trustm_readmetadata_private](#trustm_readmetadata_private)
-   * [trustm_readmetadata_status](#trustm_readmetadata_status)
-   * [trustm_read_status](#trustm_read_status)
-   * [trustm_rsa_dec](#trustm_rsa_dec)
-   * [trustm_rsa_enc](#trustm_rsa_enc)
-   * [trustm_rsa_keygen](#trustm_rsa_keygen)
-   * [trustm_rsa_sign](#trustm_rsa_sign)
-   * [trustm_rsa_verify](#trustm_rsa_verify)
-   * [trustm_symmetric_keygen](#trustm_symmetric_keygen)
-   * [trustm_symmetric_enc](#trustm_symmetric_enc)
-   * [trustm_symmetric_dec](#trustm_symmetric_dec)
-   * [trustm_hkdf](#trustm_hkdf)
-   * [trustm_hmac](#trustm_hmac)
+
+    *Note : Only the ticked APIs have been implemented in this version.*
+  - [x] [trustm_cert](#trustm_cert)
+   - [x] [trustm_chipinfo](#trustm_chipinfo)
+   - [x] [trustm_data](#trustm_data)
+   - [x] [trustm_ecc_keygen](#trustm_ecc_keygen)
+   - [x] [trustm_ecc_sign](#trustm_ecc_sign)
+   - [x] [trustm_ecc_verify](#trustm_ecc_verify)
+   - [x] [trustm_errorcode](#trustm_errorcode)
+   - [x] [trustm_metadata](#trustm_metadata)
+   - [x] [trustm_monotonic_counter](#trustm_monotonic_counter)
+   - [x] [trustm_readmetadata_data](#trustm_readmetadata_data)
+   - [x] [trustm_readmetadata_private](#trustm_readmetadata_private)
+   - [x] [trustm_readmetadata_status](#trustm_readmetadata_status)
+   - [x] [trustm_read_status](#trustm_read_status)
+   - [ ] [trustm_rsa_dec](#trustm_rsa_dec)
+   - [ ] [trustm_rsa_enc](#trustm_rsa_enc)
+   - [ ] [trustm_rsa_keygen](#trustm_rsa_keygen)
+   - [ ] [trustm_rsa_sign](#trustm_rsa_sign)
+   - [ ] [trustm_rsa_verify](#trustm_rsa_verify)
+   - [ ] [trustm_symmetric_keygen](#trustm_symmetric_keygen)
+   - [ ] [trustm_symmetric_enc](#trustm_symmetric_enc)
+   - [ ] [trustm_symmetric_dec](#trustm_symmetric_dec)
+   - [ ] [trustm_hkdf](#trustm_hkdf)
+   - [ ] [trustm_hmac](#trustm_hmac)
 4. [Trust M1 OpenSSL Engine usage](#engine_usage)
     * [rand](#rand)
     * [req](#req)
@@ -52,12 +57,12 @@ Following is the software component to build the tools :
 * GCC
 * OpenSSL development library (libssl-dev)
 * OpenSSL 1.1.1d
-* OPTIGA Trust M1 library (source code)
+* OPTIGA Trust library (source code)
 * pthread
 * rt
 
 Hardware platforms and boards:
-* Raspberry PI 3 on Linux kernel 4.19
+* Raspberry PI 3 on Linux kernel 5.4.79
 
 * [OPTIGA™ Trust M](https://www.infineon.com/cms/en/product/evaluation-boards/s2go-security-optiga-m/)
 
@@ -118,8 +123,8 @@ foo@bar:~$ git clone --recurse-submodules https://github.com/Infineon/cli-optiga
 Check out the development branch as needed
 
 ```
-foo@bar:~$ git checkout development_v3
-foo@bar:~$ git submodule update
+foo@bar:~$ git checkout dev_v3_linux_kernel
+foo@bar:~$ git submodule update -f
 ```
 
 Change the reset type to use software reset as follow in the header file at "**cli-optiga-trust-m/trustm_lib/optiga/include/optiga/**"
@@ -133,8 +138,10 @@ Change the reset type to use software reset as follow in the header file at "**c
 
 ### <a name="build_lib"></a>First time building the library
 
+make with linux driver
+
 ```console 
-foo@bar:~$ make
+foo@bar:~$ sudo make all_with_driver
 ```
  to install
 
@@ -144,11 +151,35 @@ foo@bar:~$ make
 foo@bar:~$ sudo make install
 ```
 
+to uninstall with driver
+
+```console 
+foo@bar:~$ sudo make uninstall_with_driver
+```
+
 to uninstall
 
 ```console 
 foo@bar:~$ sudo make uninstall
 ```
+
+### <a name="run_lib"></a>Open/Close Trust M before/after running CLI Tools
+
+go to folder linux-driver-optiga-trust-m and run
+
+```console 
+foo@bar:~$ sudo ./optiga_init_example -open
+```
+
+to open Trust M before running CLI Tools
+
+run
+
+```console 
+foo@bar:~$ sudo ./optiga_init_example -close
+```
+
+to close Trust M after running CLI Tools
 
 ## <a name="cli_usage"></a>CLI Tools Usage
 
