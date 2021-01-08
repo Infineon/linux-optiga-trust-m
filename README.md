@@ -5,8 +5,11 @@
     * [Contents of the package](#contents_of_package)
     
 2. [Getting Started](#getting_started)
+    
     * [Getting the Code from Github](#getting_code)
     * [First time building the library](#build_lib)
+    * [build with linux driver](#build_with_driver)
+    * [build CLI Tools only](#build_cli_only) 
     * [Open/Close Trust M before/after running CLI Tools](#run_lib)
     
 3. [CLI Tools Usage](#cli_usage)
@@ -35,15 +38,19 @@
    - [ ] [trustm_symmetric_dec](#trustm_symmetric_dec)
    - [ ] [trustm_hkdf](#trustm_hkdf)
    - [ ] [trustm_hmac](#trustm_hmac)
-4. [Trust M1 OpenSSL Engine usage](#engine_usage)
-    * [rand](#rand)
-    * [req](#req)
-    * [pkey](#pkey)
-    * [dgst](#dgst)
-    * [Testing TLS connection with ECC key](#test_tls_ecc)
-    * [Testing TLS connection with RSA key](#test_tls_rsa)
-    * [Using Trust M OpenSSL engine to sign and issue certificate](#issue_cert)
-    * [Simple Example on OpenSSL using C language](#opensslc)
+4. [Trust M OpenSSL Engine usage](#engine_usage)
+    
+    *Note : Only the ticked APIs have been implemented in this version.*
+    
+    - [x] [rand](#rand)
+    - [x] [req](#req)
+    - [x] [pkey](#pkey)
+    - [x] [dgst](#dgst)
+    - [x] [Testing TLS connection with ECC key](#test_tls_ecc)
+    - [ ] [Testing TLS connection with RSA key](#test_tls_rsa)
+    - [ ] [Using Trust M OpenSSL engine to sign and issue certificate](#issue_cert)
+    - [ ] [Simple Example on OpenSSL using C language](#opensslc)
+    
 5. [Known issues](#known_issues)
 
 ## <a name="about"></a>About
@@ -138,12 +145,14 @@ Change the reset type to use software reset as follow in the header file at "**c
 
 ### <a name="build_lib"></a>First time building the library
 
-make with linux driver
+#### <a name="build_with_driver"></a>build with linux driver
+
+build with linux driver
 
 ```console 
 foo@bar:~$ sudo make all_with_driver
 ```
- to install
+to install CLI Tools
 
 *Note : In case install fail try performing the uninstall and redo make.*
 
@@ -157,13 +166,33 @@ to uninstall with driver
 foo@bar:~$ sudo make uninstall_with_driver
 ```
 
-to uninstall
+#### <a name="build_cli_only"></a>build CLI Tools only
+
+build CLI Tools only
+
+```console 
+foo@bar:~$ make
+```
+
+to uninstall CLI Tools
 
 ```console 
 foo@bar:~$ sudo make uninstall
 ```
 
 ### <a name="run_lib"></a>Open/Close Trust M before/after running CLI Tools
+
+to install driver after power on Trust M
+
+```console 
+foo@bar:~$ sudo make install_driver
+```
+
+to set driver permission to pi
+
+```console 
+foo@bar:~$ sudo make set_driver_permission
+```
 
 go to folder linux-driver-optiga-trust-m and run
 
