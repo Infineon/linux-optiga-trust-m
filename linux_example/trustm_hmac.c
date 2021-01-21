@@ -82,7 +82,7 @@ int main (int argc, char **argv)
 {
     optiga_lib_status_t return_status;
     uint16_t optiga_oid;
-    uint8_t mac_buffer[32] = {0};
+    uint8_t mac_buffer[64] = {0};
     uint32_t mac_buffer_length = sizeof(mac_buffer);
     //uint16_t i;
     uint8_t hmac_type=0x20;// default HMAC_SHA256
