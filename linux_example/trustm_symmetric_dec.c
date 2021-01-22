@@ -247,7 +247,7 @@ int main (int argc, char **argv)
                 break;
             else
             {
-                trustmwriteTo(encyptdata, encyptdatalen, outFile);
+                trustmwriteTo(message, messagelen, outFile);
                 printf("Success\n");
             }
         }
