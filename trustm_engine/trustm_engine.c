@@ -284,9 +284,15 @@ optiga_lib_status_t trustmEngine_App_Open(void)
     trustm_ctx.appOpen = 0;
     
 #ifdef OPTIGA_OPEN_CLOSE_DISABLED
-        return_status= OPTIGA_LIB_SUCCESS; 
-        TRUSTM_ENGINE_DBGFN("TrustM Opened already. \n");
-        return return_status;
+    return_status= OPTIGA_LIB_SUCCESS; 
+    TRUSTM_ENGINE_DBGFN("<");
+    trustm_ctx.appOpen = 1;
+    return_status = trustmEngine_Open();
+    if (return_status != OPTIGA_LIB_SUCCESS)
+    {
+        TRUSTM_ENGINE_ERRFN("Fail to open trustM!!");
+    }
+    return return_status;
 #else 
     pid_t current_pid;
     pid_t queue_pid;
@@ -425,10 +431,13 @@ optiga_lib_status_t trustmEngine_Close(void)
 
     // destroy util and crypt instances
     //optiga_lib_status = OPTIGA_LIB_BUSY;
-    return_status = optiga_crypt_destroy(me_crypt);
-    if(OPTIGA_LIB_SUCCESS != return_status)
+    if(me_crypt !=NULL)
     {
-        TRUSTM_ENGINE_ERRFN("Fail : optiga_crypt_destroy \n");
+        return_status = optiga_crypt_destroy(me_crypt);
+        if(OPTIGA_LIB_SUCCESS != return_status)
+        {
+            TRUSTM_ENGINE_ERRFN("Fail : optiga_crypt_destroy \n");
+        }
     }
 
     if (me_util != NULL)
@@ -455,15 +464,17 @@ optiga_lib_status_t trustmEngine_App_Close(void)
 #ifdef OPTIGA_OPEN_CLOSE_DISABLED
     trustm_open_flag = 0;
     trustm_ctx.appOpen = 0;
+    TRUSTM_ENGINE_DBGFN(">");
     if(NULL != me_crypt)
     {
         return_status = OPTIGA_LIB_BUSY;
         while(OPTIGA_LIB_BUSY == return_status)
-        {
+        {  
+            TRUSTM_ENGINE_DBGFN("Destroy me_crypt\n");
             return_status = optiga_crypt_destroy(me_crypt);
             if (return_status != OPTIGA_LIB_SUCCESS)
             {
-                 TRUSTM_ENGINE_ERRFN("destroy instance failed...\n");
+                 TRUSTM_ENGINE_ERRFN("crypt destroy instance failed...\n");
             }
         }
     }
@@ -472,14 +483,20 @@ optiga_lib_status_t trustmEngine_App_Close(void)
         return_status = OPTIGA_LIB_BUSY;
         while(OPTIGA_LIB_BUSY == return_status)
         {
+            TRUSTM_ENGINE_DBGFN("Destroy me_util\n");
             return_status = optiga_util_destroy(me_util);
             if (return_status != OPTIGA_LIB_SUCCESS)
             {
-                 TRUSTM_ENGINE_ERRFN("destroy instance failed...\n");
+                 TRUSTM_ENGINE_ERRFN("util destroy instance failed...\n");
             }
         }
     }
-    return OPTIGA_LIB_SUCCESS;
+    me_crypt=NULL;
+    me_util=NULL;
+    TRUSTM_ENGINE_DBGFN("<");
+    return return_status;
+
+    
 #else    
     uint8_t secCnt;
 
@@ -1013,14 +1030,14 @@ static int engine_init(ENGINE *e)
             break;
         }
 
-        return_status = trustmEngine_Open();
-        if (return_status != OPTIGA_LIB_SUCCESS)
-        {
-            TRUSTM_ENGINE_ERRFN("Fail to open trustM!!");
-            ret = TRUSTM_ENGINE_FAIL; 
-            exit(1);
-            //break;
-        }
+        //~ return_status = trustmEngine_Open();
+        //~ if (return_status != OPTIGA_LIB_SUCCESS)
+        //~ {
+            //~ TRUSTM_ENGINE_ERRFN("Fail to open trustM!!");
+            //~ ret = TRUSTM_ENGINE_FAIL; 
+            //~ exit(1);
+            //~ //break;
+        //~ }
 
         //Init TrustM context
         trustm_ctx.key_oid = 0x0000;
