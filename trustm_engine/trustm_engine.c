@@ -285,13 +285,13 @@ optiga_lib_status_t trustmEngine_App_Open(void)
     
 #ifdef OPTIGA_OPEN_CLOSE_DISABLED
     return_status= OPTIGA_LIB_SUCCESS; 
-    TRUSTM_ENGINE_DBGFN("<");
-    trustm_ctx.appOpen = 1;
     return_status = trustmEngine_Open();
     if (return_status != OPTIGA_LIB_SUCCESS)
     {
         TRUSTM_ENGINE_ERRFN("Fail to open trustM!!");
     }
+    TRUSTM_ENGINE_DBGFN("<");
+    trustm_ctx.appOpen = 1;
     return return_status;
 #else 
     pid_t current_pid;
@@ -1017,7 +1017,7 @@ static int engine_ctrl(ENGINE *e, int cmd, long i, void *p, void (*f) ())
 static int engine_init(ENGINE *e)
 {
     static int initialized = 0;
-    optiga_lib_status_t return_status;
+    //optiga_lib_status_t return_status;
 
     int ret = TRUSTM_ENGINE_FAIL;
     TRUSTM_ENGINE_DBGFN("> Engine 0x%x init", (unsigned int) e);
