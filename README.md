@@ -5,7 +5,7 @@
     * [Contents of the package](#contents_of_package)
     
 2. [Getting Started](#getting_started)
-    
+   
     * [Getting the Code from Github](#getting_code)
     * [First time building the library](#build_lib)
     * [build with linux driver](#build_with_driver)
@@ -14,7 +14,27 @@
     
 3. [CLI Tools Usage](#cli_usage)
 
-    *Note : Only the ticked APIs have been implemented in this version.*
+    ***Important Note** : 
+
+    a) Only the ticked APIs have been implemented in this version.
+
+    ​       These Functions are tested based on three concurrent processes with the following settings
+
+    ```console
+      #define OPTIGA_CMD_MAX_REGISTRATIONS                (0x06)
+    ```
+
+    at "**cli-optiga-trust-m/linux-driver-optiga-trust-m/optiga-trust-m/optiga/include/optiga/**"
+
+    - optiga_lib_config_m_v3.h for OPTIGA™ Trust M3 or 
+
+    - optiga_lib_config_m_v1.h for OPTIGA™ Trust M1
+
+      For higher processes requirement set the OPTIGA_CMD_MAX_REGISTRATIONS to higher values(plus two) per process with additional margin for stability
+
+    b) Abrupt closure of terminal
+
+     Abrupt closure of terminal leads to error. Please refer to [Known symptoms](#known_symptoms) for more details.*****
   - [x] [trustm_cert](#trustm_cert)
    - [x] [trustm_chipinfo](#trustm_chipinfo)
    - [x] [trustm_data](#trustm_data)
@@ -39,7 +59,7 @@
    - [ ] [trustm_hkdf](#trustm_hkdf)
    - [ ] [trustm_hmac](#trustm_hmac)
 4. [Trust M OpenSSL Engine usage](#engine_usage)
-    
+   
     *Note : Only the ticked APIs have been implemented in this version.*
     
     - [x] [rand](#rand)
@@ -51,7 +71,7 @@
     - [ ] [Using Trust M OpenSSL engine to sign and issue certificate](#issue_cert)
     - [ ] [Simple Example on OpenSSL using C language](#opensslc)
     
-5. [Known issues](#known_issues)
+5. [Known symptoms](#known_symptoms)
 
 ## <a name="about"></a>About
 
@@ -134,7 +154,7 @@ foo@bar:~$ git checkout dev_v3_linux_kernel
 foo@bar:~$ git submodule update -f
 ```
 
-Change the reset type to use software reset as follow in the header file at "**cli-optiga-trust-m/trustm_lib/optiga/include/optiga/**"
+Change the reset type to use software reset as follow in the header file at "**cli-optiga-trust-m/linux-driver-optiga-trust-m/optiga-trust-m/optiga/include/optiga/**"
 
 - optiga_lib_config_m_v3.h for OPTIGA™ Trust M3 or 
 - optiga_lib_config_m_v1.h for OPTIGA™ Trust M1
@@ -192,6 +212,12 @@ to set driver permission to pi
 
 ```console 
 foo@bar:~$ sudo make set_driver_permission
+```
+
+to uninstall driver
+
+```console 
+foo@bar:~$ sudo make remove_driver
 ```
 
 go to folder linux-driver-optiga-trust-m and run
@@ -1778,15 +1804,7 @@ In the *simpleTest_Client.c* code ~ line number 53-63. List the macro for changi
 - DEFAULT_PORT   *\<Port to use for connection>*
 - SECURE_COMM   *\<SSL Protocol to be used TLS/DTLS>*
 
-## <a name="known_issues"></a>Known issues
-
-### Sporadic hang or segment fault seem when using the OpenSSL Engine
-
-When sporadic hanging or segment fault is seem when using the OpenSSL engine (Especially after modification of the engine code). Ensure that the pal_os_event.c patch is implemented. In the engine code ensure that trustm_disarm_timer(); is call after any OPTIGA™ Trust M library API is used.
-
-### At time display may show misalignment
-
-Run the tools again to refresh the output.
+## <a name="known_symptoms"></a>Known symptoms
 
 ### Secure communication bypass
 
@@ -1796,10 +1814,8 @@ The I2C secure communication bypass option for CLI only works if the default res
 
 Check the hardware reset pin if it is connected with an active reset GPIO as assigned n the OPTIGA™ Trust M library. Alternatively, you could configure the library to use software reset.
 
-### Security Event Counter : x [waiting. Ctrl+c to abort.] message when command line ends
+### Abrupt closure of terminal
 
-The CLI at this point is waiting for the Security Event Counter [0xE0C5] to countdown to zero before it can save the context. You can either wait till the counter return to zero which may take some time depending on the counter value. Alternatively, you can press Ctrl-c to break the program. Note that if you break the program using Ctrl-c, the next CLI command will still wait for the countdown as long as the Security Event Counter is not zero.
+ Abrupt closure of terminal leads to error since abrupt closure of process does not notify the driver to release the instance, uninstall and re-install Linux driver to resolve this issue.
 
-### After replacing OPTIGA™ Trust M Error message "Error in trustm_helper/trustm_helper.c:884 trustm_Open: Fail : optiga_util_open_application" occurs
 
-This is due to the context mis-match. Delete the hidden file .trustm_ctx and .trustm_hibernate_ctx to resolve the issue.
