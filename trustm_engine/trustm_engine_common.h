@@ -70,18 +70,20 @@
 
 #endif
 
-#define TRUSTM_ENGINE_APP_OPEN         if (trustm_ctx.appOpen == 0) \
+/*#define TRUSTM_ENGINE_APP_OPEN         if (trustm_ctx.appOpen == 0) \
                                           {trustm_hibernate_flag = 0; \
                                            return_status = trustmEngine_App_Open(); \
                                           }else{trustm_ctx.appOpen = 2;}
-
-#define TRUSTM_ENGINE_APP_OPEN_RET(x,y)  if (trustm_ctx.appOpen == 0) \
+*/
+/*#define TRUSTM_ENGINE_APP_OPEN_RET(x,y)  if (trustm_ctx.appOpen == 0) \
                                            {trustm_hibernate_flag = 0; \
                                             return_status = trustmEngine_App_Open(); \
                                             if (return_status != OPTIGA_LIB_SUCCESS) { \
                                                TRUSTM_ENGINE_ERRFN("Fail to open trustM!!"); \
                                                x = y;return x;} \
                                            }else{trustm_ctx.appOpen = 2;}
+*/                                           
+#define TRUSTM_ENGINE_APP_OPEN_RET(x,y)   trustmEngine_App_Open_Recovery();
 
 #define TRUSTM_ENGINE_APP_CLOSE        if (trustm_ctx.appOpen == 1) \
                                           {trustmEngine_App_Close(); \
@@ -157,6 +159,8 @@ void trustmEngine_close(void);
 
 optiga_lib_status_t trustmEngine_Open(void);
 optiga_lib_status_t trustmEngine_App_Open(void);
+optiga_lib_status_t trustmEngine_App_Open_Recovery(void);
+
 optiga_lib_status_t trustmEngine_Close(void);
 optiga_lib_status_t trustmEngine_App_Close(void);
 
