@@ -51,6 +51,7 @@ static const char *engine_name = "Infineon OPTIGA TrustM Engine";
 #define IPC_FLAGSIZE    sizeof(pid_t)
 #define IPC_SLEEP_STEPS 1
 #define MAX_IPC_TIME 16
+#define BUSY_WAIT_TIME_OUT 6000 // Note: This value must be at least 4000, any value smaller might encounter premature exit while waiting response from Trust M
 key_t ipc_FlagInterKey;
 int   ipc_FlagInterShmid;
 pid_t ipc_queue;
@@ -176,6 +177,30 @@ static void __trustmEngine_delay (int cnt)
 }
 
 /**********************************************************************
+* trustmEngine_WaitForCompletion()
+**********************************************************************/
+optiga_lib_status_t trustmEngine_WaitForCompletion(uint16_t wait_time)
+{
+    uint16_t tickcount;
+     
+    tickcount=0;
+    do
+    {
+        mssleep(1);
+        tickcount++;
+        if (tickcount >= wait_time)
+        {
+            TRUSTM_ENGINE_ERRFN("Fail : Optiga Busy Time Out:%d\n",tickcount);
+            return OPTIGA_LIB_BUSY;
+        }
+         
+    }while (optiga_lib_status == OPTIGA_LIB_BUSY);
+    TRUSTM_ENGINE_DBGFN(" Tick Counter: %d", tickcount);
+    return optiga_lib_status;
+    
+}
+
+/**********************************************************************
 * __trustmEngine_secCnt()
 **********************************************************************/
 static uint8_t __trustmEngine_secCnt(void)
@@ -209,10 +234,11 @@ static uint8_t __trustmEngine_secCnt(void)
             break;
         }
 
-        while (OPTIGA_LIB_BUSY == optiga_lib_status) 
-        {
-            pal_os_timer_delay_in_milliseconds(10);
-        }
+        //while (OPTIGA_LIB_BUSY == optiga_lib_status) 
+        //{
+            //pal_os_timer_delay_in_milliseconds(10);
+        // }
+        trustmEngine_WaitForCompletion(BUSY_WAIT_TIME_OUT);
 
         if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
         {
@@ -262,6 +288,39 @@ optiga_lib_status_t trustmEngine_Open(void)
 
     }while(FALSE);      
 
+    TRUSTM_ENGINE_DBGFN("<");
+    return return_status;
+}
+
+
+/**********************************************************************
+* trustmEngine_App_Open_Recovery()
+**********************************************************************/
+optiga_lib_status_t trustmEngine_App_Open_Recovery(void)
+{
+    optiga_lib_status_t return_status;
+    
+    TRUSTM_ENGINE_DBGFN(">");
+    if  (trustm_ctx.appOpen == 1)
+    {   
+        TRUSTM_ENGINE_DBGFN("Trust M already openned, Close and re-open again");
+        trustmEngine_App_Close();
+    }
+      
+    trustm_hibernate_flag = 0; 
+    return_status = trustmEngine_App_Open();
+    if (return_status != OPTIGA_LIB_SUCCESS) 
+    { 
+       TRUSTM_ENGINE_DBGFN("Error opening Trust M, Retry 1");
+       trustm_ctx.appOpen=1;
+       trustmEngine_App_Close();
+       return_status = trustmEngine_App_Open();
+       if (return_status != OPTIGA_LIB_SUCCESS)
+       {
+           TRUSTM_ENGINE_ERRFN("Error opening Trust M, EXIT");
+        }            
+    }    
+     
     TRUSTM_ENGINE_DBGFN("<");
     return return_status;
 }
@@ -349,7 +408,7 @@ optiga_lib_status_t trustmEngine_App_Open(void)
 
         TRUSTM_ENGINE_DBGFN("waiting...");
         //Wait until the optiga_util_open_application is completed
-        while (optiga_lib_status == OPTIGA_LIB_BUSY ){}
+        trustmEngine_WaitForCompletion(BUSY_WAIT_TIME_OUT);
         TRUSTM_ENGINE_DBG("++done.\n");
 
         if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
@@ -371,13 +430,8 @@ optiga_lib_status_t trustmEngine_App_Open(void)
                             break;
                         }
 
-                        TRUSTM_ENGINE_DBGFN("waiting (max count: 50)");
-                        //Wait until the optiga_util_open_application is completed
-                        while (optiga_lib_status == OPTIGA_LIB_BUSY )
-                        {
-                            //TRUSTM_ENGINE_DBG(".");
-                            //pal_os_timer_delay_in_milliseconds(50);
-                        }
+                        TRUSTM_ENGINE_DBGFN("waiting...");
+                        trustmEngine_WaitForCompletion(BUSY_WAIT_TIME_OUT);
                         TRUSTM_ENGINE_DBG("++\n");
                         
                         if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
@@ -483,12 +537,7 @@ optiga_lib_status_t trustmEngine_App_Close(void)
             break;
         }
 
-        while (optiga_lib_status == OPTIGA_LIB_BUSY)
-        {
-            //Wait until the optiga_util_close_application is completed
-            //printf("Waiting : optiga_util_close_application \n");
-            //printf(".");
-        }
+        trustmEngine_WaitForCompletion(BUSY_WAIT_TIME_OUT);
         
         if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
         {
@@ -498,14 +547,13 @@ optiga_lib_status_t trustmEngine_App_Close(void)
             break;
         }
 
-        trustm_ctx.appOpen = 0;
         TRUSTM_ENGINE_DBGFN("Success : optiga_util_close_application \n");
 
     }while(FALSE);
 
     if (return_status != OPTIGA_LIB_SUCCESS)
         trustmPrintErrorCode(return_status);
-        
+    trustm_ctx.appOpen = 0;   
     /// IPC Release 
     mssleep(30);
     __trustmEngine_writeshm(ipc_FlagInterShmid,0);
@@ -539,7 +587,7 @@ static uint32_t parseKeyParams(const char *aArg)
     char *ptr;
     TRUSTM_ENGINE_DBGFN(">");
     TRUSTM_WORKAROUND_TIMER_ARM;
-    TRUSTM_ENGINE_APP_OPEN;
+    TRUSTM_ENGINE_APP_OPEN_RET(NULL,NULL);
     do
     {
         strcpy(in, aArg);
@@ -687,7 +735,7 @@ static uint32_t parseKeyParams(const char *aArg)
                 if (OPTIGA_LIB_SUCCESS != return_status)
                     break;			
                 //Wait until the optiga_util_read_metadata operation is completed
-                while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+                trustmEngine_WaitForCompletion(BUSY_WAIT_TIME_OUT);
                 return_status = optiga_lib_status;
                 if (return_status != OPTIGA_LIB_SUCCESS)
                     break;

@@ -368,7 +368,9 @@ EVP_PKEY *trustm_ec_loadkeyE0E0(void)
 
         j=0;    
         if((trustm_ctx.pubkey[1] & 0x80) == 0x00)
+        {
         j = trustm_ctx.pubkey[3] + 4;
+        }
         else
         {
         j = (trustm_ctx.pubkey[1] & 0x7f);
@@ -422,7 +424,7 @@ EVP_PKEY *trustm_ec_loadkey(void)
             }
             else
             {
-            TRUSTM_ENGINE_DBGFN("No plubic Key found, Register Private Key only");
+            TRUSTM_ENGINE_DBGFN("No public Key found, Register Private Key only");
             //load dummy public key
             if(trustm_ctx.ec_key_curve == OPTIGA_ECC_CURVE_NIST_P_256)
             {
