@@ -268,10 +268,7 @@ static uint8_t __trustm_secCnt(void)
             break;
         }
 
-        while (OPTIGA_LIB_BUSY == optiga_lib_status) 
-        {
-            pal_os_timer_delay_in_milliseconds(10);
-        }
+        trustm_WaitForCompletion(BUSY_WAIT_TIME_OUT);
 
         if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
         {
@@ -597,7 +594,7 @@ optiga_lib_status_t trustmReadMetadata(uint16_t optiga_oid, trustm_metadata_t *o
         if (OPTIGA_LIB_SUCCESS != return_status)
             break;          
         //Wait until the optiga_util_read_metadata operation is completed
-        while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+        trustm_WaitForCompletion(BUSY_WAIT_TIME_OUT);
         return_status = optiga_lib_status;
         if (return_status != OPTIGA_LIB_SUCCESS)
             break;
@@ -924,10 +921,7 @@ optiga_lib_status_t trustm_readUID(utrustm_UID_t *UID)
             break;
         }
 
-        while (OPTIGA_LIB_BUSY == optiga_lib_status) 
-        {
-            pal_os_timer_delay_in_milliseconds(10);
-        }
+        trustm_WaitForCompletion(BUSY_WAIT_TIME_OUT);
 
         if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
         {
@@ -957,12 +951,34 @@ void optiga_crypt_callback(void * context, optiga_lib_status_t return_status)
     }
 }
 
+/**********************************************************************
+* trustm_WaitForCompletion()
+**********************************************************************/
+optiga_lib_status_t trustm_WaitForCompletion(uint16_t wait_time)
+{
+    uint16_t tickcount;
+     
+    tickcount=0;
+    do
+    {
+        mssleep(1);
+        tickcount++;
+        if (tickcount >= wait_time)
+        {
+            TRUSTM_HELPER_ERRFN("Fail : Optiga Busy Time Out:%d\n",tickcount);
+            return OPTIGA_LIB_BUSY;
+        }
+         
+    }while (optiga_lib_status == OPTIGA_LIB_BUSY);
+    TRUSTM_HELPER_DBGFN(" Tick Counter: %d", tickcount);
+    return optiga_lib_status;
+ }   
 
 
 /**********************************************************************
-* trustm_Open()
+* _trustm_Open()
 **********************************************************************/
-optiga_lib_status_t trustm_Open(void)
+optiga_lib_status_t _trustm_Open(void)
 {
     optiga_lib_status_t return_status;
     pid_t current_pid;
@@ -1061,9 +1077,7 @@ optiga_lib_status_t trustm_Open(void)
 
         TRUSTM_HELPER_DBGFN("waiting...");
         //Wait until the optiga_util_open_application is completed
-        while (optiga_lib_status == OPTIGA_LIB_BUSY )
-        {
-        }
+        trustm_WaitForCompletion(BUSY_WAIT_TIME_OUT);
         TRUSTM_HELPER_DBG("++done\n");
 
         if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
@@ -1081,6 +1095,39 @@ optiga_lib_status_t trustm_Open(void)
 
 
 
+    TRUSTM_HELPER_DBGFN("<");
+    return return_status;
+}
+
+/**********************************************************************
+* trustm_Open()
+**********************************************************************/
+optiga_lib_status_t trustm_Open(void)
+{
+    optiga_lib_status_t return_status;
+    
+    TRUSTM_HELPER_DBGFN(">");
+    TRUSTM_HELPER_DBGFN("trustm_Open with recovery\n"); 
+    if  (trustm_open_flag == 1)
+    {   
+        TRUSTM_HELPER_DBGFN("Trust M already opened, Close and re-open again");
+        trustm_Close();
+    }
+      
+    trustm_hibernate_flag = 0; 
+    return_status = _trustm_Open();
+    if (return_status != OPTIGA_LIB_SUCCESS) 
+    { 
+       TRUSTM_HELPER_DBGFN("Error opening Trust M, Retry 1");
+       trustm_open_flag = 1;
+       trustm_Close();
+       return_status = _trustm_Open();
+       if (return_status != OPTIGA_LIB_SUCCESS)
+       {
+           TRUSTM_HELPER_ERRFN("Error opening Trust M, EXIT");
+        }            
+    }    
+     
     TRUSTM_HELPER_DBGFN("<");
     return return_status;
 }
@@ -1136,10 +1183,7 @@ optiga_lib_status_t trustm_Close(void)
             break;
         }
 
-        while (optiga_lib_status == OPTIGA_LIB_BUSY)
-        {
-        }
-        
+        trustm_WaitForCompletion(BUSY_WAIT_TIME_OUT);
         if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
         {
             //optiga util close application failed
@@ -1148,7 +1192,6 @@ optiga_lib_status_t trustm_Close(void)
             break;
         }
 
-        trustm_open_flag = 0;
         //pal_gpio_deinit(&optiga_reset_0);
         //pal_gpio_deinit(&optiga_vdd_0);
         TRUSTM_HELPER_DBGFN("Success : optiga_util_close_application \n");
@@ -1160,16 +1203,23 @@ optiga_lib_status_t trustm_Close(void)
 
     // destroy util and crypt instances
     //optiga_lib_status = OPTIGA_LIB_BUSY;
-    return_status = optiga_crypt_destroy(me_crypt);
-    if(OPTIGA_LIB_SUCCESS != return_status)
+    if (me_crypt!=NULL)
     {
-        TRUSTM_HELPER_ERRFN("Fail : optiga_crypt_destroy \n");
-        //break;
+        TRUSTM_HELPER_DBGFN("optiga_crypt_destroy\n");
+        return_status = optiga_crypt_destroy(me_crypt);
+        if(OPTIGA_LIB_SUCCESS != return_status)
+        {
+            TRUSTM_HELPER_ERRFN("Fail : optiga_crypt_destroy \n");
+            //break;
+        }
     }
 
     if (me_util != NULL)
-        optiga_util_destroy(me_util);    
-
+    {
+        TRUSTM_HELPER_DBGFN("optiga_util_destroy\n");
+        return_status=optiga_util_destroy(me_util);
+    }
+    trustm_open_flag = 0;
     /// IPC Release 
     mssleep(30);
     __trustm_writeshm(ipc_FlagInterShmid,0);
