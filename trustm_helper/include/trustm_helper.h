@@ -63,6 +63,7 @@
 
 #define TRUSTM_CTX_FILENAME             ".trustm_ctx"
 #define TRUSTM_HIBERNATE_CTX_FILENAME   ".trustm_hibernate_ctx"
+#define BUSY_WAIT_TIME_OUT 6000 // Note: This value must be at least 4000, any value smaller might encounter premature exit while waiting response from Trust M
 
 
 // ********** typedef
@@ -118,8 +119,10 @@ extern uint16_t trustm_open_flag;
 extern uint8_t trustm_hibernate_flag;
 
 // Function Prototype
-optiga_lib_status_t trustm_Open(void);
+optiga_lib_status_t _trustm_Open(void);
 optiga_lib_status_t trustm_Close(void);
+optiga_lib_status_t trustm_Open(void);
+optiga_lib_status_t trustm_WaitForCompletion(uint16_t wait_time);
 void optiga_util_callback(void * context, optiga_lib_status_t return_status);
 void optiga_crypt_callback(void * context, optiga_lib_status_t return_status);
 
