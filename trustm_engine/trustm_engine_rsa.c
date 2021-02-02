@@ -132,7 +132,7 @@ static EVP_PKEY *trustm_rsa_generatekey(void)
             break;
         //Wait until the optiga_util_read_metadata operation is completed
         printf("Please wait generating RSA key .......\n");
-        while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+        trustmEngine_WaitForCompletion(MAX_RSA_KEY_GEN_TIME);
         return_status = optiga_lib_status;
         if (return_status != OPTIGA_LIB_SUCCESS)
             break;
@@ -153,7 +153,7 @@ static EVP_PKEY *trustm_rsa_generatekey(void)
             if (OPTIGA_LIB_SUCCESS != return_status)
             break;
             //Wait until the optiga_util_read_metadata operation is completed
-            while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+            trustmEngine_WaitForCompletion(BUSY_WAIT_TIME_OUT);
             return_status = optiga_lib_status;
             if (return_status != OPTIGA_LIB_SUCCESS)
             break;
@@ -270,7 +270,7 @@ static int trustmEngine_rsa_priv_enc(int flen,
         if (OPTIGA_LIB_SUCCESS != return_status)
             break;
         //Wait until the optiga_util_read_metadata operation is completed
-        while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+        trustmEngine_WaitForCompletion(BUSY_WAIT_TIME_OUT);
         return_status = optiga_lib_status;
         if (return_status != OPTIGA_LIB_SUCCESS)
             break;
@@ -332,7 +332,7 @@ static int trustmEngine_rsa_priv_dec(int flen,
         if (OPTIGA_LIB_SUCCESS != return_status)
             break;
         //Wait until the optiga_util_read_metadata operation is completed
-        while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+        trustmEngine_WaitForCompletion(BUSY_WAIT_TIME_OUT);
         return_status = optiga_lib_status;
         if (return_status != OPTIGA_LIB_SUCCESS)
             break;
@@ -413,7 +413,7 @@ static int trustmEngine_rsa_pub_enc(int flen,
         if (OPTIGA_LIB_SUCCESS != return_status)
             break;
         //Wait until the optiga_util_read_metadata operation is completed
-        while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+        trustmEngine_WaitForCompletion(BUSY_WAIT_TIME_OUT);
         return_status = optiga_lib_status;
         if (return_status != OPTIGA_LIB_SUCCESS)
             break;
@@ -499,7 +499,7 @@ static int trustmEngine_rsa_sign(int type,
         if (OPTIGA_LIB_SUCCESS != return_status)
             break;
         //Wait until the optiga_util_read_metadata operation is completed
-        while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+        trustmEngine_WaitForCompletion(BUSY_WAIT_TIME_OUT);
         return_status = optiga_lib_status;
         if (return_status != OPTIGA_LIB_SUCCESS)
             break;
@@ -574,7 +574,7 @@ int trustmEngine_rsa_verify(int dtype,
         if (OPTIGA_LIB_SUCCESS != return_status)
             break;
         //Wait until the optiga_util_read_metadata operation is completed
-        while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+        trustmEngine_WaitForCompletion(BUSY_WAIT_TIME_OUT);
         return_status = optiga_lib_status;
         if (return_status != OPTIGA_LIB_SUCCESS)
             break;

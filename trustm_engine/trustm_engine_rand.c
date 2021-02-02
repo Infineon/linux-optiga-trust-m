@@ -109,7 +109,7 @@ static int trustmEngine_getrandom(unsigned char *buf, int num)
             if (OPTIGA_LIB_SUCCESS != return_status)
                 break;			
             //Wait until the optiga_util_read_metadata operation is completed
-            while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+            trustmEngine_WaitForCompletion(BUSY_WAIT_TIME_OUT);
             return_status = optiga_lib_status;
             if (return_status != OPTIGA_LIB_SUCCESS)
                 break;
@@ -130,7 +130,7 @@ static int trustmEngine_getrandom(unsigned char *buf, int num)
             if (OPTIGA_LIB_SUCCESS != return_status)
                 break;			
             //Wait until the optiga_util_read_metadata operation is completed
-            while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+            trustmEngine_WaitForCompletion(BUSY_WAIT_TIME_OUT);
             return_status = optiga_lib_status;
             if (return_status != OPTIGA_LIB_SUCCESS)
                 break;
