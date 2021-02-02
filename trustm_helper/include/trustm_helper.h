@@ -64,7 +64,7 @@
 #define TRUSTM_CTX_FILENAME             ".trustm_ctx"
 #define TRUSTM_HIBERNATE_CTX_FILENAME   ".trustm_hibernate_ctx"
 #define BUSY_WAIT_TIME_OUT 6000 // Note: This value must be at least 4000, any value smaller might encounter premature exit while waiting response from Trust M
-
+#define MAX_RSA_KEY_GEN_TIME 62000 // Note: RSA key gen time can very from 7s to 60s
 
 // ********** typedef
 typedef struct _tag_trustm_UID {

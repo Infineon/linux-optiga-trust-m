@@ -171,7 +171,7 @@ uint16_t trustmEngine_init_ec(ENGINE *e);
 EVP_PKEY *trustm_rsa_loadkey(void);
 EVP_PKEY *trustm_ec_loadkey(void);
 EVP_PKEY *trustm_ec_loadkeyE0E0(void);
-
+optiga_lib_status_t trustmEngine_WaitForCompletion(uint16_t wait_time);
 pthread_mutex_t lock;
 
 #endif // _TRUSTM_ENGINE_COMMON_H_

@@ -51,7 +51,6 @@ static const char *engine_name = "Infineon OPTIGA TrustM Engine";
 #define IPC_FLAGSIZE    sizeof(pid_t)
 #define IPC_SLEEP_STEPS 1
 #define MAX_IPC_TIME 16
-#define BUSY_WAIT_TIME_OUT 6000 // Note: This value must be at least 4000, any value smaller might encounter premature exit while waiting response from Trust M
 key_t ipc_FlagInterKey;
 int   ipc_FlagInterShmid;
 pid_t ipc_queue;
@@ -195,7 +194,7 @@ optiga_lib_status_t trustmEngine_WaitForCompletion(uint16_t wait_time)
         }
          
     }while (optiga_lib_status == OPTIGA_LIB_BUSY);
-    TRUSTM_ENGINE_DBGFN(" Tick Counter: %d", tickcount);
+    TRUSTM_ENGINE_DBGFN(" max wait_time:%d, Tick Counter: %d", wait_time,tickcount);
     return optiga_lib_status;
     
 }
@@ -229,15 +228,11 @@ static uint8_t __trustmEngine_secCnt(void)
         if (OPTIGA_LIB_SUCCESS != return_status)
         {
             //Reading the data object failed.
-            TRUSTM_HELPER_ERRFN("optiga_util_read_data : FAIL!!!\n");
+            TRUSTM_ENGINE_ERRFN("optiga_util_read_data : FAIL!!!\n");
             read_data_buffer[0] = 0;
             break;
         }
 
-        //while (OPTIGA_LIB_BUSY == optiga_lib_status) 
-        //{
-            //pal_os_timer_delay_in_milliseconds(10);
-        // }
         trustmEngine_WaitForCompletion(BUSY_WAIT_TIME_OUT);
 
         if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
@@ -462,19 +457,23 @@ optiga_lib_status_t trustmEngine_Close(void)
 {
     optiga_lib_status_t return_status;
 
-    TRUSTM_HELPER_DBGFN(">");
+    TRUSTM_ENGINE_DBGFN(">");
 
     // destroy util and crypt instances
-    //optiga_lib_status = OPTIGA_LIB_BUSY;
-    return_status = optiga_crypt_destroy(me_crypt);
-    if(OPTIGA_LIB_SUCCESS != return_status)
+    if (me_crypt!=NULL)
     {
+        TRUSTM_ENGINE_DBGFN("optiga_crypt_destroy\n");
+        return_status = optiga_crypt_destroy(me_crypt);
+        if(OPTIGA_LIB_SUCCESS != return_status)
+        {
         TRUSTM_ENGINE_ERRFN("Fail : optiga_crypt_destroy \n");
+        }
     }
 
     if (me_util != NULL)
-        optiga_util_destroy(me_util);    
-
+    {   TRUSTM_ENGINE_DBGFN("optiga_util_destroy\n");
+        return_status=optiga_util_destroy(me_util);   
+    }
     TRUSTM_WORKAROUND_TIMER_DISARM;
 
     // No point deinit the GPIO as it is a fix pin

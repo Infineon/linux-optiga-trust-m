@@ -941,7 +941,7 @@ optiga_lib_status_t trustm_WaitForCompletion(uint16_t wait_time)
         }
          
     }while (optiga_lib_status == OPTIGA_LIB_BUSY);
-    TRUSTM_HELPER_DBGFN(" Tick Counter: %d", tickcount);
+    TRUSTM_HELPER_DBGFN(" max wait_time:%d, Tick Counter: %d", wait_time,tickcount);
     return optiga_lib_status;
  }   
 
