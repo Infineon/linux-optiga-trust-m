@@ -229,7 +229,7 @@ int main (int argc, char **argv)
             if (OPTIGA_LIB_SUCCESS != return_status)
                 break;
             //Wait until the optiga_util_read_metadata operation is completed
-            while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+            trustm_WaitForCompletion(BUSY_WAIT_TIME_OUT);
             return_status = optiga_lib_status;
             if (return_status != OPTIGA_LIB_SUCCESS)
                 break;
@@ -254,7 +254,7 @@ int main (int argc, char **argv)
                 if (OPTIGA_LIB_SUCCESS != return_status)
                     break;
                 //Wait until the optiga_util_read_metadata operation is completed
-                while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+                trustm_WaitForCompletion(BUSY_WAIT_TIME_OUT);
                 return_status = optiga_lib_status;
                 if (return_status != OPTIGA_LIB_SUCCESS)
                     break;
@@ -283,7 +283,7 @@ int main (int argc, char **argv)
             if (OPTIGA_LIB_SUCCESS != return_status)
                 break;
             //Wait until the optiga_util_read_metadata operation is completed
-            while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+            trustm_WaitForCompletion(BUSY_WAIT_TIME_OUT);
             return_status = optiga_lib_status;
             if (return_status != OPTIGA_LIB_SUCCESS)
                 break;
@@ -338,7 +338,7 @@ int main (int argc, char **argv)
             if (OPTIGA_LIB_SUCCESS != return_status)
                 break;
             //Wait until the optiga_util_read_metadata operation is completed
-            while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+            trustm_WaitForCompletion(BUSY_WAIT_TIME_OUT);
             return_status = optiga_lib_status;
             if (return_status != OPTIGA_LIB_SUCCESS)
                 break;
@@ -413,7 +413,7 @@ int main (int argc, char **argv)
             if (OPTIGA_LIB_SUCCESS != return_status)
                 break;
             //Wait until the optiga_util_read_metadata operation is completed
-            while (OPTIGA_LIB_BUSY == optiga_lib_status) {}
+            trustm_WaitForCompletion(BUSY_WAIT_TIME_OUT);
             return_status = optiga_lib_status;
             if (return_status != OPTIGA_LIB_SUCCESS)
                 break;
