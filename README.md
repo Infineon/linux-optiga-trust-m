@@ -115,11 +115,11 @@ Getting the initial code from Github with submodules
 foo@bar:~$ git clone --recurse-submodules https://github.com/Infineon/cli-optiga-trust-m.git
 ```
 
-Check out the development branch as needed
+Note:  The following commands are optional and it is required only when switching between different branches.
 
 ```
 foo@bar:~$ git checkout development_v3
-foo@bar:~$ git submodule update
+foo@bar:~$ git submodule update -f
 ```
 
 Change the reset type to use software reset as follow in the header file at "**cli-optiga-trust-m/trustm_lib/optiga/include/optiga/**"
