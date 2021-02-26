@@ -180,7 +180,7 @@ int main (int argc, char **argv)
 
     trustmGetOIDName(optiga_oid, messagebuf);
     printf("========================================================\n");
-    printf(messagebuf);
+    puts(messagebuf);
 
     do
     {
