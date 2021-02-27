@@ -45,8 +45,19 @@
 #include <errno.h>   
 
 //Debug Print
+#define CLI_WORKAROUND 1
 //#define DEBUG_TRUSTM_HELPER =1
 //#define HIBERNATE_ENABLE =1
+
+#ifdef CLI_WORKAROUND
+#define TRUSTM_CLI_WORKAROUND_TIMER_ARM        pal_os_event_arm()
+#define TRUSTM_CLI_WORKAROUND_TIMER_DISARM     pal_os_event_disarm()
+#define TRUSTM_CLI_WORKAROUND_TIMER_DESTROY    pal_os_event_destroy1()
+#else
+#define TRUSTM_CLI_WORKAROUND_TIMER_ARM
+#define TRUSTM_CLI_WORKAROUND_TIMER_DISARM     
+#define TRUSTM_CLI_WORKAROUND_TIMER_DESTROY   
+#endif
 
 #ifdef DEBUG_TRUSTM_HELPER
 
