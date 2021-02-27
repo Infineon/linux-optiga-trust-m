@@ -43,6 +43,12 @@
 
 #include "trustm_helper.h"
 
+#ifdef CLI_WORKAROUND
+	extern void pal_os_event_disarm(void);
+	extern void pal_os_event_arm(void);
+	extern void pal_os_event_destroy1(void);
+#endif
+
 /*************************************************************************
 *  Global
 *************************************************************************/
@@ -1074,7 +1080,7 @@ optiga_lib_status_t _trustm_Open(void)
             break;
         }
 
-
+        TRUSTM_CLI_WORKAROUND_TIMER_ARM;
         TRUSTM_HELPER_DBGFN("waiting...");
         //Wait until the optiga_util_open_application is completed
         trustm_WaitForCompletion(BUSY_WAIT_TIME_OUT);
@@ -1224,7 +1230,7 @@ optiga_lib_status_t trustm_Close(void)
     mssleep(30);
     __trustm_writeshm(ipc_FlagInterShmid,0);
 
-    
+    TRUSTM_CLI_WORKAROUND_TIMER_DISARM;
     TRUSTM_HELPER_DBGFN("TrustM Closed.\n");
     TRUSTM_HELPER_DBGFN("<");
     return return_status;
