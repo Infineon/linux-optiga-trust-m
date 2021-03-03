@@ -130,12 +130,13 @@ extern uint16_t trustm_open_flag;
 extern uint8_t trustm_hibernate_flag;
 
 // Function Prototype
+int mssleep(long msec);
 optiga_lib_status_t _trustm_Open(void);
 optiga_lib_status_t trustm_Close(void);
 optiga_lib_status_t trustm_Open(void);
 optiga_lib_status_t trustm_WaitForCompletion(uint16_t wait_time);
-void optiga_util_callback(void * context, optiga_lib_status_t return_status);
-void optiga_crypt_callback(void * context, optiga_lib_status_t return_status);
+void helper_optiga_util_callback(void * context, optiga_lib_status_t return_status);
+void helper_optiga_crypt_callback(void * context, optiga_lib_status_t return_status);
 
 void trustmHexDump(uint8_t *pdata, uint32_t len);
 uint16_t trustmWritePEM(uint8_t *buf, uint32_t len, const char *filename, char *name);

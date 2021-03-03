@@ -31,6 +31,8 @@
 #include "trustm_helper.h"
 
 #include "trustm_engine_common.h"
+#include "trustm_engine_ipc_lock.h"
+
 
 #ifdef WORKAROUND
 	extern void pal_os_event_disarm(void);
@@ -44,19 +46,6 @@ extern void pal_os_event_disarm(void);
 
 static const char *engine_id   = "trustm_engine";
 static const char *engine_name = "Infineon OPTIGA TrustM Engine";
-
-//Globe Variable
-// for IPC
-// ---- InterCom
-#define IPC_FLAGSIZE    sizeof(pid_t)
-#define IPC_SLEEP_STEPS 1
-#define MAX_IPC_TIME 16
-key_t ipc_FlagInterKey;
-int   ipc_FlagInterShmid;
-pid_t ipc_queue;
-unsigned char ipc_value;
-unsigned char ipc_temp;
-long ipc_task;
 
 /**********************************************************************
 * mssleep()
@@ -81,86 +70,24 @@ int mssleep(long msec)
 
     return res;
 }
-
 /**********************************************************************
-* __trustmEngine_removeshm()
+* engine_optiga_util_callback()
 **********************************************************************/
-/*static void __trustmEngine_removeshm(int shmid)
+void engine_optiga_util_callback(void * context, optiga_lib_status_t return_status)
 {
-        shmctl(shmid, IPC_RMID, 0);
-        TRUSTM_ENGINE_DBGFN("Shared memory segment removed");
-        //TRUSTM_HELPER_ERRFN("Shared memory segment removed");
-}*/
-
-/**********************************************************************
-* __trustmEngine_writeshm()
-**********************************************************************/
-static void __trustmEngine_writeshm(int shmid,pid_t data)
-{
-    pid_t  *Flag_segptr;
-
-    /* Attach (map) the shared memory segment into the current process */
-     if((Flag_segptr = (pid_t *)shmat(shmid, 0, 0)) == (pid_t *)-1)
-     {
-             perror("write flag shmat");
-             exit(1);
-     }
-
-     *Flag_segptr=data;
-     shmdt(Flag_segptr);
+    optiga_lib_status = return_status;
+    TRUSTM_HELPER_DBGFN("optiga_lib_status: %x\n",optiga_lib_status);
 }
 
 /**********************************************************************
-* __trustmEngine_readshm()
+* engine_optiga_crypt_callback()
 **********************************************************************/
-static pid_t __trustmEngine_readshm(int shmid)
-{   pid_t  *Flag_segptr;
-    pid_t Flag;
-    /* Attach (map) the shared memory segment into the current process */
-     if((Flag_segptr = (pid_t *)shmat(shmid, 0, 0)) == (pid_t *)-1)
-     {
-             perror("read flag shmat");
-             exit(1);
-     }
-     Flag = *Flag_segptr;
-     shmdt(Flag_segptr);
-
-    return Flag;
-}
-
-/**********************************************************************
-* __trustmEngine_ipcInit()
-**********************************************************************/
-static void __trustmEngine_ipcInit(void)
+void engine_optiga_crypt_callback(void * context, optiga_lib_status_t return_status)
 {
-	/* Unique Key for InterCom */
-    ipc_FlagInterKey = 0x11111123;
-    pid_t pid;
-
-  	/* Open the shared memory segment - create if necessary */
-    if((ipc_FlagInterShmid = shmget(ipc_FlagInterKey, IPC_FLAGSIZE, IPC_CREAT|IPC_EXCL|0666)) == -1)
+    optiga_lib_status = return_status;
+    if (NULL != context)
     {
-        TRUSTM_ENGINE_DBGFN("Shared memory segment exists - opening as client");
-        /* Segment probably already exists - try as a client */
-        if((ipc_FlagInterShmid = shmget(ipc_FlagInterKey, IPC_FLAGSIZE, 0)) == -1)
-        {
-            TRUSTM_ENGINE_DBGFN("share mem error %d",ipc_FlagInterShmid);
-            perror("Init shmget");
-            //shmctl(shmid, IPC_RMID, 0);
-            
-            exit(1);
-        }
-    }
-    else
-    {
-        // First created so init queue
-        pid=getpid();
-        TRUSTM_ENGINE_DBGFN("Init Queue %d", pid);
-        
-        //~ __trustmEngine_writeshm(ipc_FlagInterShmid,0x1);
-        __trustmEngine_writeshm(ipc_FlagInterShmid,pid); // stores the current PID
-
-        
+        // callback to upper layer here
     }
 }
 
@@ -257,25 +184,38 @@ optiga_lib_status_t trustmEngine_Open(void)
 
     do
     {
-        pal_gpio_init(&optiga_reset_0);
-        pal_gpio_init(&optiga_vdd_0);
+        //pal_gpio_init(&optiga_reset_0);
+        //pal_gpio_init(&optiga_vdd_0);
         
         //Create an instance of optiga_util to open the application on OPTIGA.
-        me_util = optiga_util_create(0, optiga_util_callback, NULL);
+        trustmEngine_ipc_acquire();
+        if (me_util == NULL)
+        {
+             me_util = optiga_util_create(0, engine_optiga_util_callback, NULL);
         if (NULL == me_util)
         {
             TRUSTM_ENGINE_ERRFN("Fail : optiga_util_create\n");
             return_status = OPTIGA_UTIL_ERROR;
             break;
         }
-        TRUSTM_ENGINE_DBGFN("TrustM util instance created. \n");
+        TRUSTM_ENGINE_DBGFN("optiga_util_create OK \n");
+        }else
+        {   TRUSTM_ENGINE_DBGFN("TrustM util instance exists. \n");
+        }
 
-        me_crypt = optiga_crypt_create(0, optiga_crypt_callback, NULL);
+        if(me_crypt ==NULL)
+        {
+        me_crypt = optiga_crypt_create(0, engine_optiga_crypt_callback, NULL);
         if (NULL == me_crypt)
         {
             TRUSTM_ENGINE_ERRFN("Fail : optiga_crypt_create\n");
             return_status = OPTIGA_CRYPT_ERROR;
             break;
+        }
+        TRUSTM_ENGINE_DBGFN("optiga_crypt_create OK \n");
+        }else
+        {
+            TRUSTM_ENGINE_DBGFN("TrustM crypt instance exists. \n");
         }
         return_status = OPTIGA_LIB_SUCCESS;
         TRUSTM_ENGINE_DBGFN("TrustM crypt instance created. \n");
@@ -326,57 +266,17 @@ optiga_lib_status_t trustmEngine_App_Open_Recovery(void)
 optiga_lib_status_t trustmEngine_App_Open(void)
 {
     optiga_lib_status_t return_status;
-    pid_t current_pid;
-    pid_t queue_pid;
-    int queue_delay;
 
     TRUSTM_ENGINE_DBGFN(">");
-    trustm_ctx.appOpen = 0;
     do
     {
-        //Init IPC
-        if (trustm_ctx.ipcInit == 0)
+        trustm_ctx.appOpen = 0;
+        return_status = trustmEngine_Open();
+        if (return_status != OPTIGA_LIB_SUCCESS)
         {
-            __trustmEngine_ipcInit();
-            trustm_ctx.ipcInit = 1;
+            TRUSTM_ENGINE_ERRFN("Fail to create instances");
+            break;
         }
-
-        /// IPC Check
-        current_pid=getpid();
-        queue_delay= ((current_pid %MAX_IPC_TIME)+1)*IPC_SLEEP_STEPS;; // wait for 0 to 20ms at IPC_SLEEP_STEPS steps depends on process number
-        mssleep(queue_delay);
-        
-        queue_pid = __trustmEngine_readshm(ipc_FlagInterShmid);
-        TRUSTM_ENGINE_DBGFN("Check if TrustM Open:queue %d:current:%d:Delay %d", queue_pid,current_pid,queue_delay);
-        if (queue_pid ==0)
-        {    __trustmEngine_writeshm(ipc_FlagInterShmid,current_pid); /*write pid into shared memory*/
-            queue_pid = __trustmEngine_readshm(ipc_FlagInterShmid);
-            TRUSTM_ENGINE_DBGFN("Resource seized by %d",current_pid);
-        }    
-       
-        while ( queue_pid !=current_pid)  /*Check if taken by other process and wait*/
-        {
-            queue_pid = __trustmEngine_readshm(ipc_FlagInterShmid);
-            if (queue_pid ==0)
-            {    __trustmEngine_writeshm(ipc_FlagInterShmid,current_pid); /*write pid into shared memory*/
-                //queue_pid=__trustmEngine_readshm(ipc_FlagInterShmid);
-                TRUSTM_ENGINE_DBGFN("Resource seized by %d",current_pid);
-            }
-            else if (kill(queue_pid,0) == -1) 
-            {
-              TRUSTM_ENGINE_DBGFN("Process does not exist1:%d", queue_pid);
-              __trustmEngine_writeshm(ipc_FlagInterShmid,current_pid);
-              //queue_pid=__trustmEngine_readshm(ipc_FlagInterShmid);
-            }
-            queue_delay= ((current_pid %MAX_IPC_TIME)+1)*IPC_SLEEP_STEPS; // wait for 1 to MAX_IPC_TIME at IPC_SLEEP_STEPS steps depends on process number
-            mssleep(queue_delay);
-            queue_pid=__trustmEngine_readshm(ipc_FlagInterShmid);
-        }
-        
-
-        
-        TRUSTM_ENGINE_DBGFN("Lock queue %d", queue_pid);
-
         /**
          * Open the application on OPTIGA which is a precondition to perform any other operations
          * using optiga_util_open_application
@@ -479,7 +379,8 @@ optiga_lib_status_t trustmEngine_Close(void)
     // No point deinit the GPIO as it is a fix pin
     //pal_gpio_deinit(&optiga_reset_0);
     //pal_gpio_deinit(&optiga_vdd_0);
-        
+    me_util=NULL;
+    me_crypt=NULL;    
     TRUSTM_ENGINE_DBGFN("TrustM Closed.\n");
     TRUSTM_ENGINE_DBGFN("<");
     return return_status;
@@ -552,11 +453,11 @@ optiga_lib_status_t trustmEngine_App_Close(void)
 
     if (return_status != OPTIGA_LIB_SUCCESS)
         trustmPrintErrorCode(return_status);
+    trustmEngine_Close();
     trustm_ctx.appOpen = 0;   
     /// IPC Release 
     mssleep(30);
-    __trustmEngine_writeshm(ipc_FlagInterShmid,0);
-
+    trustmEngine_ipc_release();
     TRUSTM_ENGINE_DBGFN("<");
     return return_status;
 }
@@ -836,7 +737,7 @@ static int engine_destroy(ENGINE *e)
         trustm_ctx.pubkey[i] = 0x00;
     }
     
-    trustmEngine_Close();
+    trustmEngine_ipc_release();
     
     TRUSTM_ENGINE_DBGFN("<");
     return TRUSTM_ENGINE_SUCCESS;
@@ -860,6 +761,7 @@ static int engine_finish(ENGINE *e)
 static EVP_PKEY * engine_load_privkey(ENGINE *e, const char *key_id, UI_METHOD *ui, void *cb_data)
 {
     EVP_PKEY    *key         = NULL;    
+    trustmEngine_ipc_acquire();
     
     TRUSTM_ENGINE_DBGFN("> key_id : %s", key_id);
 
@@ -1015,7 +917,11 @@ static int engine_init(ENGINE *e)
             ret = TRUSTM_ENGINE_SUCCESS;
             break;
         }
-
+        me_util=NULL;
+        me_crypt=NULL;
+        pal_gpio_init(&optiga_reset_0);
+        pal_gpio_init(&optiga_vdd_0);
+        
         return_status = trustmEngine_Open();
         if (return_status != OPTIGA_LIB_SUCCESS)
         {
@@ -1046,11 +952,13 @@ static int engine_init(ENGINE *e)
         trustm_ctx.ipcInit = 0;
 
         // Init Random Method
+        #ifdef TRUSTM_RAND_ENABLED 
         ret = trustmEngine_init_rand(e);
         if (ret != TRUSTM_ENGINE_SUCCESS) {
             TRUSTM_ENGINE_ERRFN("Init Rand Fail!!");
             break;
         }
+        #endif
 
         // Init RSA Method
         ret = trustmEngine_init_rsa(e);
@@ -1078,6 +986,7 @@ static int bind(ENGINE *e, const char *id)
     int ret = TRUSTM_ENGINE_FAIL;
     
     TRUSTM_ENGINE_DBGFN(">");
+    trustmEngine_ipc_acquire();
 
     do {         
         if (!ENGINE_set_id(e, engine_id)) {
@@ -1130,7 +1039,7 @@ static int bind(ENGINE *e, const char *id)
 */
         ret = TRUSTM_ENGINE_SUCCESS;
     }while(FALSE);
-
+    trustmEngine_ipc_release();
     TRUSTM_ENGINE_DBGFN("<");
     return ret;
   }

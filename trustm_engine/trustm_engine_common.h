@@ -42,6 +42,7 @@
 #define PARAM_MAX_LEN        (128)
 
 #define WORKAROUND 1
+//#define TRUSTM_RAND_ENABLED 1
 //#define TRUSTM_ENGINE_DEBUG = 1
 
 #ifdef WORKAROUND
@@ -154,6 +155,7 @@ typedef struct trustm_ctx_str
 extern trustm_ctx_t trustm_ctx;
 
 //function prototype
+int mssleep(long msec);
 int  trustmEngine_init(void);
 void trustmEngine_close(void);
 

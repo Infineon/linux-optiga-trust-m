@@ -42,6 +42,7 @@
 #include "optiga/pal/pal_ifx_i2c_config.h"
 
 #include "trustm_helper.h"
+#include "trustm_helper_ipc_lock.h"
 
 #ifdef CLI_WORKAROUND
 	extern void pal_os_event_disarm(void);
@@ -58,19 +59,6 @@ optiga_lib_status_t optiga_lib_status;
 uint16_t trustm_open_flag = 0;
 uint8_t trustm_hibernate_flag = 0;
 
-//Globe Variable
-// for IPC
-// ---- InterCom
-#define IPC_FLAGSIZE    sizeof(pid_t)
-#define IPC_SLEEP_STEPS 1
-#define MAX_IPC_TIME 16
-
-key_t ipc_FlagInterKey;
-int   ipc_FlagInterShmid;
-pid_t ipc_queue;
-unsigned char ipc_value;
-unsigned char ipc_temp;
-long ipc_task;
 /*************************************************************************
 *  functions
 *************************************************************************/
@@ -78,7 +66,7 @@ long ipc_task;
  * Callback when optiga_util_xxxx operation is completed asynchronously
  */
 
-void optiga_util_callback(void * context, optiga_lib_status_t return_status)
+void helper_optiga_util_callback(void * context, optiga_lib_status_t return_status)
 {
     optiga_lib_status = return_status;
     TRUSTM_HELPER_DBGFN("optiga_lib_status: %x\n",optiga_lib_status);
@@ -154,83 +142,6 @@ int mssleep(long msec)
 
     return res;
 }
-
-/**********************************************************************
-* __trustm_removeshm()
-**********************************************************************/
-//static void __trustm_removeshm(int shmid)
-//{
-//        shmctl(shmid, IPC_RMID, 0);
-//        TRUSTM_HELPER_ERRFN("Shared memory segment removed");
-//}
-
-/**********************************************************************
-* __trustm_writeshm()
-**********************************************************************/
-static void __trustm_writeshm(int shmid,pid_t data)
-{
-    pid_t  *Flag_segptr;
-
-    /* Attach (map) the shared memory segment into the current process */
-     if((Flag_segptr = (pid_t *)shmat(shmid, 0, 0)) == (pid_t *)-1)
-     {
-             perror("write flag shmat");
-             exit(1);
-     }
-
-     *Flag_segptr=data;
-     shmdt(Flag_segptr);
-}
-
-/**********************************************************************
-* __trustm_readshm()
-**********************************************************************/
-static pid_t __trustm_readshm(int shmid)
-{   pid_t  *Flag_segptr;
-    pid_t Flag;
-    /* Attach (map) the shared memory segment into the current process */
-     if((Flag_segptr = (pid_t *)shmat(shmid, 0, 0)) == (pid_t *)-1)
-     {
-             perror("read flag shmat");
-             exit(1);
-     }
-     Flag = *Flag_segptr;
-     shmdt(Flag_segptr);
-
-    return Flag;
-}
-
-/**********************************************************************
-* __trustm_ipcInit()
-**********************************************************************/
-static void __trustm_ipcInit(void)
-{
-	/* Unique Key for InterCom */
-    ipc_FlagInterKey = 0x11111123;
-    pid_t pid;
-
-  	/* Open the shared memory segment - create if necessary */
-    if((ipc_FlagInterShmid = shmget(ipc_FlagInterKey, IPC_FLAGSIZE, IPC_CREAT|IPC_EXCL|0666)) == -1)
-    {
-        TRUSTM_HELPER_DBGFN("Shared memory segment exists - opening as client");
-        /* Segment probably already exists - try as a client */
-        if((ipc_FlagInterShmid = shmget(ipc_FlagInterKey, IPC_FLAGSIZE, 0)) == -1)
-        {
-            perror("Init shmget");
-            exit(1);
-        }
-    }
-    else
-    {
-        // First created so init queue
-        pid=getpid();
-        TRUSTM_HELPER_DBGFN("Init Queue %d", pid);
-        
-        //~ __trustm_writeshm(ipc_FlagInterShmid,0x1);
-        __trustm_writeshm(ipc_FlagInterShmid,pid); // stores the current PID
-    }
-}
-
 
 static void __delay (int cnt)
 {
@@ -946,9 +857,9 @@ optiga_lib_status_t trustm_readUID(utrustm_UID_t *UID)
 }
 
 /**********************************************************************
-* optiga_crypt_callback()
+* helper_optiga_crypt_callback()
 **********************************************************************/
-void optiga_crypt_callback(void * context, optiga_lib_status_t return_status)
+void helper_optiga_crypt_callback(void * context, optiga_lib_status_t return_status)
 {
     optiga_lib_status = return_status;
     if (NULL != context)
@@ -986,59 +897,20 @@ optiga_lib_status_t trustm_WaitForCompletion(uint16_t wait_time)
 **********************************************************************/
 optiga_lib_status_t _trustm_Open(void)
 {
-    optiga_lib_status_t return_status;
-    pid_t current_pid;
-    pid_t queue_pid;
-    int queue_delay;
+    optiga_lib_status_t return_status = OPTIGA_LIB_BUSY;
+    
+    trustm_ipc_acquire();
+
 
     TRUSTM_HELPER_DBGFN(">");
     trustm_open_flag = 0;
     do
     {
-        //Init IPC
-        __trustm_ipcInit();
-
-        /// IPC Check
-        current_pid=getpid();
-        queue_delay= ((current_pid %MAX_IPC_TIME)+1)*IPC_SLEEP_STEPS;; // wait for 0 to 20ms at IPC_SLEEP_STEPS steps depends on process number
-        mssleep(queue_delay);
-        
-        queue_pid = __trustm_readshm(ipc_FlagInterShmid);
-        TRUSTM_HELPER_DBGFN("Check if TrustM Open:queue %d:current:%d:Delay %d", queue_pid,current_pid,queue_delay);
-        if (queue_pid ==0)
-        {    __trustm_writeshm(ipc_FlagInterShmid,current_pid); /*write pid into shared memory*/
-            queue_pid = __trustm_readshm(ipc_FlagInterShmid);
-            TRUSTM_HELPER_DBGFN("Resource seized by %d",current_pid);
-        }    
-       
-        while ( queue_pid !=current_pid)  /*Check if taken by other process and wait*/
-        {
-            queue_pid = __trustm_readshm(ipc_FlagInterShmid);
-            if (queue_pid ==0)
-            {    __trustm_writeshm(ipc_FlagInterShmid,current_pid); /*write pid into shared memory*/
-                //queue_pid=__trustm_readshm(ipc_FlagInterShmid);
-                TRUSTM_HELPER_DBGFN("Resource seized by %d",current_pid);
-            }
-            else if (kill(queue_pid,0) == -1) 
-            {
-              TRUSTM_HELPER_DBGFN("Process does not exist1:%d", queue_pid);
-              __trustm_writeshm(ipc_FlagInterShmid,current_pid);
-              //queue_pid=__trustm_readshm(ipc_FlagInterShmid);
-            }
-            queue_delay= ((current_pid %MAX_IPC_TIME)+1)*IPC_SLEEP_STEPS; // wait for 1 to MAX_IPC_TIME at IPC_SLEEP_STEPS steps depends on process number
-            mssleep(queue_delay);
-            queue_pid=__trustm_readshm(ipc_FlagInterShmid);
-        }
-        
-
-        
-        TRUSTM_HELPER_DBGFN("Lock queue %d", queue_pid);
-
-        
+    
         pal_gpio_init(&optiga_reset_0);
         pal_gpio_init(&optiga_vdd_0);
         //Create an instance of optiga_util to open the application on OPTIGA.
-        me_util = optiga_util_create(0, optiga_util_callback, NULL);
+        me_util = optiga_util_create(0, helper_optiga_util_callback, NULL);
         if (NULL == me_util)
         {
             TRUSTM_HELPER_ERRFN("Fail : optiga_util_create\n");
@@ -1046,7 +918,7 @@ optiga_lib_status_t _trustm_Open(void)
         }
         TRUSTM_HELPER_DBGFN("TrustM util instance created. \n");
 
-        me_crypt = optiga_crypt_create(0, optiga_crypt_callback, NULL);
+        me_crypt = optiga_crypt_create(0, helper_optiga_crypt_callback, NULL);
         if (NULL == me_crypt)
         {
             TRUSTM_HELPER_ERRFN("Fail : optiga_crypt_create\n");
@@ -1228,7 +1100,8 @@ optiga_lib_status_t trustm_Close(void)
     trustm_open_flag = 0;
     /// IPC Release 
     mssleep(30);
-    __trustm_writeshm(ipc_FlagInterShmid,0);
+    trustm_ipc_release();
+    TRUSTM_HELPER_DBGFN("release shared memory.\n");
 
     TRUSTM_CLI_WORKAROUND_TIMER_DISARM;
     TRUSTM_HELPER_DBGFN("TrustM Closed.\n");
