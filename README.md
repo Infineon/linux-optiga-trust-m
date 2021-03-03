@@ -30,7 +30,7 @@
    * [trustm_symmetric_dec](#trustm_symmetric_dec)
    * [trustm_hkdf](#trustm_hkdf)
    * [trustm_hmac](#trustm_hmac)
-4. [Trust M1 OpenSSL Engine usage](#engine_usage)
+4. [Trust M1/M3 OpenSSL Engine usage](#engine_usage)
     * [rand](#rand)
     * [req](#req)
     * [pkey](#pkey)
@@ -43,7 +43,7 @@
 
 ## <a name="about"></a>About
 
-This is a command line tools tools and OpenSSL Engine for OPTIGA Trust M1 on Linux platform.
+This is a command line tools tools and OpenSSL Engine for OPTIGA Trust M1/M3 on Linux platform.
 
 
 ### <a name="prerequisites"></a>Prerequisites
@@ -52,7 +52,7 @@ Following is the software component to build the tools :
 * GCC
 * OpenSSL development library (libssl-dev)
 * OpenSSL 1.1.1d
-* OPTIGA Trust M1 library (source code)
+* OPTIGA Trust M1/M3 library (source code)
 * pthread
 * rt
 
@@ -90,19 +90,29 @@ This tools consists of the following files & directory:
 	│   ├── trustm_rsa_dec.c              // example of OPTIGA™ Trust M RSA Decode function
 	│   ├── trustm_rsa_enc.c              // example of OPTIGA™ Trust M RSA Encode function
 	│   ├── trustm_rsa_keygen.c           // RSA Key generation
-	│   ├── trustm_rsa_sign.c             //  example of OPTIGA™ Trust M RSA sign function
+	│   ├── trustm_rsa_sign.c             // example of OPTIGA™ Trust M RSA sign function
 	│   └── trustm_rsa_verify.c           // example of OPTIGA™ Trust M RSA verify function
+	│   └── trustm_symmetric_keygen.c     // symmetric Key generation
+	│   └── trustm_symmetric_enc.c        // example of OPTIGA™ Trust M symmetric key encryption function
+	│   └── trustm_symmetric_dec.c        // example of OPTIGA™ Trust M symmetric key decryption function
+	│   └── trustm_hkdf.c                // example of OPTIGA™ Trust M key derivation function
+	│   └── trustm_hmac.c                // example of OPTIGA™ Trust M hashed MAC function
 	├── Makefile                    // this project Makefile 
 	├── README.md                   // this read me file in Markdown format 
-	├── trustm_engine                     /* all trust M1 OpenSSL Engine source code       */
-	│   ├── trustm_engine.c               // entry point for Trust M1 OpenSSL Engine 
-	│   ├── trustm_engine_common.h        // header file for Trust M1 OpenSSL Engine
+	├── trustm_engine                     /* all trust M1/M3 OpenSSL Engine source code       */
+	│   ├── trustm_engine.c               // entry point for Trust M1/M3 OpenSSL Engine 
+	│   ├── trustm_engine.c               // entry point for Trust M1/M3 OpenSSL Engine
+    │   ├── trustm_engine_ipc_lock.c      // IPC shared memory functions for trustmEngine
+    │   ├── trustm_engine_ipc_lock.h      // header file for trustmEngine IPC shared memory functions
+	│   ├── trustm_engine_common.h        // header file for Trust M1/M3 OpenSSL Engine
 	│   ├── trustm_engine_rand.c          // Random number generator source  
 	│   └── trustm_engine_rsa.c           // RSA source 
 	├── trustm_helper                     /* Helper rountine for Trust M library           */
 	│   ├── include	                          /* Helper include directory
 	│   │   └── trustm_helper.h               // Helper header file
+	│   │   └── trustm_helper_ipc_lock.h     //  header file for trustm IPC shared memory functions
 	│   └── trustm_helper.c	              // Helper source 
+	│   └── trustm_helper_ipc_lock.c	  // IPC shared memory functions for trustm
 	└── trustm_lib                        /* Directory for trust M library */
 ```
 
