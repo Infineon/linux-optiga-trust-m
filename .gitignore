@@ -2,7 +2,7 @@
 # Object files
 *.o
 *.obj
-
+bin/
 
 # Shared objects (inc. Windows DLLs)
 *.so

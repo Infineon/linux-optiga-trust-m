@@ -164,7 +164,7 @@ $(APPS): %: $(OTHOBJ) $(INCSRC) $(BINDIR)/$(LIB) %.o
 	@echo "******* Linking $@ "
 	@mkdir -p bin
 	@$(CC) $@.o $(LDFLAGS_1) $(LDFLAGS) $(OTHOBJ) -o $@
-	@cp $@ bin/.
+	@mv $@ bin/.
 
 $(BINDIR)/$(LIB): %: $(LIBOBJ) $(INCSRC)
 	@echo "******* Linking $@ "
