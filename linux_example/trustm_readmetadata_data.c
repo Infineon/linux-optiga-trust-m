@@ -131,7 +131,7 @@ int main (int argc, char **argv)
             if(messagebuf != NULL)
             {
                 printf("===========================================\n");
-                printf(messagebuf);
+                puts(messagebuf);
 
                 if(uOptFlag.flags.bypass != 1)
                 {
