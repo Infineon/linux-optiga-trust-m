@@ -736,7 +736,7 @@ static int engine_destroy(ENGINE *e)
     {
         trustm_ctx.pubkey[i] = 0x00;
     }
-    
+    trustmEngine_Close();
     trustmEngine_ipc_release();
     
     TRUSTM_ENGINE_DBGFN("<");
