@@ -202,7 +202,7 @@ void trustm_ipc_release(void)
         TRUSTM_HELPER_DBGFN("release shared memory\n");
         __trustm_writeshm(ipc_FlagInterShmid,0xAA55);
     }
-    else if (queue_pid!=0)
+    else if (queue_pid!=0xAA55)
     {   TRUSTM_HELPER_DBGFN("shared memory used by others\n");
     }
     mssleep(30);
