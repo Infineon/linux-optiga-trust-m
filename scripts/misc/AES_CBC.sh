@@ -11,7 +11,10 @@ set -e
 
 for i in $(seq 1 1); do
 echo "test $i"
-
+echo "Checking Access Condition for 0xe200"
+$EXEPATH/trustm_metadata -r 0xe200
+echo "Set Change to ALW to enable AES Key Gen(Only executable when LcsO<op)"
+$EXEPATH/trustm_metadata -w 0xe200 -Ca
 echo "Testing AES128 CBC mode"
 $EXEPATH/trustm_symmetric_keygen -t 0x02 -k 0x81
 #~ echo "Encrypt message by TrustM AES128 CBC mode"

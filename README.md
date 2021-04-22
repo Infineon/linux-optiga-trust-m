@@ -484,7 +484,9 @@ List all the known OPTIGA™ Trust M error code with description
 
 Modify OPTIGA™ Trust M OID metadata.
 
-*Warning : -I, -O and -T option is not reversible.*
+***Warning : -I, -O and -T option is not reversible**.* 
+
+The Lcs is implemented in a way that the four primary states only progress in one direction from a lower value to a higher value(e.g. initialization(in)=>operational(op) state). Once Lcs0 is set to higher value, it is not reversible and can not be set to lower value any more.
 
 ```console
 foo@bar:~$ ./bin/trustm_metadata 
@@ -951,6 +953,8 @@ Verify Success.
 
 Simple demo to show the process to generate symmetric key using OPTIGA™ Trust M library.
 
+Note: The Access Condition CHA for OID 0xe200 must be set to "ALW"(Only executable when LcsO<op). Fore details, please refer to the test script AES_CBC.sh inside  "**cli-optiga-trust-m/scripts/misc/**"
+
 ```console
 foo@bar:~$ ./bin/trustm_symmetric_keygen 
 Help menu: trustm_symmetric_keygen <option> ...<option>
@@ -1054,6 +1058,8 @@ Success
 ###  <a name="trustm_hkdf"></a>trustm_hkdf
 
 Simple demo to show the process to derive key using OPTIGA™ Trust M library.
+
+Note: Fore detailed use case, please refer to the test script hkdf.sh inside  "**cli-optiga-trust-m/scripts/misc/**"
 
 ```console
 foo@bar:~$ ./bin/trustm_hkdf

@@ -15,7 +15,7 @@ echo "test $i"
 echo "Testing HMAC SHA256 function at 0xF1D0"
 echo "Write shared secret into 0xF1D0"
 $EXEPATH/trustm_data -e -w 0xf1d0 -i shared_secret.txt
-#~echo -e -n \\x20\\x11\\xC0\\x01\\x01\\xD0\\x03\\xE1\\xFC\\x07\\xD1\\01\\00\\xD3\\x01\\x00\\xE8\\x01\\x21 >metadata.bin
+echo -e -n \\x20\\x11\\xC0\\x01\\x01\\xD0\\x03\\xE1\\xFC\\x07\\xD1\\01\\00\\xD3\\x01\\x00\\xE8\\x01\\x21 >metadata.bin
 xxd metadata.bin
 $EXEPATH/trustm_metadata -w 0xf1d0 -F metadata.bin
 $EXEPATH/trustm_hmac -I 0xF1D0 -H 0X20 -i hmac.txt -o hmac_f1d0_256.txt
