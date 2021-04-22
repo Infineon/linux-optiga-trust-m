@@ -162,6 +162,8 @@ foo@bar:~$ sudo make uninstall
 
 ## <a name="cli_usage"></a>CLI Tools Usage
 
+Note:  To pair the host with OPTIGA™ Trust M, please run the test script "write_default_shared_secret" inside "**cli-optiga-trust-m/scripts/misc/**" to write the default shared secret into OPTIGA™ Trust M.
+
 ### <a name="trustm_cert"></a>trustm_cert
 
 Read/Write/Clear certificate from/to certificate data object. Output and input certificate in PEM format.
@@ -1059,7 +1061,7 @@ Success
 
 Simple demo to show the process to derive key using OPTIGA™ Trust M library.
 
-Note: Fore detailed use case, please refer to the test script hkdf.sh inside  "**cli-optiga-trust-m/scripts/misc/**"
+Note: For detailed use case, please refer to the test script hkdf.sh inside  "**cli-optiga-trust-m/scripts/misc/**"
 
 ```console
 foo@bar:~$ ./bin/trustm_hkdf
@@ -1108,6 +1110,8 @@ Decryption Key :
 ###  <a name="trustm_hmac"></a>trustm_hmac
 
 Simple demo to show the process to generate the MAC for the given input data using the secret installed in OPTIGA™ Trust M.
+
+Note: For detailed use case, please refer to the test script hmac.sh inside  "**cli-optiga-trust-m/scripts/misc/**"
 
 ```console
 foo@bar:~$ ./bin/trustm_hmac
