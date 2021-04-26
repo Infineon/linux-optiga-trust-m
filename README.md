@@ -486,7 +486,7 @@ List all the known OPTIGA™ Trust M error code with description
 
 Modify OPTIGA™ Trust M OID metadata.
 
-***Warning : -I, -O and -T option is not reversible**.* 
+***Warning : Any manipuldation with the lifecycle state LcsO like -I, -O and -T option might lock the data/key slot permanently. Depending on the access condition cofiguration "locking"  means you would be able to use it, but, for instance, not change.**.* 
 
 The Lcs is implemented in a way that the four primary states only progress in one direction from a lower value to a higher value(e.g. initialization(in)=>operational(op) state). Once Lcs0 is set to higher value, it is not reversible and can not be set to lower value any more.
 
