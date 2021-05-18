@@ -187,7 +187,7 @@ EVP_PKEY *trustm_ec_generatekey(void)
                                 0x2B,0x24,0x03,0x03,0x02,0x08,0x01,0x01,0x0d};                                                                                    
 
     TRUSTM_ENGINE_DBGFN(">");
-    TRUSTM_WORKAROUND_TIMER_ARM;
+    
     TRUSTM_ENGINE_APP_OPEN_RET(key,NULL);
     do
     {
@@ -334,7 +334,7 @@ EVP_PKEY *trustm_ec_loadkeyE0E0(void)
     
     optiga_lib_status_t return_status;
 
-    TRUSTM_WORKAROUND_TIMER_ARM; 
+    
     TRUSTM_ENGINE_APP_OPEN_RET(key,NULL);
     do
     {
@@ -492,65 +492,67 @@ static ECDSA_SIG* trustm_ecdsa_sign(
     TRUSTM_ENGINE_DBGFN("APPLIED digest length hack");
     }
 
-    TRUSTM_WORKAROUND_TIMER_ARM;    
+       
     TRUSTM_ENGINE_APP_OPEN_RET(ecdsa_sig,NULL);
     do 
     {  
         optiga_lib_status = OPTIGA_LIB_BUSY;
-        if((trustm_ctx.ec_key_curve == OPTIGA_ECC_CURVE_NIST_P_521) || (trustm_ctx.ec_key_curve == OPTIGA_ECC_CURVE_BRAIN_POOL_P_512R1)){
-        return_status = optiga_crypt_ecdsa_sign(me_crypt,
-                            dgst,
-                            dgstlen,
-                            trustm_ctx.key_oid,
-                            (sig+3),
-                            &sig_len);
-        if (OPTIGA_LIB_SUCCESS != return_status)
-            break;          
-        //Wait until the optiga_util_read_metadata operation is completed
-        trustmEngine_WaitForCompletion(BUSY_WAIT_TIME_OUT);
-        return_status = optiga_lib_status;
-        if (return_status != OPTIGA_LIB_SUCCESS)
-            break;
+        if((trustm_ctx.ec_key_curve == OPTIGA_ECC_CURVE_NIST_P_521) || (trustm_ctx.ec_key_curve == OPTIGA_ECC_CURVE_BRAIN_POOL_P_512R1))
+        {
+            return_status = optiga_crypt_ecdsa_sign(me_crypt,
+                                dgst,
+                                dgstlen,
+                                trustm_ctx.key_oid,
+                                (sig+3),
+                                &sig_len);
+            if (OPTIGA_LIB_SUCCESS != return_status)
+                break;          
+            //Wait until the optiga_util_read_metadata operation is completed
+            trustmEngine_WaitForCompletion(BUSY_WAIT_TIME_OUT);
+            return_status = optiga_lib_status;
+            if (return_status != OPTIGA_LIB_SUCCESS)
+                break;
+            else
+            {
+                TRUSTM_ENGINE_DBGFN("Signature received : sig+3=%x, sig_len=0x%x=%d",
+                (unsigned int) sig+3,
+                sig_len, sig_len);
+
+                sig[0] = 0x30;
+                sig[1] = 0x81;
+                sig[2] = sig_len;
+                TRUSTM_ENGINE_DBGFN("ecc curve: 0x%.4x",trustm_ctx.ec_key_curve);
+                trustmHexDump(sig,sig_len+3);            
+                const unsigned char *p = sig;
+                ecdsa_sig = d2i_ECDSA_SIG(NULL, &p, sig_len+3);
+            }
+        }
         else
         {
-            TRUSTM_ENGINE_DBGFN("Signature received : sig+3=%x, sig_len=0x%x=%d",
-            (unsigned int) sig+3,
-            sig_len, sig_len);
-
-            sig[0] = 0x30;
-            sig[1] = 0x81;
-            sig[2] = sig_len;
-            TRUSTM_ENGINE_DBGFN("ecc curve: 0x%.4x",trustm_ctx.ec_key_curve);
-            trustmHexDump(sig,sig_len+3);            
-            const unsigned char *p = sig;
-            ecdsa_sig = d2i_ECDSA_SIG(NULL, &p, sig_len+3);
-        }
-        }
-        else{
             return_status = optiga_crypt_ecdsa_sign(me_crypt,
                             dgst,
                             dgstlen,
                             trustm_ctx.key_oid,
                             (sig+2),
                             &sig_len);
-        if (OPTIGA_LIB_SUCCESS != return_status)
-            break;          
-        //Wait until the optiga_util_read_metadata operation is completed
-        trustmEngine_WaitForCompletion(BUSY_WAIT_TIME_OUT);
-        return_status = optiga_lib_status;
-        if (return_status != OPTIGA_LIB_SUCCESS)
-            break;
-        else
-        {
-            TRUSTM_ENGINE_DBGFN("Signature received : sig+2=%x, sig_len=0x%x=%d",
-            (unsigned int) sig+2,
-            sig_len, sig_len);
+            if (OPTIGA_LIB_SUCCESS != return_status)
+                break;          
+            //Wait until the optiga_util_read_metadata operation is completed
+            trustmEngine_WaitForCompletion(BUSY_WAIT_TIME_OUT);
+            return_status = optiga_lib_status;
+            if (return_status != OPTIGA_LIB_SUCCESS)
+                break;
+            else
+            {
+                TRUSTM_ENGINE_DBGFN("Signature received : sig+2=%x, sig_len=0x%x=%d",
+                (unsigned int) sig+2,
+                sig_len, sig_len);
 
-            sig[0] = 0x30;
-            sig[1] = sig_len;
-            const unsigned char *p = sig;
-            ecdsa_sig = d2i_ECDSA_SIG(NULL, &p, sig_len+2);
-        }
+                sig[0] = 0x30;
+                sig[1] = sig_len;
+                const unsigned char *p = sig;
+                ecdsa_sig = d2i_ECDSA_SIG(NULL, &p, sig_len+2);
+            }
         }
     }while(FALSE);
     TRUSTM_ENGINE_APP_CLOSE;

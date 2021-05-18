@@ -48,7 +48,9 @@
 #include "ifx_i2c_config.h"
 #include "optiga_util.h"
 #include "optiga_comms.h"
-#include "optiga_crypt.h"  
+#include "optiga_crypt.h"
+#include "shared_mutex.h"
+  
 
 //Debug Print
 //#define TRUSTM_HELPER_IPC_LOCK_DEBUG
@@ -62,8 +64,8 @@
 // Function Prototype
 
 void __trustm_ipcInit(void);
-void trustm_ipc_acquire(void);
-void trustm_ipc_release(void);
+void trustm_ipc_acquire(shared_mutex_t* shm_mutex, const char* mutex_name);
+void trustm_ipc_release(shared_mutex_t* shm_mutex);
 
 
 #endif  // _TRUSTM_HELPER_IPC_LOCK_H_

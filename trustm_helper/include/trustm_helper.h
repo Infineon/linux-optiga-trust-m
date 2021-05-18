@@ -46,7 +46,7 @@
 
 //Debug Print
 #define CLI_WORKAROUND 1
-//#define DEBUG_TRUSTM_HELPER =1
+//~ #define DEBUG_TRUSTM_HELPER =1
 //#define HIBERNATE_ENABLE =1
 
 #ifdef CLI_WORKAROUND
@@ -63,6 +63,9 @@
 
 #define TRUSTM_HELPER_DBG(x, ...)      fprintf(stderr, "%d:%s:%d " x "\n", getpid(),__FILE__, __LINE__, ##__VA_ARGS__)
 #define TRUSTM_HELPER_DBGFN(x, ...)    fprintf(stderr, "%d:%s:%d %s: " x "\n", getpid(),__FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
+//~ #define TRUSTM_HELPER_DBG(x, ...)      printf("%d:%s:%d " x "\n", getpid(),__FILE__, __LINE__, ##__VA_ARGS__)
+//~ #define TRUSTM_HELPER_DBGFN(x, ...)    printf("%d:%s:%d %s: " x "\n", getpid(),__FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
+
 #else
 #define TRUSTM_HELPER_DBG(x, ...)
 #define TRUSTM_HELPER_DBGFN(x, ...)
@@ -70,7 +73,7 @@
 
 #define TRUSTM_HELPER_INFO(...)    printf(__VA_ARGS__)
 #define TRUSTM_HELPER_ERRFN(x, ...)    fprintf(stderr, "%d:Error in %s:%d %s: " x "\n",getpid(), __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
-#define TRUSTM_HELPER_RETCODEFN(y, x, ...)   fprintf(stdout, "\n%d:Error [0x%.4X] : " x "\n",getpid(), y, ##__VA_ARGS__)
+#define TRUSTM_HELPER_RETCODEFN(y, x, ...)   fprintf(stderr, "\n%d:Error [0x%.4X] : " x "\n",getpid(), y, ##__VA_ARGS__)
 
 #define TRUSTM_CTX_FILENAME             ".trustm_ctx"
 #define TRUSTM_HIBERNATE_CTX_FILENAME   ".trustm_hibernate_ctx"

@@ -42,8 +42,8 @@
 #define PARAM_MAX_LEN        (128)
 
 #define WORKAROUND 1
-//#define TRUSTM_RAND_ENABLED 1
-//#define TRUSTM_ENGINE_DEBUG = 1
+#define TRUSTM_RAND_ENABLED 
+//~ #define TRUSTM_ENGINE_DEBUG 
 
 #ifdef WORKAROUND
 #define TRUSTM_WORKAROUND_TIMER_ARM        pal_os_event_arm()
@@ -61,7 +61,6 @@
 #define TRUSTM_ENGINE_DBGFN(x, ...)    fprintf(stderr, "%d:%s:%d %s: " x "\n", getpid(),__FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
 #define TRUSTM_ENGINE_ERRFN(x, ...)    fprintf(stderr, "%d:Error in %s:%d %s: " x "\n",getpid(), __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
 #define TRUSTM_ENGINE_MSGFN(x, ...)    fprintf(stderr, "%d:Message:%s:%d %s: " x "\n",getpid(), __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
-
 #else
 
 #define TRUSTM_ENGINE_DBG(x, ...)

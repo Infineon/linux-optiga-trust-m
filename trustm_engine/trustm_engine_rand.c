@@ -94,8 +94,9 @@ static int trustmEngine_getrandom(unsigned char *buf, int num)
     i = num % MAX_RAND_INPUT; // max random number output, find the reminder
     j = (num - i)/MAX_RAND_INPUT; // Get the count 
 
-    TRUSTM_WORKAROUND_TIMER_ARM; 
+    
     TRUSTM_ENGINE_APP_OPEN_RET(ret,TRUSTM_ENGINE_FAIL);
+    //~ TRUSTM_WORKAROUND_TIMER_ARM; 
     do 
     {   
         k = 0;

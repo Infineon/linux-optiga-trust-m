@@ -29,9 +29,10 @@
 
 #include "optiga/pal/pal_ifx_i2c_config.h"
 #include "trustm_helper.h"
+#include "trustm_helper_ipc_lock.h"
 
 #include "trustm_engine_common.h"
-#include "trustm_engine_ipc_lock.h"
+
 
 
 #ifdef WORKAROUND
@@ -41,6 +42,8 @@
 #endif
 
 trustm_ctx_t trustm_ctx;
+shared_mutex_t trustm_eng_mutex;
+shared_mutex_t ssl_mutex;
 
 extern void pal_os_event_disarm(void);
 
@@ -188,35 +191,36 @@ optiga_lib_status_t trustmEngine_Open(void)
         //pal_gpio_init(&optiga_vdd_0);
         
         //Create an instance of optiga_util to open the application on OPTIGA.
-        trustmEngine_ipc_acquire();
+        trustm_ipc_acquire(&trustm_eng_mutex,"/trustm-mutex");
         if (me_util == NULL)
         {
-             me_util = optiga_util_create(0, engine_optiga_util_callback, NULL);
-        if (NULL == me_util)
-        {
-            TRUSTM_ENGINE_ERRFN("Fail : optiga_util_create\n");
-            return_status = OPTIGA_UTIL_ERROR;
-            break;
-        }
-        TRUSTM_ENGINE_DBGFN("optiga_util_create OK \n");
+            me_util = optiga_util_create(0, engine_optiga_util_callback, NULL);
+            if (NULL == me_util)
+            {
+                TRUSTM_ENGINE_ERRFN("Fail : optiga_util_create\n");
+                return_status = OPTIGA_UTIL_ERROR;
+                break;
+            }
+            TRUSTM_ENGINE_DBGFN("optiga_util_create OK \n");
         }else
         {   TRUSTM_ENGINE_DBGFN("TrustM util instance exists. \n");
         }
 
         if(me_crypt ==NULL)
         {
-        me_crypt = optiga_crypt_create(0, engine_optiga_crypt_callback, NULL);
-        if (NULL == me_crypt)
-        {
-            TRUSTM_ENGINE_ERRFN("Fail : optiga_crypt_create\n");
-            return_status = OPTIGA_CRYPT_ERROR;
-            break;
-        }
-        TRUSTM_ENGINE_DBGFN("optiga_crypt_create OK \n");
+            me_crypt = optiga_crypt_create(0, engine_optiga_crypt_callback, NULL);
+            if (NULL == me_crypt)
+            {
+                TRUSTM_ENGINE_ERRFN("Fail : optiga_crypt_create\n");
+                return_status = OPTIGA_CRYPT_ERROR;
+                break;
+            }
+            TRUSTM_ENGINE_DBGFN("optiga_crypt_create OK \n");
         }else
         {
             TRUSTM_ENGINE_DBGFN("TrustM crypt instance exists. \n");
         }
+        TRUSTM_WORKAROUND_TIMER_ARM;
         return_status = OPTIGA_LIB_SUCCESS;
         TRUSTM_ENGINE_DBGFN("TrustM crypt instance created. \n");
         TRUSTM_ENGINE_DBGFN("TrustM Open. \n");
@@ -456,8 +460,8 @@ optiga_lib_status_t trustmEngine_App_Close(void)
     trustmEngine_Close();
     trustm_ctx.appOpen = 0;   
     /// IPC Release 
-    mssleep(30);
-    trustmEngine_ipc_release();
+    //~ mssleep(30);
+    trustm_ipc_release(&trustm_eng_mutex);
     TRUSTM_ENGINE_DBGFN("<");
     return return_status;
 }
@@ -486,8 +490,9 @@ static uint32_t parseKeyParams(const char *aArg)
     const char needle[3] = "0x";    
     char *ptr;
     TRUSTM_ENGINE_DBGFN(">");
-    TRUSTM_WORKAROUND_TIMER_ARM;
+    
     TRUSTM_ENGINE_APP_OPEN_RET(NULL,NULL);
+    //~ TRUSTM_WORKAROUND_TIMER_ARM;
     do
     {
         strcpy(in, aArg);
@@ -711,7 +716,7 @@ static int engine_destroy(ENGINE *e)
     uint16_t i;
     
     TRUSTM_ENGINE_DBGFN("> Engine 0x%x destroy", (unsigned int) e);
-
+    trustm_ipc_acquire(&ssl_mutex,"/ssl-mutex");
     //Clear TrustM context
     trustm_ctx.key_oid = 0x0000;
     trustm_ctx.rsa_key_type = 0;
@@ -737,8 +742,8 @@ static int engine_destroy(ENGINE *e)
         trustm_ctx.pubkey[i] = 0x00;
     }
     trustmEngine_Close();
-    trustmEngine_ipc_release();
     
+    trustm_ipc_release(&ssl_mutex);
     TRUSTM_ENGINE_DBGFN("<");
     return TRUSTM_ENGINE_SUCCESS;
 }
@@ -761,10 +766,10 @@ static int engine_finish(ENGINE *e)
 static EVP_PKEY * engine_load_privkey(ENGINE *e, const char *key_id, UI_METHOD *ui, void *cb_data)
 {
     EVP_PKEY    *key         = NULL;    
-    trustmEngine_ipc_acquire();
+    
     
     TRUSTM_ENGINE_DBGFN("> key_id : %s", key_id);
-
+    trustm_ipc_acquire(&ssl_mutex,"/ssl-mutex");
     do 
     {
         if(parseKeyParams(key_id) == 0)
@@ -815,7 +820,7 @@ static EVP_PKEY * engine_load_privkey(ENGINE *e, const char *key_id, UI_METHOD *
         
     }while(FALSE);
     TRUSTM_WORKAROUND_TIMER_DISARM;
-
+    trustm_ipc_release(&ssl_mutex);
     TRUSTM_ENGINE_DBGFN("<");
     return key;
 }
@@ -839,7 +844,7 @@ static EVP_PKEY * engine_load_pubkey(ENGINE *e, const char *key_id, UI_METHOD *u
     uint16_t i;
         
     TRUSTM_ENGINE_DBGFN("> key_id : %s", key_id);
-
+    trustm_ipc_acquire(&ssl_mutex,"/ssl-mutex");
     do {
         if (key_id == NULL)
         {
@@ -878,7 +883,7 @@ static EVP_PKEY * engine_load_pubkey(ENGINE *e, const char *key_id, UI_METHOD *u
         }
         
     }while(FALSE);
-
+    trustm_ipc_release(&ssl_mutex);
     TRUSTM_ENGINE_DBGFN("<");
     return key;
 }
@@ -905,11 +910,10 @@ static int engine_ctrl(ENGINE *e, int cmd, long i, void *p, void (*f) ())
 static int engine_init(ENGINE *e)
 {
     static int initialized = 0;
-    optiga_lib_status_t return_status;
 
     int ret = TRUSTM_ENGINE_FAIL;
     TRUSTM_ENGINE_DBGFN("> Engine 0x%x init", (unsigned int) e);
-
+    trustm_ipc_acquire(&ssl_mutex,"/ssl-mutex");
     do {
         TRUSTM_ENGINE_DBGFN("Initializing");
         if (initialized) {
@@ -922,14 +926,6 @@ static int engine_init(ENGINE *e)
         pal_gpio_init(&optiga_reset_0);
         pal_gpio_init(&optiga_vdd_0);
         
-        return_status = trustmEngine_Open();
-        if (return_status != OPTIGA_LIB_SUCCESS)
-        {
-            TRUSTM_ENGINE_ERRFN("Fail to open trustM!!");
-            ret = TRUSTM_ENGINE_FAIL; 
-            exit(1);
-            //break;
-        }
 
         //Init TrustM context
         trustm_ctx.key_oid = 0x0000;
@@ -952,13 +948,13 @@ static int engine_init(ENGINE *e)
         trustm_ctx.ipcInit = 0;
 
         // Init Random Method
-        #ifdef TRUSTM_RAND_ENABLED 
+#ifdef TRUSTM_RAND_ENABLED 
         ret = trustmEngine_init_rand(e);
         if (ret != TRUSTM_ENGINE_SUCCESS) {
             TRUSTM_ENGINE_ERRFN("Init Rand Fail!!");
             break;
         }
-        #endif
+#endif
 
         // Init RSA Method
         ret = trustmEngine_init_rsa(e);
@@ -976,7 +972,7 @@ static int engine_init(ENGINE *e)
 
         initialized = 1;
     }while(FALSE);
-    
+    trustm_ipc_release(&ssl_mutex);
     TRUSTM_ENGINE_DBGFN("<");
     return ret;
 }
@@ -986,7 +982,7 @@ static int bind(ENGINE *e, const char *id)
     int ret = TRUSTM_ENGINE_FAIL;
     
     TRUSTM_ENGINE_DBGFN(">");
-    trustmEngine_ipc_acquire();
+   
 
     do {         
         if (!ENGINE_set_id(e, engine_id)) {
@@ -1039,7 +1035,7 @@ static int bind(ENGINE *e, const char *id)
 */
         ret = TRUSTM_ENGINE_SUCCESS;
     }while(FALSE);
-    trustmEngine_ipc_release();
+ 
     TRUSTM_ENGINE_DBGFN("<");
     return ret;
   }

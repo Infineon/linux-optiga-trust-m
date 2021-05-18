@@ -58,7 +58,7 @@ optiga_crypt_t * me_crypt;
 optiga_lib_status_t optiga_lib_status;
 uint16_t trustm_open_flag = 0;
 uint8_t trustm_hibernate_flag = 0;
-
+shared_mutex_t trustm_mutex;
 /*************************************************************************
 *  functions
 *************************************************************************/
@@ -899,7 +899,8 @@ optiga_lib_status_t _trustm_Open(void)
 {
     optiga_lib_status_t return_status = OPTIGA_LIB_BUSY;
     
-    trustm_ipc_acquire();
+    
+    trustm_ipc_acquire(&trustm_mutex,"/trustm-mutex");
 
 
     TRUSTM_HELPER_DBGFN(">");
@@ -910,14 +911,20 @@ optiga_lib_status_t _trustm_Open(void)
         pal_gpio_init(&optiga_reset_0);
         pal_gpio_init(&optiga_vdd_0);
         //Create an instance of optiga_util to open the application on OPTIGA.
-        me_util = optiga_util_create(0, helper_optiga_util_callback, NULL);
-        if (NULL == me_util)
-        {
-            TRUSTM_HELPER_ERRFN("Fail : optiga_util_create\n");
-            break;
-        }
-        TRUSTM_HELPER_DBGFN("TrustM util instance created. \n");
-
+     if (NULL == me_util)
+     {        
+            me_util = optiga_util_create(0, helper_optiga_util_callback, NULL);
+            if (NULL == me_util)
+            {
+                TRUSTM_HELPER_ERRFN("Fail : optiga_util_create\n");
+                break;
+            }
+            TRUSTM_HELPER_DBGFN("TrustM util instance created. \n");
+     }else
+     {  TRUSTM_HELPER_DBGFN("TrustM me_util instance exist. \n");
+         }
+     if (NULL == me_crypt)
+     {
         me_crypt = optiga_crypt_create(0, helper_optiga_crypt_callback, NULL);
         if (NULL == me_crypt)
         {
@@ -925,7 +932,11 @@ optiga_lib_status_t _trustm_Open(void)
             break;
         }
         TRUSTM_HELPER_DBGFN("TrustM crypt instance created. \n");
-
+     }
+     else
+     {  TRUSTM_HELPER_DBGFN("TrustM me_crypt instance exist. \n");
+         
+        }
         TRUSTM_HELPER_DBGFN("TrustM Open. \n");
 
         /**
@@ -1099,8 +1110,8 @@ optiga_lib_status_t trustm_Close(void)
     }
     trustm_open_flag = 0;
     /// IPC Release 
-    mssleep(30);
-    trustm_ipc_release();
+    //~ mssleep(30);
+    trustm_ipc_release(&trustm_mutex);
     TRUSTM_HELPER_DBGFN("release shared memory.\n");
 
     TRUSTM_CLI_WORKAROUND_TIMER_DISARM;

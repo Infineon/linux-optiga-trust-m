@@ -51,159 +51,62 @@
 /*************************************************************************
 *  Global
 *************************************************************************/
-//Globe Variable
-// for IPC
-// ---- InterCom
-#define IPC_FLAGSIZE    sizeof(pid_t)
-#define IPC_SLEEP_STEPS 1
-#define MAX_IPC_TIME 50
 
-key_t ipc_FlagInterKey;
-int   ipc_FlagInterShmid;
-pid_t ipc_queue;
-unsigned char ipc_value;
-unsigned char ipc_temp;
-long ipc_task;
 /*************************************************************************
 *  functions
 *************************************************************************/
 
-/**********************************************************************
-* __trustm_writeshm()
-**********************************************************************/
-static void __trustm_writeshm(int shmid,pid_t data)
-{
-    pid_t  *Flag_segptr;
-
-    /* Attach (map) the shared memory segment into the current process */
-     if((Flag_segptr = (pid_t *)shmat(shmid, 0, 0)) == (pid_t *)-1)
-     {
-             perror("write flag shmat");
-             //exit(1);
-             return;
-     }
-
-     *Flag_segptr=data;
-     shmdt(Flag_segptr);
-}
-
-/**********************************************************************
-* __trustm_readshm()
-**********************************************************************/
-static pid_t __trustm_readshm(int shmid)
-{   pid_t  *Flag_segptr;
-    pid_t Flag;
-    /* Attach (map) the shared memory segment into the current process */
-     if((Flag_segptr = (pid_t *)shmat(shmid, 0, 0)) == (pid_t *)-1)
-     {
-             perror("read flag shmat");
-             //exit(1);
-             return 0;
-     }
-     Flag = *Flag_segptr;
-     shmdt(Flag_segptr);
-
-    return Flag;
-}
-
-/**********************************************************************
-* __trustm_ipcInit()
-**********************************************************************/
-void __trustm_ipcInit(void)
-{
-	/* Unique Key for InterCom */
-    ipc_FlagInterKey = 0x11111123;
-    pid_t pid;
-
-  	/* Open the shared memory segment - create if necessary */
-    if((ipc_FlagInterShmid = shmget(ipc_FlagInterKey, IPC_FLAGSIZE, IPC_CREAT|IPC_EXCL|0666)) == -1)
-    {
-        TRUSTM_HELPER_DBGFN("Shared memory segment exists - opening as client");
-        /* Segment probably already exists - try as a client */
-        if((ipc_FlagInterShmid = shmget(ipc_FlagInterKey, IPC_FLAGSIZE, 0)) == -1)
-        {
-            perror("Init shmget");
-            exit(1);
-        }
-    }
-    else
-    {
-        // First created so init queue
-        pid=getpid();
-        TRUSTM_HELPER_DBGFN("Init Queue %d", pid);
-        
-        //~ __trustm_writeshm(ipc_FlagInterShmid,0x1);
-        __trustm_writeshm(ipc_FlagInterShmid,pid); // stores the current PID
-    }
-}
 
 /**********************************************************************
 * trustm_ipc_acquire()
 **********************************************************************/
-void trustm_ipc_acquire(void)
+
+void trustm_ipc_acquire(shared_mutex_t* shm_mutex, const  char* mutex_name)
 {
-    pid_t current_pid;
-    pid_t queue_pid;
-    int queue_delay;
-
-     __trustm_ipcInit();
-
-    /// IPC Check
-    current_pid=getpid();
-    queue_delay= ((current_pid %MAX_IPC_TIME)+1)*IPC_SLEEP_STEPS;; // wait for 0 to 20ms at IPC_SLEEP_STEPS steps depends on process number
-    mssleep(queue_delay);
     
-    queue_pid = __trustm_readshm(ipc_FlagInterShmid);
-    TRUSTM_HELPER_DBGFN("Check if TrustM Open:queue %d:current:%d:Delay %d", queue_pid,current_pid,queue_delay);
-    if (queue_pid ==0xAA55)
-    {    __trustm_writeshm(ipc_FlagInterShmid,current_pid); /*write pid into shared memory*/
-        queue_pid = __trustm_readshm(ipc_FlagInterShmid);
-        TRUSTM_HELPER_DBGFN("Resource seized by %d",current_pid);
-    }    
-   
-    while ( queue_pid !=current_pid)  /*Check if taken by other process and wait*/
-    {
-        queue_pid = __trustm_readshm(ipc_FlagInterShmid);
-        if (queue_pid ==0XAA55)
-        {    __trustm_writeshm(ipc_FlagInterShmid,current_pid); /*write pid into shared memory*/
-            //queue_pid=__trustm_readshm(ipc_FlagInterShmid);
-            TRUSTM_HELPER_DBGFN("Resource seized by %d",current_pid);
-        }
-        else if (kill(queue_pid,0) == -1) 
-        {
-          mssleep(100); 
-          queue_pid = __trustm_readshm(ipc_FlagInterShmid);
-          if (kill(queue_pid,0) == -1)
-          {
-              TRUSTM_HELPER_DBGFN("Process does not exist1:%d", queue_pid);
-              __trustm_writeshm(ipc_FlagInterShmid,current_pid);
-              //queue_pid=__trustm_readshm(ipc_FlagInterShmid);
-            }
-        }
-        queue_delay= ((current_pid %MAX_IPC_TIME)+1)*IPC_SLEEP_STEPS; // wait for 1 to MAX_IPC_TIME at IPC_SLEEP_STEPS steps depends on process number
-        mssleep(queue_delay);
-        queue_pid=__trustm_readshm(ipc_FlagInterShmid);
-    }
-    TRUSTM_HELPER_DBGFN("Lock queue %d", queue_pid);
+    int result;
+    TRUSTM_HELPER_DBGFN(">");
     
+    *shm_mutex= shared_mutex_init(mutex_name);
+    if (shm_mutex->ptr == NULL) {
+        TRUSTM_HELPER_DBGFN("Mutex create failed\n");
+          return;
+       }
+
+       
+      
+    result = pthread_mutex_lock(shm_mutex->ptr);
+    TRUSTM_HELPER_DBGFN("Lock Mutex:%s: %x\n",mutex_name,(unsigned int)shm_mutex->ptr);
+	if (result == EOWNERDEAD)
+	{
+		result = pthread_mutex_consistent(shm_mutex->ptr);
+		if (result != 0)
+			perror("pthread_mutex_consistent");
+        TRUSTM_HELPER_DBGFN("process owner dead, make it consistent\n");     
+	}
+    if (shm_mutex->created) {
+            TRUSTM_HELPER_DBGFN("The mutex was just created %x\n",*shm_mutex->pid);
+            *shm_mutex->pid = EMPTY_PID;
+       }
+    
+    TRUSTM_MUTEX_DBGFN("<");
 }
 
 /**********************************************************************
 * trustm_ipc_release(void)
 **********************************************************************/
-void trustm_ipc_release(void)
+void trustm_ipc_release(shared_mutex_t* shm_mutex)
 {
-    pid_t current_pid;
-    pid_t queue_pid;  
-    current_pid=getpid();
-    queue_pid = __trustm_readshm(ipc_FlagInterShmid);
-    if (current_pid==queue_pid)
-    {
-        TRUSTM_HELPER_DBGFN("release shared memory\n");
-        __trustm_writeshm(ipc_FlagInterShmid,0xAA55);
-    }
-    else if (queue_pid!=0xAA55)
-    {   TRUSTM_HELPER_DBGFN("shared memory used by others\n");
-    }
-    mssleep(30);
+  TRUSTM_HELPER_DBGFN(">");
+  pthread_mutex_unlock(shm_mutex->ptr); 
+  TRUSTM_HELPER_DBGFN("mutex unlock:%s:%x",shm_mutex->name, (unsigned int)shm_mutex->ptr);
+ 
+  shared_mutex_close(*shm_mutex);
+  TRUSTM_HELPER_DBGFN("mutex closed");
+  
+   TRUSTM_HELPER_DBGFN("<");
+  
 }
+
+
+
