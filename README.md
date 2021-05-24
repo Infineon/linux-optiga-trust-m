@@ -102,8 +102,8 @@ This tools consists of the following files & directory:
 	├── trustm_engine                     /* all trust M1/M3 OpenSSL Engine source code       */
 	│   ├── trustm_engine.c               // entry point for Trust M1/M3 OpenSSL Engine 
 	│   ├── trustm_engine.c               // entry point for Trust M1/M3 OpenSSL Engine
-    │   ├── trustm_engine_ipc_lock.c      // IPC shared memory functions for trustmEngine
-    │   ├── trustm_engine_ipc_lock.h      // header file for trustmEngine IPC shared memory functions
+        │   ├── trustm_engine_ipc_lock.c      // IPC shared memory functions for trustmEngine
+        │   ├── trustm_engine_ipc_lock.h      // header file for trustmEngine IPC shared memory functions
 	│   ├── trustm_engine_common.h        // header file for Trust M1/M3 OpenSSL Engine
 	│   ├── trustm_engine_rand.c          // Random number generator source  
 	│   └── trustm_engine_rsa.c           // RSA source 
@@ -1738,15 +1738,7 @@ In the *simpleTest_Client.c* code ~ line number 53-63. List the macro for changi
 - DEFAULT_PORT   *\<Port to use for connection>*
 - SECURE_COMM   *\<SSL Protocol to be used TLS/DTLS>*
 
-## <a name="known_issues"></a>Known issues
-
-### Sporadic hang or segment fault seem when using the OpenSSL Engine
-
-When sporadic hanging or segment fault is seem when using the OpenSSL engine (Especially after modification of the engine code). Ensure that the pal_os_event.c patch is implemented. In the engine code ensure that trustm_disarm_timer(); is call after any OPTIGA™ Trust M library API is used.
-
-### At time display may show misalignment
-
-Run the tools again to refresh the output.
+## <a name="known_observations"></a>Known issues
 
 ### Secure communication bypass
 
@@ -1756,10 +1748,4 @@ The I2C secure communication bypass option for CLI only works if the default res
 
 Check the hardware reset pin if it is connected with an active reset GPIO as assigned n the OPTIGA™ Trust M library. Alternatively, you could configure the library to use software reset.
 
-### Security Event Counter : x [waiting. Ctrl+c to abort.] message when command line ends
 
-The CLI at this point is waiting for the Security Event Counter [0xE0C5] to countdown to zero before it can save the context. You can either wait till the counter return to zero which may take some time depending on the counter value. Alternatively, you can press Ctrl-c to break the program. Note that if you break the program using Ctrl-c, the next CLI command will still wait for the countdown as long as the Security Event Counter is not zero.
-
-### After replacing OPTIGA™ Trust M Error message "Error in trustm_helper/trustm_helper.c:884 trustm_Open: Fail : optiga_util_open_application" occurs
-
-This is due to the context mis-match. Delete the hidden file .trustm_ctx and .trustm_hibernate_ctx to resolve the issue.
