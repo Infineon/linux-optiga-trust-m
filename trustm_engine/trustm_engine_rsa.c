@@ -170,7 +170,7 @@ static EVP_PKEY *trustm_rsa_generatekey(void)
         key = d2i_PUBKEY(NULL,(const unsigned char **)&data,public_key_length+i);
     } while (FALSE);
     TRUSTM_ENGINE_APP_CLOSE;
-    TRUSTM_WORKAROUND_TIMER_DISARM;
+    
     
     // Capture OPTIGA Error
     if (return_status != OPTIGA_LIB_SUCCESS)
@@ -279,7 +279,7 @@ static int trustmEngine_rsa_priv_enc(int flen,
         ret = templen;
     }while(FALSE);
     TRUSTM_ENGINE_APP_CLOSE;
-    TRUSTM_WORKAROUND_TIMER_DISARM;
+    
     // Capture OPTIGA Error
     if (return_status != OPTIGA_LIB_SUCCESS)
     trustmPrintErrorCode(return_status);
@@ -344,7 +344,7 @@ static int trustmEngine_rsa_priv_dec(int flen,
 
     } while (FALSE);
     TRUSTM_ENGINE_APP_CLOSE;
-    TRUSTM_WORKAROUND_TIMER_DISARM;
+    
 
     // Capture OPTIGA Error
     if (return_status != OPTIGA_LIB_SUCCESS)
@@ -425,7 +425,7 @@ static int trustmEngine_rsa_pub_enc(int flen,
 
     } while (FALSE);
     TRUSTM_ENGINE_APP_CLOSE;
-    TRUSTM_WORKAROUND_TIMER_DISARM;
+    
     // Capture OPTIGA Error
     if (return_status != OPTIGA_LIB_SUCCESS)
     trustmPrintErrorCode(return_status);
@@ -508,7 +508,7 @@ static int trustmEngine_rsa_sign(int type,
         ret = TRUSTM_ENGINE_SUCCESS;
     }while(FALSE);
     TRUSTM_ENGINE_APP_CLOSE;
-    TRUSTM_WORKAROUND_TIMER_DISARM;
+    
 
     // Capture OPTIGA Error
     if (return_status != OPTIGA_LIB_SUCCESS)
@@ -582,7 +582,7 @@ int trustmEngine_rsa_verify(int dtype,
         ret = TRUSTM_ENGINE_SUCCESS;
     }while(FALSE);
     TRUSTM_ENGINE_APP_CLOSE;
-    TRUSTM_WORKAROUND_TIMER_DISARM;
+    
 
     // Capture OPTIGA Error
     if (return_status != OPTIGA_LIB_SUCCESS)

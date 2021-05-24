@@ -307,7 +307,7 @@ EVP_PKEY *trustm_ec_generatekey(void)
             key = d2i_PUBKEY(NULL,(const unsigned char **)&data,public_key_length+i);
     } while (FALSE);
     TRUSTM_ENGINE_APP_CLOSE;
-    TRUSTM_WORKAROUND_TIMER_DISARM;
+    
     
     // Capture OPTIGA Error
     if (return_status != OPTIGA_LIB_SUCCESS)
@@ -390,7 +390,7 @@ EVP_PKEY *trustm_ec_loadkeyE0E0(void)
 
     } while(FALSE);
     TRUSTM_ENGINE_APP_CLOSE;
-    TRUSTM_WORKAROUND_TIMER_DISARM;
+    
     
     // Capture OPTIGA Error
     if (return_status != OPTIGA_LIB_SUCCESS)
@@ -556,7 +556,7 @@ static ECDSA_SIG* trustm_ecdsa_sign(
         }
     }while(FALSE);
     TRUSTM_ENGINE_APP_CLOSE;
-    TRUSTM_WORKAROUND_TIMER_DISARM;
+    
 
     // Capture OPTIGA Error
     if (return_status != OPTIGA_LIB_SUCCESS)

@@ -141,7 +141,7 @@ static int trustmEngine_getrandom(unsigned char *buf, int num)
         ret = TRUSTM_ENGINE_SUCCESS;
     }while(FALSE);
     TRUSTM_ENGINE_APP_CLOSE;
-    TRUSTM_WORKAROUND_TIMER_DISARM;
+    
   
 	// Capture OPTIGA Error
 	if (return_status != OPTIGA_LIB_SUCCESS)

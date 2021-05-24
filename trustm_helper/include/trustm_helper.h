@@ -47,7 +47,7 @@
 //Debug Print
 #define CLI_WORKAROUND 1
 //~ #define DEBUG_TRUSTM_HELPER =1
-//#define HIBERNATE_ENABLE =1
+//~ #define TRUST_CLOSE_APP_ENABLE
 
 #ifdef CLI_WORKAROUND
 #define TRUSTM_CLI_WORKAROUND_TIMER_ARM        pal_os_event_arm()
@@ -63,9 +63,6 @@
 
 #define TRUSTM_HELPER_DBG(x, ...)      fprintf(stderr, "%d:%s:%d " x "\n", getpid(),__FILE__, __LINE__, ##__VA_ARGS__)
 #define TRUSTM_HELPER_DBGFN(x, ...)    fprintf(stderr, "%d:%s:%d %s: " x "\n", getpid(),__FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
-//~ #define TRUSTM_HELPER_DBG(x, ...)      printf("%d:%s:%d " x "\n", getpid(),__FILE__, __LINE__, ##__VA_ARGS__)
-//~ #define TRUSTM_HELPER_DBGFN(x, ...)    printf("%d:%s:%d %s: " x "\n", getpid(),__FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
-
 #else
 #define TRUSTM_HELPER_DBG(x, ...)
 #define TRUSTM_HELPER_DBGFN(x, ...)

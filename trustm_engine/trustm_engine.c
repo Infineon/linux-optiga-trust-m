@@ -97,6 +97,7 @@ void engine_optiga_crypt_callback(void * context, optiga_lib_status_t return_sta
 /**********************************************************************
 * __trustmEngine_delay()
 **********************************************************************/
+/*
 static void __trustmEngine_delay (int cnt)
 {
     uint32_t wait;
@@ -104,7 +105,7 @@ static void __trustmEngine_delay (int cnt)
     for(wait=0;wait<(0x1fffffff*cnt);wait++)
     {}
 }
-
+*/
 /**********************************************************************
 * trustmEngine_WaitForCompletion()
 **********************************************************************/
@@ -132,6 +133,7 @@ optiga_lib_status_t trustmEngine_WaitForCompletion(uint16_t wait_time)
 /**********************************************************************
 * __trustmEngine_secCnt()
 **********************************************************************/
+/*
 static uint8_t __trustmEngine_secCnt(void)
 {
     uint16_t offset, bytes_to_read;
@@ -175,7 +177,7 @@ static uint8_t __trustmEngine_secCnt(void)
 
     return read_data_buffer[0];
 }
-
+*/
 /**********************************************************************
 * trustmEngine_Open()
 **********************************************************************/
@@ -187,8 +189,6 @@ optiga_lib_status_t trustmEngine_Open(void)
 
     do
     {
-        //pal_gpio_init(&optiga_reset_0);
-        //pal_gpio_init(&optiga_vdd_0);
         
         //Create an instance of optiga_util to open the application on OPTIGA.
         trustm_ipc_acquire(&trustm_eng_mutex,"/trustm-mutex");
@@ -223,7 +223,7 @@ optiga_lib_status_t trustmEngine_Open(void)
         TRUSTM_WORKAROUND_TIMER_ARM;
         return_status = OPTIGA_LIB_SUCCESS;
         TRUSTM_ENGINE_DBGFN("TrustM crypt instance created. \n");
-        TRUSTM_ENGINE_DBGFN("TrustM Open. \n");
+        
 
     }while(FALSE);      
 
@@ -240,18 +240,13 @@ optiga_lib_status_t trustmEngine_App_Open_Recovery(void)
     optiga_lib_status_t return_status;
     
     TRUSTM_ENGINE_DBGFN(">");
-    if  (trustm_ctx.appOpen == 1)
-    {   
-        TRUSTM_ENGINE_DBGFN("Trust M already openned, Close and re-open again");
-        trustmEngine_App_Close();
-    }
       
     trustm_hibernate_flag = 0; 
     return_status = trustmEngine_App_Open();
     if (return_status != OPTIGA_LIB_SUCCESS) 
     { 
        TRUSTM_ENGINE_DBGFN("Error opening Trust M, Retry 1");
-       trustm_ctx.appOpen=1;
+      
        trustmEngine_App_Close();
        return_status = trustmEngine_App_Open();
        if (return_status != OPTIGA_LIB_SUCCESS)
@@ -274,7 +269,7 @@ optiga_lib_status_t trustmEngine_App_Open(void)
     TRUSTM_ENGINE_DBGFN(">");
     do
     {
-        trustm_ctx.appOpen = 0;
+       
         return_status = trustmEngine_Open();
         if (return_status != OPTIGA_LIB_SUCCESS)
         {
@@ -285,74 +280,36 @@ optiga_lib_status_t trustmEngine_App_Open(void)
          * Open the application on OPTIGA which is a precondition to perform any other operations
          * using optiga_util_open_application
          */        
-        optiga_lib_status = OPTIGA_LIB_BUSY;
-        if ((access(TRUSTM_HIBERNATE_CTX_FILENAME,F_OK) != -1) &&
-            (access(TRUSTM_CTX_FILENAME,F_OK) != -1) &&
-            (trustm_hibernate_flag != 0))
-        {
-            TRUSTM_ENGINE_DBGFN("Hibernate ctx found. Restore ctx\n");
-            return_status = optiga_util_open_application(me_util, 1); // perform restore
-        }
-        else
-        {
-            TRUSTM_ENGINE_DBGFN("No hibernate ctx found. Skip restore\n");
-            return_status = optiga_util_open_application(me_util, 0); // skip restore
-        }
-        
-        if (OPTIGA_LIB_SUCCESS != return_status)
-        {
-            TRUSTM_ENGINE_ERRFN("Fail : optiga_util_open_application[1] \n");
-            break;
-        }
-
-        TRUSTM_ENGINE_DBGFN("waiting...");
-        //Wait until the optiga_util_open_application is completed
-        trustmEngine_WaitForCompletion(BUSY_WAIT_TIME_OUT);
-        TRUSTM_ENGINE_DBG("++done.\n");
-
-        if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
-        {
-            //optiga util open application failed
-            TRUSTM_ENGINE_ERRFN("Fail : optiga_util_open_application \n");
-            trustmPrintErrorCode(optiga_lib_status);
+        if(*trustm_eng_mutex.pid==EMPTY_PID || *trustm_eng_mutex.pid != getpid() )
+        {   
+            TRUSTM_ENGINE_DBGFN("optiga_util_open_application:Init");
+            optiga_lib_status = OPTIGA_LIB_BUSY;
+            return_status = optiga_util_open_application(me_util, 0);
             
-            // restore hibernate fail try again withot restore
-            if(trustm_hibernate_flag != 0)
+            if (OPTIGA_LIB_SUCCESS != return_status)
             {
-                do {
-                        TRUSTM_ENGINE_ERRFN("test_point 1");
-                        optiga_lib_status = OPTIGA_LIB_BUSY;
-                        return_status = optiga_util_open_application(me_util, 0); // skip restore
-                        if (OPTIGA_LIB_SUCCESS != return_status)
-                        {
-                            TRUSTM_ENGINE_ERRFN("Fail[21] : optiga_util_open_application[1] \n");
-                            break;
-                        }
-
-                        TRUSTM_ENGINE_DBGFN("waiting...");
-                        trustmEngine_WaitForCompletion(BUSY_WAIT_TIME_OUT);
-                        TRUSTM_ENGINE_DBG("++\n");
-                        
-                        if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
-                        {
-                            //optiga util open application failed
-                            TRUSTM_ENGINE_ERRFN("Fail[22] : optiga_util_open_application \n");
-                            trustmPrintErrorCode(optiga_lib_status);
-                        }
-                    } while(FALSE);
-            }
-            return_status = optiga_lib_status;
-            if (return_status != OPTIGA_LIB_SUCCESS)
+                TRUSTM_ENGINE_ERRFN("Fail : optiga_util_open_application[1] \n");
                 break;
+            }
+            //Wait until the optiga_util_open_application is completed
+            return_status=trustmEngine_WaitForCompletion(BUSY_WAIT_TIME_OUT);
+            if (return_status != OPTIGA_LIB_SUCCESS)
+            {   TRUSTM_ENGINE_ERRFN("Fail : optiga_util_open_application time out[1] \n");
+                trustmPrintErrorCode(return_status);
+                break;
+            }
+            *trustm_eng_mutex.pid = getpid(); 
         }
         
-        trustm_ctx.appOpen = 1;
+        
         TRUSTM_ENGINE_DBGFN("Success : optiga_util_open_application \n");
     }while(FALSE);      
 
     TRUSTM_ENGINE_DBGFN("<");
     return return_status;
 }
+
+
 
 /**********************************************************************
 * trustmEngine_Close()
@@ -385,7 +342,7 @@ optiga_lib_status_t trustmEngine_Close(void)
     //pal_gpio_deinit(&optiga_vdd_0);
     me_util=NULL;
     me_crypt=NULL;    
-    TRUSTM_ENGINE_DBGFN("TrustM Closed.\n");
+    TRUSTM_ENGINE_DBGFN("TrustM instance destroyed.\n");
     TRUSTM_ENGINE_DBGFN("<");
     return return_status;
 }
@@ -396,44 +353,14 @@ optiga_lib_status_t trustmEngine_Close(void)
 optiga_lib_status_t trustmEngine_App_Close(void)
 {
     optiga_lib_status_t return_status;
-    uint8_t secCnt;
+    
 
     TRUSTM_HELPER_DBGFN(">");
 
     do{
-        if (trustm_ctx.appOpen != 1)
-        {
-            TRUSTM_ENGINE_ERRFN("trustM is not open \n");
-            break;
-        }      
 
-        if (trustm_hibernate_flag != 0)
-        {
-            if (access(TRUSTM_HIBERNATE_CTX_FILENAME,F_OK) != -1)
-                remove(TRUSTM_HIBERNATE_CTX_FILENAME);
-
-            secCnt = __trustmEngine_secCnt();
-            while (secCnt)
-            {
-                TRUSTM_ENGINE_DBGFN("Security Event Counter : %d [waiting. Ctrl+c to abort.]\n",secCnt);
-                __trustmEngine_delay(2);
-                secCnt = __trustmEngine_secCnt();
-                if (secCnt == 0)
-                    TRUSTM_ENGINE_DBGFN("context saved.\n");
-            }
-            optiga_lib_status = OPTIGA_LIB_BUSY;
-            return_status = optiga_util_close_application(me_util, 1);
-        }
-        else
-        {
-            if (access(TRUSTM_HIBERNATE_CTX_FILENAME,F_OK) != -1)
-                remove(TRUSTM_HIBERNATE_CTX_FILENAME);
-            if (access(TRUSTM_CTX_FILENAME,F_OK) != -1)
-                remove(TRUSTM_CTX_FILENAME);
-
-            optiga_lib_status = OPTIGA_LIB_BUSY;
-            return_status = optiga_util_close_application(me_util, 0);
-        }
+        optiga_lib_status = OPTIGA_LIB_BUSY;
+        return_status = optiga_util_close_application(me_util, 0);
             
         if (OPTIGA_LIB_SUCCESS != return_status)
         {
@@ -441,16 +368,12 @@ optiga_lib_status_t trustmEngine_App_Close(void)
             break;
         }
 
-        trustmEngine_WaitForCompletion(BUSY_WAIT_TIME_OUT);
-        
-        if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
+        return_status=trustmEngine_WaitForCompletion(BUSY_WAIT_TIME_OUT);
+        if (OPTIGA_LIB_SUCCESS != return_status)
         {
-            //optiga util close application failed
-            TRUSTM_ENGINE_ERRFN("Fail : optiga_util_close_application \n");
-            return_status = optiga_lib_status;
+            TRUSTM_ENGINE_ERRFN("Fail : optiga_util_close_application time out \n");
             break;
         }
-
         TRUSTM_ENGINE_DBGFN("Success : optiga_util_close_application \n");
 
     }while(FALSE);
@@ -458,13 +381,26 @@ optiga_lib_status_t trustmEngine_App_Close(void)
     if (return_status != OPTIGA_LIB_SUCCESS)
         trustmPrintErrorCode(return_status);
     trustmEngine_Close();
-    trustm_ctx.appOpen = 0;   
-    /// IPC Release 
-    //~ mssleep(30);
+    
+    *trustm_eng_mutex.pid=EMPTY_PID;
     trustm_ipc_release(&trustm_eng_mutex);
     TRUSTM_ENGINE_DBGFN("<");
     return return_status;
 }
+
+
+/**********************************************************************
+* trustmEngine_App_Release()
+**********************************************************************/
+void trustmEngine_App_Release(void)
+{
+    TRUSTM_ENGINE_DBGFN(">");
+    TRUSTM_WORKAROUND_TIMER_DISARM;
+    trustm_ipc_release(&trustm_eng_mutex);
+    TRUSTM_ENGINE_DBGFN("<");
+      
+    }
+
 
 static uint32_t parseKeyParams(const char *aArg)
 {   
@@ -705,7 +641,9 @@ static uint32_t parseKeyParams(const char *aArg)
         ret = value;
     }while(FALSE);
     TRUSTM_ENGINE_APP_CLOSE;
-    TRUSTM_WORKAROUND_TIMER_DISARM;
+
+    
+    
     TRUSTM_ENGINE_DBGFN("<");
 
     return ret;

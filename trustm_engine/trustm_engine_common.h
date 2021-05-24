@@ -44,6 +44,7 @@
 #define WORKAROUND 1
 #define TRUSTM_RAND_ENABLED 
 //~ #define TRUSTM_ENGINE_DEBUG 
+//~ #define TRUST_ENG_CLOSE_APP_ENABLE
 
 #ifdef WORKAROUND
 #define TRUSTM_WORKAROUND_TIMER_ARM        pal_os_event_arm()
@@ -85,9 +86,11 @@
 */                                           
 #define TRUSTM_ENGINE_APP_OPEN_RET(x,y)   trustmEngine_App_Open_Recovery();
 
-#define TRUSTM_ENGINE_APP_CLOSE        if (trustm_ctx.appOpen == 1) \
-                                          {trustmEngine_App_Close(); \
-                                          }else{trustm_ctx.appOpen = 1;}
+#ifdef TRUST_ENG_CLOSE_APP_ENABLE
+#define TRUSTM_ENGINE_APP_CLOSE           trustmEngine_App_Close(); 
+#else
+#define TRUSTM_ENGINE_APP_CLOSE           trustmEngine_App_Release(); 
+#endif                                          
 
 //Macro define
 /// Definition for false
@@ -164,6 +167,7 @@ optiga_lib_status_t trustmEngine_App_Open_Recovery(void);
 
 optiga_lib_status_t trustmEngine_Close(void);
 optiga_lib_status_t trustmEngine_App_Close(void);
+void trustmEngine_App_Release(void);
 
 uint16_t trustmEngine_init_rand(ENGINE *e);
 uint16_t trustmEngine_init_rsa(ENGINE *e);
