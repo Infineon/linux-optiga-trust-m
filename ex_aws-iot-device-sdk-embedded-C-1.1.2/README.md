@@ -24,7 +24,7 @@ The software and configuration in this Application Note has been tested with the
 
 ## 1.2              Hardware Wiring
 
- ![](/pictures/Hardware.jpg)
+ ![](pictures/Hardware.jpg)
 
 **Figure 1 Connection of Raspberry Pi 3 to Trust M**
 
@@ -56,19 +56,19 @@ Enables the I2C interface using the raspi-config tool command. Go to option 5 - 
 pi@raspberrypi:~ sudo raspi-config 
 ```
 
- ![](/pictures/I2C_config.jpg)
+ ![](pictures/I2C_config.jpg)
 
 **Figure 2 Configure the I2C interface**
 
-<img src="/pictures/I2C_config2.jpg" style="zoom:150%;" />          
+<img src="pictures/I2C_config2.jpg" style="zoom:150%;" />          
 
 **Figure 3 Select the I2C interface**
 
- <img src="/pictures/I2C_config3.jpg" style="zoom:150%;" />
+ <img src="pictures/I2C_config3.jpg" style="zoom:150%;" />
 
 **Figure 4 Enable the I2C interface**
 
- <img src="/pictures/I2C_config4.jpg" style="zoom:150%;" />
+ <img src="pictures/I2C_config4.jpg" style="zoom:150%;" />
 
 **Figure 5 I2C interface is enabled**
 
@@ -302,7 +302,7 @@ pi@raspberrypi:~/temp/cli-optiga-trust-m/ex_aws-iot-device-sdk-embedded-C-1.1.2/
 
 Note: There are some compilation warnings due to the SDK version, please ignore them. From AWS IoT Core dashboard, use the Test option follow by subscribing to all the topics using the “#“ on the topic. 
 
-![](/pictures/AWSIoT.png)         
+![](pictures/AWSIoT.png)         
 
 **Figure 6 Subscribe to all the published topic** 
 
@@ -334,7 +334,7 @@ sdkTest/sub     hello from SDK : 1
 
 
 
- ![](/pictures/pubsub.png)
+ ![](pictures/pubsub.png)
 
 **Figure 7 Published message shown in the display** 
 
