@@ -40,7 +40,7 @@ LIBDIR += trustm_helper
 #OTHDIR = $(TRUSTM)/examples/optiga
  
 BINDIR = bin
-APPDIR = linux_example
+APPDIR = ex_cli_applications
 ENGDIR = trustm_engine
 LIB_INSTALL_DIR = /usr/lib/arm-linux-gnueabihf
 ENGINE_INSTALL_DIR = $(LIB_INSTALL_DIR)/engines-1.1

@@ -1,8 +1,7 @@
-# Command Line Interface (CLI) & OpenSSL Engine for OPTIGA™ Trust M1/M3 security solution
+# Linux tools and examples for OPTIGA™ Trust M1/M3 security solution
 
 1. [About](#about)
     * [Prerequisites](#prerequisites)
-    * [Contents of the package](#contents_of_package)
 2. [Getting Started](#getting_started)
     * [Getting the Code from Github](#getting_code)
     * [First time building the library](#build_lib)
@@ -39,11 +38,16 @@
     * [Testing TLS connection with RSA key](#test_tls_rsa)
     * [Using Trust M OpenSSL engine to sign and issue certificate](#issue_cert)
     * [Simple Example on OpenSSL using C language](#opensslc)
-5. [Known issues](#known_issues)
+5. [AWS IoT C-SDK](./ex_aws-iot-device-sdk-embedded-C-1.1.2/README.md)
+6. [Known issues](#known_issues)
 
 ## <a name="about"></a>About
 
-This is a command line tools tools and OpenSSL Engine for OPTIGA Trust M1/M3 on Linux platform.
+This is a Linux Tools for OPTIGA Trust M1/M3 on Linux platform that consist of:
+
+- Command Line Interface examples
+- OpenSSL Engine
+- AWS IoT C SDK example
 
 
 ### <a name="prerequisites"></a>Prerequisites
@@ -64,57 +68,6 @@ Hardware platforms and boards:
 * [Shield2Go Adapter for Raspberry Pi](https://www.infineon.com/cms/en/product/evaluation-boards/s2go-adapter-rasp-pi-iot/)
 
   ![](/pictures/coonection_diagram1.png)
-
-### <a name="contents_of_package"></a>Contents of Package
-
-This tools consists of the following files & directory:
-```formated
-        .
-	├── bin                        /* all executable and .so file is store here	 */
-	├── LICENSE                    // MIT license file
-	├── linux_example                     /* Source code for executable file */
-	│   ├── trustm_cert.c                 // read and store x.509 certificate in OPTIGA™ Trust M
-	│   └── trustm_chipinfo.c             // list chip info
-	│   ├── trustm_data.c                 // read and store raw data in OPTIGA™ Trust M
-	│   ├── trustm_ecc_keygen.c           // ECC Key generation
-	│   ├── trustm_ecc_sign.c             // example of OPTIGA™ Trust M ECC sign function
-	│   ├── trustm_ecc_verify.c           // example of OPTIGA™ Trust M ECC verify function
-	│   ├── trustm_errorcode.c            // List all known OPTIGA™ Trust M error code
-	│   ├── trustm_metadata.c             // read and modify metadata of selected OID 
-	│   ├── trustm_monotonic_counter.c    // example of OPTIGA™ Trust M monotonic  counter function
-	│   ├── trustm_read_data.c            // read all app1 data
-	│   ├── trustm_readmetadata_data.c    // read all metadata of data objects
-	│   ├── trustm_readmetadata_private.c // read all metadata of keys OID
-	│   ├── trustm_readmetadata_status.c  // read all metadata of status OID
-	│   ├── trustm_read_status.c          // read all status data
-	│   ├── trustm_rsa_dec.c              // example of OPTIGA™ Trust M RSA Decode function
-	│   ├── trustm_rsa_enc.c              // example of OPTIGA™ Trust M RSA Encode function
-	│   ├── trustm_rsa_keygen.c           // RSA Key generation
-	│   ├── trustm_rsa_sign.c             // example of OPTIGA™ Trust M RSA sign function
-	│   └── trustm_rsa_verify.c           // example of OPTIGA™ Trust M RSA verify function
-	│   └── trustm_symmetric_keygen.c     // symmetric Key generation
-	│   └── trustm_symmetric_enc.c        // example of OPTIGA™ Trust M symmetric key encryption function
-	│   └── trustm_symmetric_dec.c        // example of OPTIGA™ Trust M symmetric key decryption function
-	│   └── trustm_hkdf.c                // example of OPTIGA™ Trust M key derivation function
-	│   └── trustm_hmac.c                // example of OPTIGA™ Trust M hashed MAC function
-	├── Makefile                    // this project Makefile 
-	├── README.md                   // this read me file in Markdown format 
-	├── trustm_engine                     /* all trust M1/M3 OpenSSL Engine source code       */
-	│   ├── trustm_engine.c               // entry point for Trust M1/M3 OpenSSL Engine 
-	│   ├── trustm_engine.c               // entry point for Trust M1/M3 OpenSSL Engine
-        │   ├── trustm_engine_ipc_lock.c      // IPC shared memory functions for trustmEngine
-        │   ├── trustm_engine_ipc_lock.h      // header file for trustmEngine IPC shared memory functions
-	│   ├── trustm_engine_common.h        // header file for Trust M1/M3 OpenSSL Engine
-	│   ├── trustm_engine_rand.c          // Random number generator source  
-	│   └── trustm_engine_rsa.c           // RSA source 
-	├── trustm_helper                     /* Helper rountine for Trust M library           */
-	│   ├── include	                          /* Helper include directory
-	│   │   └── trustm_helper.h               // Helper header file
-	│   │   └── trustm_helper_ipc_lock.h     //  header file for trustm IPC shared memory functions
-	│   └── trustm_helper.c	              // Helper source 
-	│   └── trustm_helper_ipc_lock.c	  // IPC shared memory functions for trustm
-	└── trustm_lib                        /* Directory for trust M library */
-```
 
 ## <a name="getting_started"></a>Getting Started
 ### <a name="getting_code"></a>Getting the Code from Github
@@ -1738,7 +1691,7 @@ In the *simpleTest_Client.c* code ~ line number 53-63. List the macro for changi
 - DEFAULT_PORT   *\<Port to use for connection>*
 - SECURE_COMM   *\<SSL Protocol to be used TLS/DTLS>*
 
-## <a name="known_observations"></a>Known issues
+## <a name="known_issues"></a>Known issues
 
 ### Secure communication bypass
 
@@ -1747,5 +1700,4 @@ The I2C secure communication bypass option for CLI only works if the default res
 ### OPTIGA™ Trust M Sporadic hang
 
 Check the hardware reset pin if it is connected with an active reset GPIO as assigned n the OPTIGA™ Trust M library. Alternatively, you could configure the library to use software reset.
-
 
