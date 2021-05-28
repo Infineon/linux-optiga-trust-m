@@ -1,4 +1,4 @@
-# Linux tools and examples for OPTIGA™ Trust M1/M3 security solution
+# Linux tools and examples</br> for OPTIGA™ Trust M1/M3 security solution
 
 1. [About](#about)
     * [Prerequisites](#prerequisites)
