@@ -75,7 +75,7 @@ Hardware platforms and boards:
 Getting the initial code from Github with submodules
 
 ```console
-foo@bar:~$ git clone --recurse-submodules https://github.com/Infineon/cli-optiga-trust-m.git
+foo@bar:~$ git clone --recurse-submodules https://github.com/Infineon/linux-optiga-trust-m.git
 ```
 
 Note:  The following commands are optional and it is required only when switching between different branches.
@@ -85,7 +85,7 @@ foo@bar:~$ git checkout development_v3
 foo@bar:~$ git submodule update -f
 ```
 
-Change the reset type to use software reset as follow in the header file at "**cli-optiga-trust-m/trustm_lib/optiga/include/optiga/**"
+Change the reset type to use software reset as follow in the header file at "**linux-optiga-trust-m/trustm_lib/optiga/include/optiga/**"
 
 - optiga_lib_config_m_v3.h for OPTIGA™ Trust M3 or 
 - optiga_lib_config_m_v1.h for OPTIGA™ Trust M1
@@ -115,7 +115,7 @@ foo@bar:~$ sudo make uninstall
 
 ## <a name="cli_usage"></a>CLI Tools Usage
 
-Note:  To pair the host with OPTIGA™ Trust M, please run the test script "write_default_shared_secret" inside "**cli-optiga-trust-m/scripts/misc/**" to write the default shared secret into OPTIGA™ Trust M.
+Note:  To pair the host with OPTIGA™ Trust M, please run the test script "write_default_shared_secret" inside "**linux-optiga-trust-m/scripts/misc/**" to write the default shared secret into OPTIGA™ Trust M.
 
 ### <a name="trustm_cert"></a>trustm_cert
 
