@@ -42,10 +42,23 @@ Table 1
 | 06          |                  | Not Connected           |
 | 07          |                  | Not Connected           |
 | 08          | 05               | Serial Clock Line (SCL) |
-| 09          | 07               | Active Low Reset (RST)  |
+| 09          | 11*              | Active Low Reset (RST)  |
 | 10          | 01               | Supply Voltage (VCC)    |
 
-  
+  *Note: pin 11 is GPIO17 in Raspberry Pi
+
+If the Trust M Pin 09 is not connected to the Raspberry Pi Pin 11, a soft reset can be implemented by following these steps:
+
+Change the reset type to use software reset as follow in the header file at "**linux-optiga-trust-m/trustm_lib/optiga/include/optiga/**"
+
+- optiga_lib_config_m_v3.h for OPTIGA™ Trust M3 or
+- optiga_lib_config_m_v1.h for OPTIGA™ Trust M1
+
+```
+#define OPTIGA_COMMS_DEFAULT_RESET_TYPE     (1U)
+```
+
+
 
 ## 1.3              Enable System I2C Interface
 
@@ -141,38 +154,38 @@ $ aws iot describe-endpoint --endpoint-type iot:Data-ATS
 }
 ```
 
- 
+
 
 # 2                  Installing the Trust M driver
 
  
 
-Installing the Trust M driver from GitHub
+### 2.1 Installing the Trust M driver from GitHub
 
 ```
-pi@raspberrypi:~/trustm_v3 $ git clone --recurse-submodules https://github.com/Infineon/cli-optiga-trust-m.git
-Cloning into 'cli-optiga-trust-m'...
-remote: Enumerating objects: 131, done.
-remote: Counting objects: 100% (131/131), done.
-remote: Compressing objects: 100% (98/98), done.
-remote: Total 903 (delta 78), reused 69 (delta 30), pack-reused 772
-Receiving objects: 100% (903/903), 919.72 KiB | 1005.00 KiB/s, done.
-Resolving deltas: 100% (599/599), done.
+pi@raspberrypi:~/trustm_v3 $ git clone --recurse-submodules https://github.com/Infineon/linux-optiga-trust-m.git
+Cloning into 'linux-optiga-trust-m.git'...
+remote: Enumerating objects: 1362, done.
+remote: Counting objects: 100% (590/590), done.
+remote: Compressing objects: 100% (400/400), done.
+remote: Total 1362 (delta 329), reused 411 (delta 174), pack-reused 772
+Receiving objects: 100% (1362/1362), 1.67 MiB | 2.90 MiB/s, done.
+Resolving deltas: 100% (850/850), done.
 Submodule 'trustm_lib' (https://github.com/Infineon/optiga-trust-m.git) registered for path 'trustm_lib'
-Cloning into '/home/pi/trustm_v3/cli-optiga-trust-m/trustm_lib'...
-remote: Enumerating objects: 457, done.
-remote: Counting objects: 100% (457/457), done.
-remote: Compressing objects: 100% (349/349), done.
-remote: Total 3260 (delta 243), reused 177 (delta 90), pack-reused 2803
-Receiving objects: 100% (3260/3260), 75.26 MiB | 3.82 MiB/s, done.
-Resolving deltas: 100% (1626/1626), done.
-Submodule path 'trustm_lib': checked out 'eaf4203e88b5e8da8318e0d27c338e96c4064cd4'
+Cloning into '/home/pi/trustm_v3/linux-optiga-trust-m/trustm_lib'...
+remote: Enumerating objects: 3506, done.        
+remote: Counting objects: 100% (21/21), done.        
+remote: Compressing objects: 100% (18/18), done.        
+remote: Total 3506 (delta 5), reused 8 (delta 2), pack-reused 3485        
+Receiving objects: 100% (3506/3506), 74.50 MiB | 2.44 MiB/s, done.
+Resolving deltas: 100% (1831/1831), done.
+Submodule path 'trustm_lib': checked out '955249c8da9edb953a14178b144788fe935586a5'
 ```
 
 Compile the Trust M library
 
 ```
-pi@raspberrypi:~/trustm_v3/cli-optiga-trust-m $ make
+pi@raspberrypi:~/trustm_v3/linux-optiga-trust-m $ make
 .......
 ………..
 ******* Linking bin/trustm_engine.so
@@ -181,7 +194,7 @@ pi@raspberrypi:~/trustm_v3/cli-optiga-trust-m $ make
 Install the Trust M library 
 
 ```
-pi@raspberrypi:~/trustm_v3/cli-optiga-trust-m $ sudo make install
+pi@raspberrypi:~/trustm_v3/linux-optiga-trust-m $ sudo make install
 Create symbolic link to the openssl engine /usr/lib/arm-linux-gnueabihf/engines-1.1/trustm_engine.so
 Create symbolic link to trustx_lib /usr/lib/arm-linux-gnueabihf/libtrustm.so
 ```
@@ -189,11 +202,40 @@ Create symbolic link to trustx_lib /usr/lib/arm-linux-gnueabihf/libtrustm.so
 Check that the engine has been installed
 
 ```
-pi@raspberrypi:~/trustm_v3/cli-optiga-trust-m $ openssl engine trustm_engine
+pi@raspberrypi:~/trustm_v3/linux-optiga-trust-m $ openssl engine trustm_engine
 (trustm_engine) Infineon OPTIGA TrustM Engine
 ```
 
- 
+### 2.2 Policy Registration on AWS IOT console 
+
+Before the auto_provisioning script can be executed to create a thing with certificate from TrustM, the corresponding policy is needed to be created on the AWS IOT console.
+
+1. Browse to the AWS IoT console.  
+
+2. In the navigation pane, go to Secure\ Policies section, click on create button, give a name and  click on advanced mode
+
+12. Then paste the following policy and click on create:
+
+    ```
+    { 
+     "Version": "2012-10-17", 
+     "Statement": [ 
+      { 
+      "Action": [ 
+       "iot:*" 
+      ], 
+      "Resource": [ 
+       "*" 
+      ], 
+      "Effect": "Allow" 
+      } 
+     ] 
+    } 
+    ```
+
+16. Take note of the name of the policy which is created as it will be required in the later steps
+
+    
 
 # 3                  AWS IoT MQTT Client Configuration
 
@@ -202,28 +244,28 @@ AWS IoT uses X.509 certificates for asymmetric-key based authentication. In this
  The structure of the downloaded example:
 
 ```
-pi@raspberrypi:~/temp/cli-optiga-trust-m/ex_aws-iot-device-sdk-embedded-C-1.1.2 $ ls -l
-total 64
-drwxr-xr-x 5 pi pi  4096 Nov 23 19:38 aws_iot_src
-drwxr-xr-x 4 pi pi  4096 Nov 23 19:38 aws_mqtt_embedded_client_lib
-drwxr-xr-x 2 pi pi  4096 Nov 23 19:38 certs
--rw-r--r-- 1 pi pi  2725 Nov 23 19:38 CHANGELOG.md
--rw-r--r-- 1 pi pi 13179 Nov 23 19:38 LICENSE.txt
--rw-r--r-- 1 pi pi   600 Nov 23 19:38 NOTICE.txt
-drwxr-xr-x 2 pi pi  4096 Nov 23 19:38 perso
--rw-r--r-- 1 pi pi  9838 Nov 23 19:38 PortingGuide.md
--rw-r--r-- 1 pi pi  7251 Nov 23 19:38 README.md
-drwxr-xr-x 5 pi pi  4096 Nov 23 19:38 sample_apps
+pi@raspberrypi:~/temp/linux-optiga-trust-m/ex_aws-iot-device-sdk-embedded-C-1.1.2 $ ls -l
+total 84
+drwxr-xr-x 5 pi pi  4096 Jun  9 14:28 aws_iot_src
+drwxr-xr-x 4 pi pi  4096 Jun  9 14:28 aws_mqtt_embedded_client_lib
+drwxr-xr-x 2 pi pi  4096 Jun  9 14:28 certs
+-rw-r--r-- 1 pi pi  2725 Jun  9 14:28 CHANGELOG.md
+-rw-r--r-- 1 pi pi 13179 Jun  9 14:28 LICENSE.txt
+-rw-r--r-- 1 pi pi   600 Jun  9 14:28 NOTICE.txt
+drwxr-xr-x 2 pi pi  4096 Jun  9 14:28 perso
+drwxr-xr-x 2 pi pi  4096 Jun  9 14:28 pictures
+-rw-r--r-- 1 pi pi  9838 Jun  9 14:28 PortingGuide.md
+-rw-r--r-- 1 pi pi  7251 Jun  9 14:28 README1.md
+-rw-r--r-- 1 pi pi 13006 Jun  9 14:28 README.md
+drwxr-xr-x 5 pi pi  4096 Jun  9 14:28 sample_apps
 ```
 
- 
+Change the policy name in the auto_provision_to_aws.sh script located in **linux-optiga-trust-m/ex_aws-iot-device-sdk-embedded-C-1.1.2/perso** folder to match to the policy name you created in AWS IoT console
 
-Provisioning the Trust M device using the auto_provisioning script located in the perso folder.
-
-Note: Make sure the police is already created in AWS IOT console before running this script
+Note: Make sure the policy is already created in AWS IOT console and the policy name matches the name inside auto_provision_to_aws.sh script before running the script
 
 ```
-pi@raspberrypi:~/temp/cli-optiga-trust-m/ex_aws-iot-device-sdk-embedded-C-1.1.2/perso $ sh auto_provision_to_aws.sh
+pi@raspberrypi:~/temp/linux-optiga-trust-m/ex_aws-iot-device-sdk-embedded-C-1.1.2/perso $ sh auto_provision_to_aws.sh
 Client1:-----> Creates new ECC 256 key length and Auth/Enc/Sign usage and generate a certificate request
 engine "trustm_engine" set.
 Certificate Request:
@@ -266,38 +308,37 @@ Attach device Certificate to thing
 Attach Policy
 Personalization completed
 copy temp/client1_e0f1.pem to aws-iot-device-sdk-embedded-C/certs
-
 ```
 
 
 
-Copy the certificate client1_e0f1.pem from the temp directory to certs folder 
+Copy the certificate client1_e0f1.pem from the temp directory to certs folder manually 
 
 ```
-pi@raspberrypi:~/temp/cli-optiga-trust-m/ex_aws-iot-device-sdk-embedded-C-1.1.2/perso/temp $ cp client1_e0f1.pem ../../
+pi@raspberrypi:~/temp/linux-optiga-trust-m/ex_aws-iot-device-sdk-embedded-C-1.1.2/perso/temp $ cp client1_e0f1.pem ../../
 aws_iot_src/                  CHANGELOG.md                  NOTICE.txt                    README.md
 aws_mqtt_embedded_client_lib/ .git/                         perso/                        sample_apps/
 certs/                        LICENSE.txt                   PortingGuide.md
-pi@raspberrypi:~/temp/cli-optiga-trust-m/ex_aws-iot-device-sdk-embedded-C-1.1.2/perso/temp $ cp client1_e0f1.pem ../../certs/
+pi@raspberrypi:~/temp/linux-optiga-trust-m/ex_aws-iot-device-sdk-embedded-C-1.1.2/perso/temp $ cp client1_e0f1.pem ../../certs/
 
 ```
 
 
 
-Update the aws_iot_config.h with your AWS IOT endpoint
+Update the aws_iot_config.h located in **linux-optiga-trust-m/ex_aws-iot-device-sdk-embedded-C-1.1.2/sample_apps/subscribe_publish_sample** with your AWS IOT endpoint
 
 ```
 #define AWS_IOT_MQTT_HOST    “ XXXXXXXXXXXXX-ats.iot.aws-region.amazonaws.com“
 ```
 
-Note:aws-region should be replaced with the region you are using.
+Note: aws-region should be replaced with the region you are using.
 
  
 
 Execute the source code compilation
 
 ```
-pi@raspberrypi:~/temp/cli-optiga-trust-m/ex_aws-iot-device-sdk-embedded-C-1.1.2/sample_apps/subscribe_publish_sample $ make
+pi@raspberrypi:~/temp/linux-optiga-trust-m/ex_aws-iot-device-sdk-embedded-C-1.1.2/sample_apps/subscribe_publish_sample $ make
 ```
 
 Note: There are some compilation warnings due to the SDK version, please ignore them. From AWS IoT Core dashboard, use the Test option follow by subscribing to all the topics using the “#“ on the topic. 
@@ -311,13 +352,13 @@ Note: There are some compilation warnings due to the SDK version, please ignore 
 Launch the software
 
 ```
-pi@raspberrypi:~/temp/cli-optiga-trust-m/ex_aws-iot-device-sdk-embedded-C-1.1.2/sample_apps/subscribe_publish_sample $ ./subscribe_publish_sample
+pi@raspberrypi:~/temp/linux-optiga-trust-m/ex_aws-iot-device-sdk-embedded-C-1.1.2/sample_apps/subscribe_publish_sample $ ./subscribe_publish_sample
 
 AWS IoT SDK Version 1.1.2-
 --
-DEBUG:   main L#149 rootCA /home/pi/temp/cli-optiga-trust-m/ex_aws-iot-device-sdk-embedded-C-1.1.2/sample_apps/subscribe_publish_sample/../../certs/AmazonRootCA1.pem
-DEBUG:   main L#150 clientCRT /home/pi/temp/cli-optiga-trust-m/ex_aws-iot-device-sdk-embedded-C-1.1.2/sample_apps/subscribe_publish_sample/../../certs/client1_e0f1.pem
-DEBUG:   main L#151 clientKey /home/pi/temp/cli-optiga-trust-m/ex_aws-iot-device-sdk-embedded-C-1.1.2/sample_apps/subscribe_publish_sample/../../certs/0xe0f1:^
+DEBUG:   main L#149 rootCA /home/pi/temp/linux-optiga-trust-m/ex_aws-iot-device-sdk-embedded-C-1.1.2/sample_apps/subscribe_publish_sample/../../certs/AmazonRootCA1.pem
+DEBUG:   main L#150 clientCRT /home/pi/temp/linux-optiga-trust-m/ex_aws-iot-device-sdk-embedded-C-1.1.2/sample_apps/subscribe_publish_sample/../../certs/client1_e0f1.pem
+DEBUG:   main L#151 clientKey /home/pi/temp/linux-optiga-trust-m/ex_aws-iot-device-sdk-embedded-C-1.1.2/sample_apps/subscribe_publish_sample/../../certs/0xe0f1:^
 Connecting...
 DEBUG:   iot_tls_connect L#135 Engine ID : trustm_engine
 Subscribing...

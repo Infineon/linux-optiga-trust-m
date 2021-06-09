@@ -908,7 +908,7 @@ Verify Success.
 
 Simple demo to show the process to generate symmetric key using OPTIGA™ Trust M library.
 
-Note: The Access Condition CHA for OID 0xe200 must be set to "ALW"(Only executable when LcsO<op). Fore details, please refer to the test script AES_CBC.sh inside  "**cli-optiga-trust-m/scripts/misc/**"
+Note: The Access Condition CHA for OID 0xe200 must be set to "ALW"(Only executable when LcsO<op). Fore details, please refer to the test script AES_CBC.sh inside  "**linux-optiga-trust-m/scripts/misc/**"
 
 ```console
 foo@bar:~$ ./bin/trustm_symmetric_keygen 
@@ -1014,7 +1014,7 @@ Success
 
 Simple demo to show the process to derive key using OPTIGA™ Trust M library.
 
-Note: For detailed use case, please refer to the test script hkdf.sh inside  "**cli-optiga-trust-m/scripts/misc/**"
+Note: For detailed use case, please refer to the test script hkdf.sh inside  "**linux-optiga-trust-m/scripts/misc/**"
 
 ```console
 foo@bar:~$ ./bin/trustm_hkdf
@@ -1064,7 +1064,7 @@ Decryption Key :
 
 Simple demo to show the process to generate the MAC for the given input data using the secret installed in OPTIGA™ Trust M.
 
-Note: For detailed use case, please refer to the test script hmac.sh inside  "**cli-optiga-trust-m/scripts/misc/**"
+Note: For detailed use case, please refer to the test script hmac.sh inside  "**linux-optiga-trust-m/scripts/misc/**"
 
 ```console
 foo@bar:~$ ./bin/trustm_hmac
