@@ -41,3 +41,4 @@ aws iot attach-policy --policy-name $POLICY_NAME --target `cat temp/cli_output.j
 
 echo "Personalization completed"
 echo "copy temp/$CERT_NAME.pem to aws-iot-device-sdk-embedded-C/certs"
+cp temp/$CERT_NAME.pem  ../certs/
