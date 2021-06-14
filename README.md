@@ -39,7 +39,7 @@
     * [Using Trust M OpenSSL engine to sign and issue certificate](#issue_cert)
     * [Simple Example on OpenSSL using C language](#opensslc)
 5. [AWS IoT C-SDK](./ex_aws-iot-device-sdk-embedded-C-1.1.2/README.md)
-6. [Known issues](#known_issues)
+6. [Known observations](#known_observations)
 
 ## <a name="about"></a>About
 
@@ -61,7 +61,7 @@ Following is the software component to build the tools :
 * rt
 
 Hardware platforms and boards:
-* Raspberry PI 3 on Linux kernel 4.19
+* Raspberry PI 3/4  on Linux kernel >= 4.19
 
 * [OPTIGA™ Trust M](https://www.infineon.com/cms/en/product/evaluation-boards/s2go-security-optiga-m/)
 
@@ -1691,7 +1691,7 @@ In the *simpleTest_Client.c* code ~ line number 53-63. List the macro for changi
 - DEFAULT_PORT   *\<Port to use for connection>*
 - SECURE_COMM   *\<SSL Protocol to be used TLS/DTLS>*
 
-## <a name="known_issues"></a>Known issues
+## <a name="known_observations"></a>Known observations
 
 ### Secure communication bypass
 
