@@ -116,9 +116,12 @@ typedef struct trustm_metadata_str
   uint8_t D1_readLen;
   uint8_t D3_execute[10];
   uint8_t D3_executeLen;
+  uint8_t D8_metaUpdate[10];
+  uint8_t D8_metaUpdateLen;
   uint8_t E0_algo;
   uint8_t E1_keyUsage;
-  uint8_t E8_dataObjType;  
+  uint8_t E8_dataObjType; 
+  uint8_t F0_ResetType;
 } trustm_metadata_t;
 
 

@@ -77,10 +77,13 @@ void helper_optiga_util_callback(void * context, optiga_lib_status_t return_stat
 *************************************************************************/
 
 static char __ALW[] = "ALW";
+static char __SECSTAG[] = "SecStaG";
 static char __CONF[] = "Conf";
 static char __INT[] = "Int";
+static char __AUTO[] = "Auto";
 static char __LUC[] = "Luc";
 static char __LCSG[] = "LcsG";
+static char __SECSTAA[] = "SecStaA";
 static char __LCSA[] = "LcsA";
 static char __LCSO[] = "LcsO";
 static char __EQ[] = "==";
@@ -97,6 +100,13 @@ static char __DEVCERT[] = "DEVCERT";
 static char __PRESSEC[] = "PRESSEC";
 static char __PTFBIND[] = "PTFBIND";
 static char __UPDATSEC[] = "UPDATSEC";
+static char __AUTHREF[] = "AUTHREF";
+
+static char __SETCRE[] = "SETCRE";
+static char __SETINI[] = "SETINI";
+static char __SETOP[] = "SETOP";
+static char __FLUSH[] = "FLUSH";
+static char __OVWRT[] = "OVWRT";
 
 static char __ECC256[] = "ECC256";
 static char __ECC384[] = "ECC384";
@@ -217,6 +227,33 @@ static char* __decodeDataObj(uint8_t data)
         case 0x23:
             ret = __UPDATSEC; 
             break;
+        case 0x31:
+            ret = __AUTHREF; 
+            break;
+    }
+    return ret;
+}
+
+static char* __decodeRType(uint8_t data)
+{
+    char *ret;
+    switch (data)
+    {
+        case 0x01:
+            ret = __SETCRE; 
+            break;
+        case 0x03:
+            ret = __SETINI; 
+            break;
+        case 0x07:
+            ret = __SETOP; 
+            break;
+        case 0x10:
+            ret = __FLUSH; 
+            break;
+        case 0x20:
+            ret = __OVWRT; 
+            break;
     }
     return ret;
 }
@@ -229,11 +266,17 @@ static char* __decodeAC(uint8_t data)
         case 0x00:
             ret = __ALW; 
             break;
+        case 0x10:
+            ret = __SECSTAG; 
+            break;
         case 0x20:
             ret = __CONF; 
             break;
         case 0x21:
             ret = __INT; 
+            break;
+        case 0x23:
+            ret = __AUTO; 
             break;
         case 0x40:
             ret = __LUC; 
@@ -243,6 +286,9 @@ static char* __decodeAC(uint8_t data)
             break;
         case 0xE0:
             ret = __LCSA;
+            break;
+        case 0x90:
+            ret = __SECSTAA; 
             break;
         case 0xE1:
             ret = __LCSO;
@@ -422,6 +468,7 @@ void trustmdecodeMetaData(uint8_t * metaData)
                                 break;
                             case 0x20: // Conf
                             case 0x21: // Int
+                            case 0x23: // Auth
                             case 0x40: // Luc
                                 printf("%s",__decodeAC(*(metaData+(i++))));
                                 printf("-0x%.2X%.2X",*(metaData+(i)),*(metaData+(i+1)));
@@ -440,6 +487,16 @@ void trustmdecodeMetaData(uint8_t * metaData)
                                 if ((len-j) < 3)
                                     printf(", ");                           
                                 break;
+                            case 0x10: // SecStaG 
+                                 printf("SecStaG:%.2x%.2x, ", *(metaData+(i)),*(metaData+(i+1)));
+                                 i++;
+                                 i++;
+                                break;   
+                            case 0x90: // SecStaA
+                                 printf("SecStaA:%.2x%.2x, ", *(metaData+(i)),*(metaData+(i+1)));
+                                 i++;
+                                 i++;
+                                break;
                             case 0xfa: // ==
                             case 0xfb: // >
                             case 0xfc: // <
@@ -450,7 +507,58 @@ void trustmdecodeMetaData(uint8_t * metaData)
                         }
                     }
                     break;
-                    
+                case 0xD8:    
+                    len = *(metaData+(i++));
+                    printf("MetaUpdate:");
+                    for (j=0; j<len;j++)
+                    {
+                        switch(*(metaData+(i)))
+                        {
+                            case 0x00: // ALW
+                            case 0xff: // NEV
+                                printf("%s, ",__decodeAC(*(metaData+(i++))));
+                                break;
+                            case 0x20: // Conf
+                            case 0x21: // Int
+                            case 0x23: // Auth
+                            case 0x40: // Luc
+                                printf("%s",__decodeAC(*(metaData+(i++))));
+                                printf("-0x%.2X%.2X",*(metaData+(i)),*(metaData+(i+1)));
+                                i += 2;
+                                j += 2;
+                                if ((len-j) < 3)
+                                    printf(", ");                           
+                                break;
+                            case 0x70: // LcsG
+                            case 0xe0: // LcsA
+                            case 0xe1: // LcsO
+                                printf("%s",__decodeAC(*(metaData+(i++))));
+                                printf("%s",__decodeAC(*(metaData+(i++))));
+                                printf("0x%.2X",*(metaData+(i++)));
+                                j += 2;
+                                if ((len-j) < 3)
+                                    printf(", ");                           
+                                break;
+                            case 0x10: // SecStaG 
+                                 printf("SecStaG:%.2x%.2x, ", *(metaData+(i)),*(metaData+(i+1)));
+                                 i++;
+                                 i++;
+                                break;   
+                            case 0x90: // SecStaA
+                                 printf("SecStaA:%.2x%.2x, ", *(metaData+(i)),*(metaData+(i+1)));
+                                 i++;
+                                 i++;
+                                break;
+                            case 0xfa: // ==
+                            case 0xfb: // >
+                            case 0xfc: // <
+                            case 0xfd: // &&
+                            case 0xfe: // ||
+                                printf("%s",__decodeAC(*(metaData+(i++))));
+                                break;
+                        }
+                    }                          
+                    break;    
                 case 0xE0:
                     // len is always 1
                     len = *(metaData+(i++));
@@ -467,6 +575,12 @@ void trustmdecodeMetaData(uint8_t * metaData)
                     //
                     len = *(metaData+(i++));
                     printf("DType:%s, ",__decodeDataObj(*(metaData+(i++))));                
+                    break;
+                    
+                case 0xF0:
+                    //
+                    len = *(metaData+(i++));
+                    printf("RType:%s, ",__decodeRType(*(metaData+(i++))));                
                     break;
                     
                 default:
@@ -551,6 +665,11 @@ optiga_lib_status_t trustmReadMetadata(uint16_t optiga_oid, trustm_metadata_t *o
                             for(j=0;j<read_data_buffer[i+1];j++)
                                 oidMetadata->D3_execute[j] = read_data_buffer[i+2+j];
                             break;
+                        case 0xD8:
+                            oidMetadata->D8_metaUpdateLen = read_data_buffer[i+1];
+                            for(j=0;j<read_data_buffer[i+1];j++)
+                                oidMetadata->D8_metaUpdate[j] = read_data_buffer[i+2+j];
+                            break;
                         case 0xE0:
                             oidMetadata->E0_algo = read_data_buffer[i+2];                        
                             break;
@@ -559,6 +678,9 @@ optiga_lib_status_t trustmReadMetadata(uint16_t optiga_oid, trustm_metadata_t *o
                             break;
                         case 0xE8:
                             oidMetadata->E8_dataObjType = read_data_buffer[i+2];
+                            break;
+                        case 0xF0:
+                            oidMetadata->F0_ResetType = read_data_buffer[i+2];
                             break;
                         default:
                             i = bytes_to_read;
@@ -1311,6 +1433,9 @@ void trustmGetOIDName(uint16_t optiga_oid, char *name)
             break;
         case 0xE0C6:
             sprintf(name,"Max Com Buffer Size         [0x%.4X] ", optiga_oid);
+            break;
+        case 0xE0C9:
+            sprintf(name,"Security Monitor configurations        [0x%.4X] ", optiga_oid);
             break;
         case 0xE0E0:
             sprintf(name,"Device Public Key IFX       [0x%.4X] ", optiga_oid);
