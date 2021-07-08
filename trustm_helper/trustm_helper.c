@@ -127,6 +127,7 @@ static char __DM[] = "DM";
 static char __SIGN[] = "Sign";
 static char __AGREE[] = "Agreement";
 static char __E1[100];
+static char __E2[100];
 
 
 /**********************************************************************
@@ -234,27 +235,41 @@ static char* __decodeDataObj(uint8_t data)
     return ret;
 }
 
-static char* __decodeRType(uint8_t data)
+static char* __decodeRType_E2(uint8_t data)
 {
     char *ret;
-    switch (data)
+     uint16_t i=0; 
+    
+    if ((data & 0x01) == 0x01) // Set Creation = 0x01 
     {
-        case 0x01:
-            ret = __SETCRE; 
-            break;
-        case 0x03:
-            ret = __SETINI; 
-            break;
-        case 0x07:
-            ret = __SETOP; 
-            break;
-        case 0x10:
-            ret = __FLUSH; 
-            break;
-        case 0x20:
-            ret = __OVWRT; 
-            break;
+        strcpy((__E2+i),__SETCRE);
+        i += (sizeof(__SETCRE));
     }
+    if ((data & 0x03) == 0x03) // Set Creation = 0x03 
+    {
+        __E2[i-1] = '/';
+        strcpy((__E2+i),__SETINI);
+        i += sizeof(__SETINI);
+    }
+    if ((data & 0x07) == 0x07) // Set Termination = 0x07 
+    {
+        __E2[i-1] = '/';
+        strcpy((__E2+i),__SETOP);
+        i += sizeof(__SETOP);
+    }
+    if ((data & 0x10) == 0x10) // Flush 
+    {
+        __E2[i-1] = '/';
+        strcpy((__E2+i),__FLUSH);
+        i += sizeof(__FLUSH);
+    }
+    if ((data & 0x20) ==0x20) // OverWrite 
+    {
+        __E2[i-1] = '/';
+        strcpy((__E1+i),__OVWRT);
+        i += sizeof(__OVWRT);
+    }   
+    ret = __E2;
     return ret;
 }
 
@@ -509,7 +524,7 @@ void trustmdecodeMetaData(uint8_t * metaData)
                     break;
                 case 0xD8:    
                     len = *(metaData+(i++));
-                    printf("MetaUpdate:");
+                    printf("MUD:");
                     for (j=0; j<len;j++)
                     {
                         switch(*(metaData+(i)))
@@ -580,7 +595,7 @@ void trustmdecodeMetaData(uint8_t * metaData)
                 case 0xF0:
                     //
                     len = *(metaData+(i++));
-                    printf("RType:%s, ",__decodeRType(*(metaData+(i++))));                
+                    printf("RType:%s, ",__decodeRType_E2(*(metaData+(i++))));                
                     break;
                     
                 default:

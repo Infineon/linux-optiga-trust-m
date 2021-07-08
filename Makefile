@@ -34,7 +34,7 @@ LIBDIR += $(TRUSTM)/optiga/crypt
 LIBDIR += $(TRUSTM)/optiga/comms
 LIBDIR += $(TRUSTM)/optiga/common
 LIBDIR += $(TRUSTM)/optiga/cmd
-#LIBDIR += $(TRUSTM)/externals/mbedtls
+LIBDIR += $(TRUSTM)/externals/mbedtls
 LIBDIR += trustm_helper
 
 #OTHDIR = $(TRUSTM)/examples/optiga
@@ -55,6 +55,7 @@ INCDIR += $(TRUSTM)/optiga/include/optiga/pal
 INCDIR += $(TRUSTM)/pal/linux
 INCDIR += trustm_helper/include
 INCDIR += trustm_engine
+INCDIR += $(TRUSTM)/externals/mbedtls/include
 
 ifdef INCDIR
 INCSRC := $(shell find $(INCDIR) -name '*.h')
