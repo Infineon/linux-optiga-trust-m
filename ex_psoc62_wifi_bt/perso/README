@@ -1,0 +1,3 @@
+The Script is used to: 1)Auto register the device certificate to aws
+                       2)Add tag into the device certificate to make it compatible with the format used by psoc62 wifi BT kits to connect to aws
+                       3)Write the device certificate into the corresponding certificate slot  
