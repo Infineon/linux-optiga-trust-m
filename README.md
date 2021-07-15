@@ -45,9 +45,9 @@
 
 This is a Linux Tools for OPTIGA Trust M1/M3 on Linux platform that consist of:
 
-- Command Line Interface examples
-- OpenSSL Engine
-- AWS IoT C SDK example
+- [Command Line Interface examples](#cli_usage)
+- [OpenSSL Engine](#engine_usage)
+- [AWS IoT C SDK example](./ex_aws-iot-device-sdk-embedded-C-1.1.2/)
 
 
 ### <a name="prerequisites"></a>Prerequisites
@@ -60,6 +60,10 @@ Following is the software component to build the tools :
 * pthread
 * rt
 
+Install required dependencies:
+```console
+foo@bar:~$ sudo apt-get install libssl-dev
+```
 Hardware platforms and boards:
 * Raspberry PI 3/4  on Linux kernel >= 4.19
 
