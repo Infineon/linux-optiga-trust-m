@@ -4,7 +4,7 @@ source config.sh
 # Secret OID
 SHARED_SECRET_OID=f1d0
 # Data object OID
-DATA_OBJECT_OID=f1d2
+DATA_OBJECT_OID=f1d5
 
 echo "Print out data."
 echo "49C9F492A992F6D4C54F5B12C57EDB27CED224048F25482AA149C9F492A992F6" | xxd -r -p > data.dat

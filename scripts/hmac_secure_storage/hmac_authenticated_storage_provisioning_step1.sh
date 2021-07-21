@@ -13,7 +13,7 @@ SHARED_SECRET_META="2011C00101D003E1FC07D10100D30100E80131"
 
 ## Initial data to be written into the data object, object OID and metadata definitions
 # Data object OID
-DATA_OBJECT_OID=f1d2
+DATA_OBJECT_OID=f1d5
 # Initial data to be written
 DATA_OBJECT="49C9F492A992F6D4C54F5B12C57EDB27CED224048F25482AA149C9F492A992F6"
 # Data object auto with secret object
