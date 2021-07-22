@@ -60,10 +60,7 @@ Following is the software component to build the tools :
 * pthread
 * rt
 
-Install required dependencies:
-```console
-foo@bar:~$ sudo apt-get install libssl-dev
-```
+
 Hardware platforms and boards:
 * Raspberry PI 3/4  on Linux kernel >= 4.19
 
@@ -99,7 +96,11 @@ Change the reset type to use software reset as follow in the header file at "**l
 ```
 
 ### <a name="build_lib"></a>First time building the library
-
+Install required dependencies:
+```console
+foo@bar:~$ sudo apt-get install libssl-dev
+```
+Go to the repository directory "linux-optiga-trust-m"
 ```console 
 foo@bar:~$ make
 ```
