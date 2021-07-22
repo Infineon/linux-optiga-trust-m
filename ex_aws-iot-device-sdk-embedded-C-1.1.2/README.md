@@ -91,7 +91,7 @@ Install the require tool chain for Trust M software compilation.
 
 ```
 #toolchain installation
-pi@raspberrypi:~ sudo apt-get install gcc vim cmake git python3 libssl-dev
+pi@raspberrypi:~ sudo apt-get install libssl-dev
 ```
 
 ### 1.4.1                   AWS Command Line Interface (CLI) Installation
