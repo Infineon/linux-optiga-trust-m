@@ -8,15 +8,15 @@ source config.sh
 ## Trust Anchor OID, Binding secret OID and Metadata settings
 # Trust Anchor OID
 TRUST_ANCHOR_OID=e0e3
-# Shared secret metadata setting
+# Trust Anchor metadata setting
 TRUST_ANCHOR_META="2011C00101D003E1FC07D10100D30100E80111"
 
-## Initial data to be written into the data object, object OID and metadata definitions
-# Data object OID
+## Binding secret to be written into the Binding secret object, Binding secret OID and metadata definitions
+# Binding secret OID
 BINDING_SECRET_OID=E140
-# Initial data to be written
+# Binding secret to be written
 BINDING_SECRET="0102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F202122232425262728292A2B2C2D2E2F303132333435363738393A3B3C3D3E3F40"
-# Data object auto with secret object
+# metadata setting for protected update
 BINDING_SECRET_META="200CC1020000F00101D80321$TRUST_ANCHOR_OID"
 #### Configurable Variables End
 
@@ -27,7 +27,7 @@ echo $BINDING_SECRET | xxd -r -p > binding_secret.dat
 
 for i in $(seq 1 1); do
 echo "test $i"
-echo "Step1: Provisioning initial data, metadata for Trust Anchor"
+echo "Step1: Provisioning Trust Anchor, metadata for Trust Anchor"
 echo "Write Test Trust Anchor into 0x$TRUST_ANCHOR_OID"
 $EXEPATH/trustm_cert -w 0x$TRUST_ANCHOR_OID -i $CERT_PATH/Test_Trust_Anchor.pem
 echo "Set device type to TA for 0x$TRUST_ANCHOR_OID "

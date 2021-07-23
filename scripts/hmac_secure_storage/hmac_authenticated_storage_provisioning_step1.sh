@@ -10,6 +10,7 @@ SHARED_SECRET_OID=f1d0
 SHARED_SECRET="49C9F492A992F6D4C54F5B12C57EDB27CED224048F25482AA149C9F492A992F649C9F492A992F6D4C54F5B12C57EDB27CED224048F25482AA149C9F492A992F6"
 # Shared secret metadata setting
 SHARED_SECRET_META="2011C00101D003E1FC07D10100D30100E80131"
+SHARED_SECRET_AC_READ_META="2005D103E1FC07"
 
 ## Initial data to be written into the data object, object OID and metadata definitions
 # Data object OID
@@ -35,11 +36,20 @@ echo "test $i"
 echo "Step1: Provisioning initial data, metadata and shared secret for HMAC authenticated secure storage access"
 echo "set device type to autoref for 0x$SHARED_SECRET_OID"
 echo $SHARED_SECRET_META | xxd -r -p > secret_autoref_metadata.bin
+echo "set read access to LcsO<0x07 for 0x$SHARED_SECRET_OID"
+echo $SHARED_SECRET_AC_READ_META | xxd -r -p > secret_ac_read_metadata.bin
 
 echo "Printout secret_autoref_metadata.bin"
 xxd secret_autoref_metadata.bin
 echo "write secret_autoref_metadata.bin as metadata of 0x$SHARED_SECRET_OID"
 $EXEPATH/trustm_metadata -w 0x$SHARED_SECRET_OID -F secret_autoref_metadata.bin
+
+
+echo "Printout secret_ac_read_metadata.bin"
+xxd secret_ac_read_metadata.bin
+echo "write secret_ac_read_metadata.bin as metadata of 0x$SHARED_SECRET_OID"
+$EXEPATH/trustm_metadata -w 0x$SHARED_SECRET_OID -F secret_ac_read_metadata.bin
+
 echo "Write shared secret into 0x$SHARED_SECRET_OID"
 $EXEPATH/trustm_data -e -w 0x$SHARED_SECRET_OID -i shared_secret.dat
 echo "Write intial data into 0x$DATA_OBJECT_OID"
