@@ -1523,20 +1523,20 @@ For easy setup, the demo uses the following input for :
 - Server (system with OPTIGA™ Trust M and listening to connection) 
   - server certificate : cert store in oid 0xE0E0
   - OPTIGA™ Trust M key : 0xE0F0
-  - CA certificate :  Infineon OPTIGA(TM) Trust M CA 101.pem
-    - include with Infineon OPTIGA(TM) ECC Root CA certificate
+  - CA certificate :  Infineon OPTIGA(TM) Trust M CA 300.pem
+    - include with Infineon OPTIGA(TM) ECC Root CA 2 certificate
   - Port : 5000
   - SSL Protocol : TLS1.3
 - Client (system that send HELLO request) 
-  - CA certificate :  Infineon OPTIGA(TM) Trust M CA 101.pem
-    - include with Infineon OPTIGA(TM) ECC Root CA certificate
+  - CA certificate :  Infineon OPTIGA(TM) Trust M CA 300.pem
+    - include with Infineon OPTIGA(TM) ECC Root CA 2 certificate
   - IP : 127.0.0.1
   - Port : 5000
   - SSL Protocol : DTLS1.3
 
 #### Server Setup
 
-##### Getting the 0xE0E0 Certificate in OPTIGA™ Trust X and save it as test_e0e0.crt
+##### Getting the 0xE0E0 Certificate in OPTIGA™ Trust M and save it as test_e0e0.crt
 
 You may used the below example to get the cert.
 
@@ -1551,27 +1551,27 @@ Success!!!
 
 ##### CA Certificate
 
-Ensure *Infineon OPTIGA(TM) Trust M CA 101.pem* is in the same directory as test_e0e0.crt.
+Ensure *Infineon OPTIGA(TM) Trust M CA 300.pem* is in the same directory as test_e0e0.crt.
 
-The *Infineon OPTIGA(TM) Trust M CA 101.pem* contain 2 certificate namely:
+The *Infineon OPTIGA(TM) Trust M CA 300.pem* contain 2 certificate namely:
 
-- Infineon OPTIGA(TM) Trust M CA 101
-- Infineon OPTIGA(TM) ECC Root CA
+- Infineon OPTIGA(TM) Trust M CA 300
+- Infineon OPTIGA(TM) ECC Root CA 2
 
 Below is a quick tips for verifying the Server cert matches the CA cert with OpenSSL
 
 ```console
-foo@bar:~$ openssl verify -CAfile 'Infineon OPTIGA(TM) Trust M CA 101.pem' -show_chain test_e0e0.crt 
+foo@bar:~$ openssl verify -CAfile 'Infineon OPTIGA(TM) Trust M CA 300.pem' -show_chain test_e0e0.crt 
 test_e0e0.crt: OK
 Chain:
-depth=0: CN = Infineon IoT Node (untrusted)
-depth=1: C = DE, O = Infineon Technologies AG, OU = OPTIGA(TM), CN = Infineon OPTIGA(TM) Trust M CA 101
-depth=2: C = DE, O = Infineon Technologies AG, OU = OPTIGA(TM) Devices, CN = Infineon OPTIGA(TM) ECC Root CA
+depth=0: CN = InfineonIoTNode (untrusted)
+depth=1: C = DE, O = Infineon Technologies AG, OU = OPTIGA(TM), CN = Infineon OPTIGA(TM) Trust M CA 300
+depth=2: C = DE, O = Infineon Technologies AG, OU = OPTIGA(TM) Devices, CN = Infineon OPTIGA(TM) ECC Root CA 2
 ```
 
 #### Client Setup
 
-Ensure *Infineon OPTIGA(TM) Trust M CA 101.pem* is in the current directory.
+Ensure *Infineon OPTIGA(TM) Trust M CA 300.pem* is in the current directory.
 
 #### Running the demonstration
 
@@ -1581,7 +1581,7 @@ To build the demo refer to [Build the command line tools](#build-the-command-lin
 
 #### Running the Server
 
-Open a new terminal in the system and ensure *test_e0e0.crt* and *Infineon OPTIGA(TM) Trust M CA 101.pem* is in the current folder. Run simpleTest_Server
+Open a new terminal in the system and ensure *test_e0e0.crt* and *Infineon OPTIGA(TM) Trust M CA 300.pem* is in the current folder. Run simpleTest_Server
 
 Example of simpleTest_Server running without client connection
 
@@ -1593,56 +1593,54 @@ foo@bar:~$ ./bin/simpleTest_Server
 
 #### Running the Client
 
-Open another new terminal in the system and ensure *Infineon OPTIGA(TM) Trust M CA 101.pem* is in the current folder. Run simpleTest_Client
+Open another new terminal in the system and ensure *Infineon OPTIGA(TM) Trust M CA 300.pem* is in the current folder. Run simpleTest_Client
 
 Example of simpleTest_Client running with connection to server
 
 ```
 foo@bar:~$ ./bin/simpleTest_Client 
-87 main: *****************************************
-112 doClientConnect: s_ipaddr : 127.0.0.1
-149 doClientConnect: Connecting to server ....
-167 doClientConnect: Connected to 127.0.0.1, port :0x8813
-189 doClientConnect: Performing Handshaking .....
-198 doClientConnect: Connection using : TLS_AES_256_GCM_SHA384
-199 doClientConnect:                  : TLSv1.3
-From Server [1220] : 001
-From Server [1220] : 002
-From Server [1220] : 003
-From Server [1220] : 004
-From Server [1220] : 005
-From Server [1220] : 006
+88 main: *****************************************
+113 doClientConnect: s_ipaddr : 127.0.0.1
+150 doClientConnect: Connecting to server ....
+168 doClientConnect: Connected to 127.0.0.1, port :0x8813
+190 doClientConnect: Performing Handshaking .....
+199 doClientConnect: Connection using : TLS_AES_256_GCM_SHA384
+200 doClientConnect:                  : TLSv1.3
+From Server [11072] : 001
+From Server [11072] : 002
+From Server [11072] : 003
+From Server [11072] : 004
+From Server [11072] : 005
 ```
 
 Server terminal output
 
 ```console
 foo@bar:~$ ./bin/simpleTest_Server 
-89 main: *****************************************
-141 serverListen: Listening to incoming connection
-154 serverListen: Connection from 127.0.0.1, port :0x3cce
-141 serverListen: Listening to incoming connection
-233 doServerConnected: Engine ID : trustm_engine
-239 doServerConnected: Init TrustM Engine. Ok
-245 doServerConnected: Set Default Engine Ok.
-258 doServerConnected: Load Certificate ok
-266 doServerConnected: Private Key Match the Server Certificate.
-275 doServerConnected: Load CA cert ok
-298 doServerConnected: Performing Handshking ......... 
-303 doServerConnected: Connection using : TLS_AES_256_GCM_SHA384
-304 doServerConnected:                  : TLSv1.3
-305 doServerConnected: ++++++++++++++++++++++++++++++++++++++++++++++
-325 doServerConnected: [1220] Received : 1
-325 doServerConnected: [1220] Received : 2
-325 doServerConnected: [1220] Received : 3
-325 doServerConnected: [1220] Received : 4
-325 doServerConnected: [1220] Received : 5
-325 doServerConnected: [1220] Received : 6
+92 main: *****************************************
+144 serverListen: Listening to incoming connection
+157 serverListen: Connection from 127.0.0.1, port :0xe48f
+144 serverListen: Listening to incoming connection
+236 doServerConnected: Engine ID : trustm_engine
+242 doServerConnected: Init TrustM Engine. Ok
+248 doServerConnected: Set Default Engine Ok.
+261 doServerConnected: Load Certificate ok
+269 doServerConnected: Private Key Match the Server Certificate.
+278 doServerConnected: Load CA cert ok
+301 doServerConnected: Performing Handshking ......... 
+306 doServerConnected: Connection using : TLS_AES_256_GCM_SHA384
+307 doServerConnected:                  : TLSv1.3
+308 doServerConnected: ++++++++++++++++++++++++++++++++++++++++++++++
+328 doServerConnected: [12081] Received : 1
+328 doServerConnected: [12081] Received : 2
+328 doServerConnected: [12081] Received : 3
+328 doServerConnected: [12081] Received : 4
+328 doServerConnected: [12081] Received : 5
 ```
 
 The above console screen show a successful server/client connection via TLS1.3. After the TLS handshake is completed the client will send count from 1 to 100 to the server. When server received the data from client it will is display the info received and send back the Process ID (PID) and data received to the client. The client when received the data from the service, it will display them on the screen.
 
-To run multiple client connection, open another new terminal in the system and ensure *Infineon OPTIGA(TM) Trust M CA 101.pem* is in the current folder. Run simpleTest_Client.
+To run multiple client connection, open another new terminal in the system and ensure *Infineon OPTIGA(TM) Trust M CA 300.pem* is in the current folder. Run simpleTest_Client.
 
 #### More about simpleTest_Server
 
@@ -1650,7 +1648,7 @@ To run multiple client connection, open another new terminal in the system and e
 // Macro for Keys/Certificates
 #define SERVER_CERT     "test_e0e0.crt"
 #define SERVER_KEY      "0xe0f0"
-#define CA_CERT         "Infineon OPTIGA(TM) Trust M CA 101.pem"
+#define CA_CERT         "Infineon OPTIGA(TM) Trust M CA 300.pem"
 
 // Macro for Engine
 #define ENGINE_NAME     "trustm_engine"
@@ -1676,7 +1674,7 @@ In the *simpleTest_Server.c* code ~ line number 54-66. List the macro for changi
 
 ```
 // Macro for Keys/Certificates
-#define CA_CERT      "Infineon OPTIGA(TM) Trust M CA 101.pem"
+#define CA_CERT      "Infineon OPTIGA(TM) Trust M CA 300.pem"
 
 // Macro for Engine
 #define ENGINE_NAME  "trustm_engine"
