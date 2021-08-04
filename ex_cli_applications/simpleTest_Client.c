@@ -51,7 +51,7 @@
 #endif
 
 // Macro for Keys/Certificates
-#define CA_CERT "Infineon OPTIGA(TM) Trust M CA 101.pem"
+#define CA_CERT "Infineon OPTIGA(TM) Trust M CA 300.pem"
 
 // Macro for Engine
 #define ENGINE_NAME "trustm_engine"
@@ -128,7 +128,7 @@ void doClientConnect(void)
 	}
 
 	SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, NULL);
-	SSL_CTX_set_verify_depth(ctx, 1);
+	//~ SSL_CTX_set_verify_depth(ctx, 1);
 
 	/*********************************************************************/
 	// Setting the Socket

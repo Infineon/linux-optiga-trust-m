@@ -406,7 +406,7 @@ static uint32_t parseKeyParams(const char *aArg)
 {   
     uint32_t ret;
     uint32_t value;
-    char in[1024];
+    static char in[256];
 
     char *token[5];
     int   i, j;
@@ -428,14 +428,22 @@ static uint32_t parseKeyParams(const char *aArg)
     TRUSTM_ENGINE_DBGFN(">");
     
     TRUSTM_ENGINE_APP_OPEN_RET(NULL,NULL);
-    //~ TRUSTM_WORKAROUND_TIMER_ARM;
+    
     do
     {
-        strcpy(in, aArg);
-        ptr=strstr(in,needle);
-        strcpy((char *)aArg,ptr);
-                
-        if (aArg == NULL)
+
+        TRUSTM_ENGINE_DBGFN("---> Key string = %s",aArg);
+        ptr=strstr(aArg,needle);
+        if (ptr == NULL)
+        {   
+            TRUSTM_ENGINE_ERRFN("No key identifier 0x found");
+            ret = 0;
+            break;
+        }
+        
+        strcpy(in,ptr);
+        TRUSTM_ENGINE_DBGFN("---> processed input string = %s",in);        
+        if (in == NULL)
         {
             TRUSTM_ENGINE_ERRFN("No input key parameters present. (key_oid:<pubkeyfile>)");
             //return EVP_FAIL;
@@ -444,8 +452,8 @@ static uint32_t parseKeyParams(const char *aArg)
         }
           
         i = 0;
-        token[0] = strtok((char *)aArg, ":");
-        
+        token[0] = strtok(in, ":");
+        TRUSTM_ENGINE_DBGFN("---> 1 token [0] = %s",token[0]);
         if (token[0] == NULL)
         {
             TRUSTM_ENGINE_ERRFN("Too few parameters in key parameters list. (key_oid:<pubkeyfile>)");
@@ -458,8 +466,9 @@ static uint32_t parseKeyParams(const char *aArg)
         {
             i++;
             token[i] = strtok(NULL, ":");
+            TRUSTM_ENGINE_DBGFN("---> token [%d] = %s\n",i,token[i]);
         }
-
+        TRUSTM_ENGINE_DBGFN("---> 1 token [0] = %s",token[0]);
         if (i > 6)
         {
             TRUSTM_ENGINE_ERRFN("Too many parameters in key parameters list. (key_oid:<pubkeyfile>)");
@@ -467,11 +476,13 @@ static uint32_t parseKeyParams(const char *aArg)
             ret = 0;
             break;
         }
-        
+
         TRUSTM_ENGINE_DBGFN("---> token [0] = %s",token[0]);
         
         if (strncmp(token[0], "0x",2) == 0)
-            sscanf(token[0],"%x",&value);
+        {
+          sscanf(token[0],"%x",&value);
+        }
         else
             value = 0;
 
