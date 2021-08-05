@@ -1196,7 +1196,7 @@ Following is the input format:
 Example
 
 ```console 
-foo@bar:~$ openssl pkey -engine trustm_engine -pubout -inform engine -in 0xe0fc:*:NEW -out testpube0fc.pem
+foo@bar:~$ openssl pkey -engine trustm_engine -pubout -inform engine -in 0xe0f1:*:NEW -out testpube0f1.pem
 ```
 
 ### <a name="dgst"></a>dgst
@@ -1204,10 +1204,10 @@ Usuage : Sign and verify
 Example
 
 ```console 
-foo@bar:~$ openssl dgst -sign 0xe0fc -engine trustm_engine -keyform engine -out helloworld.sig helloworld.txt
+foo@bar:~$ openssl dgst -sign 0xe0f1 -engine trustm_engine -keyform engine -out helloworld.sig helloworld.txt
 ```
 ```console 
-foo@bar:~$ openssl dgst -engine trustm_engine -verify testpube0fc.pem -keyform engine -signature helloworld.sig helloworld.txt
+foo@bar:~$ openssl dgst -sha256 -verify testpube0f1.pem -signature helloworld.sig helloworld.txt
 ```
 
 ### <a name="test_tls_ecc"></a>Testing TLS connection with ECC key
