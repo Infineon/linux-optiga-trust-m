@@ -51,7 +51,7 @@
 #endif
 
 // Macro for Keys/Certificates
-#define CA_CERT "Infineon OPTIGA(TM) Trust M CA 300.pem"
+#define CA_CERT "Infineon OPTIGA(TM) Trust M CA 300 Root CA 2.pem"
 
 // Macro for Engine
 #define ENGINE_NAME "trustm_engine"

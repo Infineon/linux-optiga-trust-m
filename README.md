@@ -1523,13 +1523,15 @@ For easy setup, the demo uses the following input for :
 - Server (system with OPTIGA™ Trust M and listening to connection) 
   - server certificate : cert store in oid 0xE0E0
   - OPTIGA™ Trust M key : 0xE0F0
-  - CA certificate :  Infineon OPTIGA(TM) Trust M CA 300.pem
+  - CA certificate :  Infineon OPTIGA(TM) Trust M CA 300 Root CA 2.pem
     - include with Infineon OPTIGA(TM) ECC Root CA 2 certificate
+    - include with Infineon OPTIGA(TM) Trust M CA 300.pem
   - Port : 5000
   - SSL Protocol : TLS1.3
 - Client (system that send HELLO request) 
-  - CA certificate :  Infineon OPTIGA(TM) Trust M CA 300.pem
-    - include with Infineon OPTIGA(TM) ECC Root CA 2 certificate
+  - - CA certificate :  Infineon OPTIGA(TM) Trust M CA 300 Root CA 2.pem
+      - include with Infineon OPTIGA(TM) ECC Root CA 2 certificate
+      - include with Infineon OPTIGA(TM) Trust M CA 300.pem
   - IP : 127.0.0.1
   - Port : 5000
   - SSL Protocol : DTLS1.3
@@ -1538,7 +1540,7 @@ For easy setup, the demo uses the following input for :
 
 ##### Getting the 0xE0E0 Certificate in OPTIGA™ Trust M and save it as test_e0e0.crt
 
-You may used the below example to get the cert.
+You may use the below example to get the cert.
 
 ```console
 foo@bar:~$ ./bin/trustm_cert -r 0xe0e0 -o test_e0e0.crt
@@ -1551,17 +1553,17 @@ Success!!!
 
 ##### CA Certificate
 
-Ensure *Infineon OPTIGA(TM) Trust M CA 300.pem* is in the same directory as test_e0e0.crt.
+Ensure *Infineon OPTIGA(TM) Trust M CA 300 Root CA 2.pem* is in the same directory as test_e0e0.crt.
 
-The *Infineon OPTIGA(TM) Trust M CA 300.pem* contain 2 certificate namely:
+The *Infineon OPTIGA(TM) Trust M CA 300 Root CA 2.pem* contain 2 certificate namely:
 
-- Infineon OPTIGA(TM) Trust M CA 300
+- Infineon OPTIGA(TM) Trust M CA 300 
 - Infineon OPTIGA(TM) ECC Root CA 2
 
 Below is a quick tips for verifying the Server cert matches the CA cert with OpenSSL
 
 ```console
-foo@bar:~$ openssl verify -CAfile 'Infineon OPTIGA(TM) Trust M CA 300.pem' -show_chain test_e0e0.crt 
+foo@bar:~$ openssl verify -CAfile 'Infineon OPTIGA(TM) Trust M CA 300 Root CA 2.pem' -show_chain test_e0e0.crt 
 test_e0e0.crt: OK
 Chain:
 depth=0: CN = InfineonIoTNode (untrusted)
@@ -1571,7 +1573,7 @@ depth=2: C = DE, O = Infineon Technologies AG, OU = OPTIGA(TM) Devices, CN = Inf
 
 #### Client Setup
 
-Ensure *Infineon OPTIGA(TM) Trust M CA 300.pem* is in the current directory.
+Ensure *Infineon OPTIGA(TM) Trust M CA 300 Root CA 2.pem* is in the current directory.
 
 #### Running the demonstration
 
@@ -1581,24 +1583,26 @@ To build the demo refer to [Build the command line tools](#build-the-command-lin
 
 #### Running the Server
 
-Open a new terminal in the system and ensure *test_e0e0.crt* and *Infineon OPTIGA(TM) Trust M CA 300.pem* is in the current folder. Run simpleTest_Server
+Open a new terminal in the system and ensure *test_e0e0.crt* and *Infineon OPTIGA(TM) Trust M CA 300 Root CA 2.pem* is in the current folder. 
+
+In this example, *test_e0e0.crt*  is needed to copy into folder scripts/SimpleServeClientTest/with_e0f0_key where *Infineon OPTIGA(TM) Trust M CA 300 Root CA 2.pem* is located.  Run *update latest exe.sh* to copy simpleTest_Server and simpleTest_Client into this folder before running simpleTest_Server
 
 Example of simpleTest_Server running without client connection
 
 ```console
-foo@bar:~$ ./bin/simpleTest_Server 
+foo@bar:~$ ./scripts/SimpleServeClientTest/with_e0f0_key/simpleTest_Server 
 89 main: *****************************************
 141 serverListen: Listening to incoming connection
 ```
 
 #### Running the Client
 
-Open another new terminal in the system and ensure *Infineon OPTIGA(TM) Trust M CA 300.pem* is in the current folder. Run simpleTest_Client
+Open another new terminal in the system and ensure *Infineon OPTIGA(TM) Trust M CA 300 Root CA 2.pem* is in the current folder. Run simpleTest_Client
 
 Example of simpleTest_Client running with connection to server
 
 ```
-foo@bar:~$ ./bin/simpleTest_Client 
+foo@bar:~$ ./scripts/SimpleServeClientTest/with_e0f0_key/simpleTest_Client 
 88 main: *****************************************
 113 doClientConnect: s_ipaddr : 127.0.0.1
 150 doClientConnect: Connecting to server ....
@@ -1616,7 +1620,7 @@ From Server [11072] : 005
 Server terminal output
 
 ```console
-foo@bar:~$ ./bin/simpleTest_Server 
+foo@bar:~$ ./scripts/SimpleServeClientTest/with_e0f0_key/simpleTest_Server 
 92 main: *****************************************
 144 serverListen: Listening to incoming connection
 157 serverListen: Connection from 127.0.0.1, port :0xe48f
@@ -1648,7 +1652,7 @@ To run multiple client connection, open another new terminal in the system and e
 // Macro for Keys/Certificates
 #define SERVER_CERT     "test_e0e0.crt"
 #define SERVER_KEY      "0xe0f0"
-#define CA_CERT         "Infineon OPTIGA(TM) Trust M CA 300.pem"
+#define CA_CERT         "Infineon OPTIGA(TM) Trust M CA 300 Root CA 2.pem"
 
 // Macro for Engine
 #define ENGINE_NAME     "trustm_engine"
@@ -1674,7 +1678,7 @@ In the *simpleTest_Server.c* code ~ line number 54-66. List the macro for changi
 
 ```
 // Macro for Keys/Certificates
-#define CA_CERT      "Infineon OPTIGA(TM) Trust M CA 300.pem"
+#define CA_CERT      "Infineon OPTIGA(TM) Trust M CA 300 Root CA 2.pem"
 
 // Macro for Engine
 #define ENGINE_NAME  "trustm_engine"

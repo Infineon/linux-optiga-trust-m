@@ -53,7 +53,7 @@
 
 #define SERVER_CERT "test_e0e0.crt"
 #define SERVER_KEY "0xe0f0"
-#define CA_CERT "Infineon OPTIGA(TM) Trust M CA 300.pem"
+#define CA_CERT "Infineon OPTIGA(TM) Trust M CA 300 Root CA 2.pem"
 
 // Macro for Engine
 #define ENGINE_NAME "trustm_engine"
