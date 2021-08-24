@@ -446,7 +446,7 @@ void trustmdecodeMetaData(uint8_t * metaData)
                     maxDataObjSize = *(metaData+(i++));
                     if (len == 2)
                         maxDataObjSize = (maxDataObjSize<<8) + *(metaData+(i++));
-                    printf("Max:%d, ",maxDataObjSize);
+                    printf("Max Size:%d, ",maxDataObjSize);
                     break;
                 
                 case 0xC5:
@@ -454,7 +454,7 @@ void trustmdecodeMetaData(uint8_t * metaData)
                     maxDataObjSize = *(metaData+(i++));
                     if (len == 2)
                         maxDataObjSize = (maxDataObjSize<<8) + *(metaData+(i++));
-                    printf("Used:%d, ",maxDataObjSize);
+                    printf("Used Size:%d, ",maxDataObjSize);
                     break;
                 
                 case 0xD0:
@@ -463,13 +463,13 @@ void trustmdecodeMetaData(uint8_t * metaData)
                     switch (*(metaData+i-1))
                     {
                         case 0xD0:
-                            printf("C:");
+                            printf("Change:");
                             break;
                         case 0xD1:
-                            printf("R:");
+                            printf("Read:");
                             break;
                         case 0xD3:
-                            printf("E:");
+                            printf("Execute:");
                             break;
                     }
                     len = *(metaData+(i++));
@@ -577,25 +577,25 @@ void trustmdecodeMetaData(uint8_t * metaData)
                 case 0xE0:
                     // len is always 1
                     len = *(metaData+(i++));
-                    printf("Algo:%s, ",__decodeAC(*(metaData+(i++))));                
+                    printf("Algorithm:%s, ",__decodeAC(*(metaData+(i++))));                
                     break;
                     
                 case 0xE1:
                     // len is always 1
                     len = *(metaData+(i++));
-                    printf("Key:%s, ",__decodeAC_E1(*(metaData+(i++))));                
+                    printf("Key Type:%s, ",__decodeAC_E1(*(metaData+(i++))));                
                     break;
                 
                 case 0xE8:
                     //
                     len = *(metaData+(i++));
-                    printf("DType:%s, ",__decodeDataObj(*(metaData+(i++))));                
+                    printf("Data Type:%s, ",__decodeDataObj(*(metaData+(i++))));                
                     break;
                     
                 case 0xF0:
                     //
                     len = *(metaData+(i++));
-                    printf("RType:%s, ",__decodeRType_E2(*(metaData+(i++))));                
+                    printf("Reset Type:%s, ",__decodeRType_E2(*(metaData+(i++))));                
                     break;
                     
                 default:
