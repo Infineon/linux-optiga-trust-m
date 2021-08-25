@@ -79,7 +79,7 @@ void helpmenu(void)
     printf("-o <filename>   : Output Pubkey to file in PEM format\n");
     printf("-s              : Save Pubkey in <Key OID + 0x10E0>\n");
     printf("                  For ECC521/BRAINPOOL512: \n");
-    printf("                  Save Pubkey in <Key OID + 0x10ED>\n");
+    printf("                  Save Pubkey in <Key OID + 0x10EF>\n");
     printf("-X              : Bypass Shielded Communication \n");
     printf("-h              : Print this help \n");
 }
@@ -323,7 +323,7 @@ int main (int argc, char **argv)
             if((keySize == 0x05) || (keySize == 0x16))
             {
                 return_status = optiga_util_write_data(me_util,
-                                                   (optiga_key_id+0x10ED),
+                                                   (optiga_key_id+0x10EF),
                                                    OPTIGA_UTIL_ERASE_AND_WRITE,
                                                    0,
                                                    (pubKey),
@@ -344,7 +344,7 @@ int main (int argc, char **argv)
                 break;
             else{
             if((keySize == 0x05) || (keySize == 0x16)){
-                printf("Write Success to OID: 0x%.4X.\n",(optiga_key_id+0x10ED));}
+                printf("Write Success to OID: 0x%.4X.\n",(optiga_key_id+0x10EF));}
             else{
             printf("Write Success to OID: 0x%.4X.\n",(optiga_key_id+0x10E0));}
                  }

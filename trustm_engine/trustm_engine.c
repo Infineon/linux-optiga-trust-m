@@ -518,7 +518,7 @@ static uint32_t parseKeyParams(const char *aArg)
                 trustm_ctx.ec_key_usage = oidMetadata.E1_keyUsage;
                 trustm_ctx.rsa_key_type = 0x00;
                 trustm_ctx.rsa_key_usage = 0x00;
-                trustm_ctx.pubkeyStore = trustm_ctx.key_oid + 0x10ED;
+                trustm_ctx.pubkeyStore = trustm_ctx.key_oid + 0x10EF;
             }
             
             if ((oidMetadata.E0_algo == OPTIGA_RSA_KEY_2048_BIT_EXPONENTIAL) ||
