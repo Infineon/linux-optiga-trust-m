@@ -120,7 +120,9 @@ foo@bar:~$ sudo make uninstall
 
 ## <a name="cli_usage"></a>CLI Tools Usage
 
-Note:  To pair the host with OPTIGA™ Trust M, please run the test script "write_default_shared_secret" inside "**linux-optiga-trust-m/scripts/misc/**" to write the default shared secret into OPTIGA™ Trust M.
+### Important Notes:  
+1. To pair the host with OPTIGA™ Trust M, please run the test script "write_default_shared_secret" inside "**linux-optiga-trust-m/scripts/misc/**" to write the default shared secret into OPTIGA™ Trust M.
+2. For secuirty reason, all commands in the following examples are with "**Shielded Connection Enabled**" and hence will increase the security counter by one. It is at the user discretion to disable "**Shielded Connection**" by using "**-X**" option if required by the application.   
 
 ### <a name="trustm_cert"></a>trustm_cert
 
