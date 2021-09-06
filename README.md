@@ -270,6 +270,12 @@ Device Public Key           [0xE0E1] [Size 0015] :
 
 Generate OPTIGA™ Trust M ECC key pair. Key type can be or together to form multiple type.
 
+Note: For ECC521/BRAINPOOL512 keygen, the private key slot only can be chosen from 0xE0F1 and 0xE0F2 if you want to save the public key into the data objects.
+
+For private key slot 0xE0F1, the public key will be stored in 0xF1E0.
+
+For private key slot 0xE0F2, the public key will be stored in 0xF1E1.
+
 ```console
 foo@bar:~$ ./bin/trustm_ecc_keygen 
 Help menu: trustm_ecc_keygen <option> ...<option>
@@ -284,7 +290,7 @@ option:-
 -o <filename>   : Output Pubkey to file in PEM format
 -s              : Save Pubkey in <Key OID + 0x10E0>
                   For ECC521/BRAINPOOL512: 
-                  Save Pubkey in <Key OID + 0x10ED>
+                  Save Pubkey in <Key OID + 0x10EF>
 -X              : Bypass Shielded Communication 
 -h              : Print this help 
 ```
@@ -1148,10 +1154,20 @@ where :
   - \* = no public input
   - ^ = public key store in Application OID Key
     - 0xE0F1 store in 0xF1D1,
+    
     - 0xE0F2 store in 0xF1D2,
+    
     - 0xE0F3 store in 0xF1D3,
+    
     - 0xE0FC store in 0xF1E0,
+    
     - 0xE0FD store in 0xF1E1
+    
+      Note: For ECC521/BRAINPOOL512, the public key store in Application OID list as below:
+    
+    - 0xE0F1 store in 0xF1E0,
+    
+    - 0xE0F2 store in 0xF1E1
 - NEW
   - Generate new key pair in OPTIGA™ Trust M
 - Key size
