@@ -270,12 +270,6 @@ Device Public Key           [0xE0E1] [Size 0015] :
 
 Generate OPTIGA™ Trust M ECC key pair. Key type can be or together to form multiple type.
 
-Note: For ECC521/BRAINPOOL512 keygen, the private key slot only can be chosen from 0xE0F1 and 0xE0F2 if you want to save the public key into the data objects.
-
-For private key slot 0xE0F1, the public key will be stored in 0xF1E0.
-
-For private key slot 0xE0F2, the public key will be stored in 0xF1E1.
-
 ```console
 foo@bar:~$ ./bin/trustm_ecc_keygen 
 Help menu: trustm_ecc_keygen <option> ...<option>
@@ -294,6 +288,12 @@ option:-
 -X              : Bypass Shielded Communication 
 -h              : Print this help 
 ```
+
+**Note:** For ECC521/BRAINPOOL512 keygen with "**-s**", the private key slot can only be chosen from 0xE0F1 and 0xE0F2 if you want to save the public key into the data objects. User may make use of "**-o**" option to output public key to file. 
+
+For private key slot 0xE0F1, the public key will be stored in 0xF1E0.
+
+For private key slot 0xE0F2, the public key will be stored in 0xF1E1.
 
 Example : generate an ECC256 key with type Auth/Enc/Sign in OID 0xE0F3 and save pubkey in OID 0xF1D3.
 
@@ -1143,13 +1143,15 @@ OPTIGA™ Trust M engine uses the -key parameter to pass input to the key genera
 
 Following is the input format:
 
--key <OID> : <public key input> : <NEW> :<key size> : <key usage>
+-key **OID** : **public key input** : **NEW** :**key size** : **key usage**
 
 where :
 
-- OID for OPTIGA™ Trust M key
+- **OID** for OPTIGA™ Trust M key
+  
   - if OID 0xE0F0 is used no other input is needed
-- public key input
+- **public key input**
+  
   - public key file name in PEM format
   - \* = no public input
   - ^ = public key store in Application OID Key
@@ -1168,9 +1170,11 @@ where :
     - 0xE0F1 store in 0xF1E0,
     
     - 0xE0F2 store in 0xF1E1
-- NEW
+- **NEW**
+  
   - Generate new key pair in OPTIGA™ Trust M
-- Key size
+- **key size**
+  
   - ECC
     - 0x03 = 256 key length  for NIST  256
     - 0x04 = 384 key length  for NIST  384
@@ -1181,7 +1185,8 @@ where :
   - RSA
     - 0x41 = 1024 key length
     - 0x42 = 2048 key length
-- Key usage 
+- **Key usage** 
+  
   - Auth : 0x01 
   - Enc : 0x02 
   - HFWU : 0x04 
@@ -1207,19 +1212,19 @@ OPTIGA™ Trust M engine uses the -in parameter to pass input to the key generat
 
 Following is the input format:
 
--in <OID> : <public key input> : <NEW> :<key size> : <key usuage>
+-in **OID** : **public key input** : **NEW** :**key size** : **key usage**
 
 (see [req](#req) for input details)
 
-Example
+Example: 
 
 ```console 
 foo@bar:~$ openssl pkey -engine trustm_engine -pubout -inform engine -in 0xe0f1:*:NEW -out testpube0f1.pem
 ```
 
 ### <a name="dgst"></a>dgst
-Usuage : Sign and verify
-Example
+Usage : Sign and verify
+Example:
 
 ```console 
 foo@bar:~$ openssl dgst -sign 0xe0f1 -engine trustm_engine -keyform engine -out helloworld.sig helloworld.txt
