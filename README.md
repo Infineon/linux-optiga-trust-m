@@ -1594,7 +1594,7 @@ depth=1: C = DE, O = Infineon Technologies AG, OU = OPTIGA(TM), CN = Infineon OP
 depth=2: C = DE, O = Infineon Technologies AG, OU = OPTIGA(TM) Devices, CN = Infineon OPTIGA(TM) ECC Root CA 2
 ```
 
-##### <a name="simpleTest_Server Code Configuration"></a>simpleTest_Server Code Configuration
+##### <a name="simpleTest_Server_Code_Configuration"></a>simpleTest_Server Code Configuration
 
 ```c
 // Macro for Keys/Certificates
@@ -1626,7 +1626,7 @@ In the *simpleTest_Server.c* code ~ line number 54-66. List the macro for changi
 
 Ensure *Infineon OPTIGA(TM) Trust M CA 300 Root CA 2.pem* is in the current directory.
 
-##### <a name="simpleTest_Client Code Configuration"></a>simpleTest_Client Code Configuration
+##### <a name="simpleTest_Client_Code_Configuration"></a>simpleTest_Client Code Configuration
 
 ```
 // Macro for Keys/Certificates
@@ -1654,7 +1654,7 @@ In the *simpleTest_Client.c* code ~ line number 53-63. List the macro for changi
 
 #### Running the demonstration
 
-As the default IP is set to a loopback IP 127.0.0.1 both the server and client need to be run on the same system. To run the client and server on a different system please refer to [simpleTest_Server Code Configuration](#simpleTest_Server Code Configuration) and [simpleTest_Client Code Configuration](#simpleTest_Client Code Configuration)
+As the default IP is set to a loopback IP 127.0.0.1 both the server and client need to be run on the same system. To run the client and server on a different system please refer to [simpleTest_Server Code Configuration](#simpleTest_Server_Code_Configuration) and [simpleTest_Client Code Configuration](#simpleTest_Client_Code_Configuration)
 
 To build the demo refer to [First time building the library](#build_lib)
 
