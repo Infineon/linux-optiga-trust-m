@@ -1594,82 +1594,7 @@ depth=1: C = DE, O = Infineon Technologies AG, OU = OPTIGA(TM), CN = Infineon OP
 depth=2: C = DE, O = Infineon Technologies AG, OU = OPTIGA(TM) Devices, CN = Infineon OPTIGA(TM) ECC Root CA 2
 ```
 
-#### Client Setup
-
-Ensure *Infineon OPTIGA(TM) Trust M CA 300 Root CA 2.pem* is in the current directory.
-
-#### Running the demonstration
-
-As the default IP is set to a loopback IP 127.0.0.1 both the server and client need to be run on the same system. To run the client and server on a different system please refer to [More about simpleTest_Server](#more-about-simpletest_server) and [More about simpleTest_Client](#more-about-simpletest_client)
-
-To build the demo refer to [Build the command line tools](#build-the-command-line-tools)
-
-#### Running the Server
-
-Open a new terminal in the system and ensure *test_e0e0.crt* and *Infineon OPTIGA(TM) Trust M CA 300 Root CA 2.pem* is in the current folder. 
-
-In this example, *test_e0e0.crt*  is needed to copy into folder scripts/SimpleServeClientTest/with_e0f0_key where *Infineon OPTIGA(TM) Trust M CA 300 Root CA 2.pem* is located.  Run *update latest exe.sh* to copy simpleTest_Server and simpleTest_Client into this folder before running simpleTest_Server
-
-Example of simpleTest_Server running without client connection
-
-```console
-foo@bar:~$ ./scripts/SimpleServeClientTest/with_e0f0_key/simpleTest_Server 
-89 main: *****************************************
-141 serverListen: Listening to incoming connection
-```
-
-#### Running the Client
-
-Open another new terminal in the system and ensure *Infineon OPTIGA(TM) Trust M CA 300 Root CA 2.pem* is in the current folder. Run simpleTest_Client
-
-Example of simpleTest_Client running with connection to server
-
-```
-foo@bar:~$ ./scripts/SimpleServeClientTest/with_e0f0_key/simpleTest_Client 
-88 main: *****************************************
-113 doClientConnect: s_ipaddr : 127.0.0.1
-150 doClientConnect: Connecting to server ....
-168 doClientConnect: Connected to 127.0.0.1, port :0x8813
-190 doClientConnect: Performing Handshaking .....
-199 doClientConnect: Connection using : TLS_AES_256_GCM_SHA384
-200 doClientConnect:                  : TLSv1.3
-From Server [11072] : 001
-From Server [11072] : 002
-From Server [11072] : 003
-From Server [11072] : 004
-From Server [11072] : 005
-```
-
-Server terminal output
-
-```console
-foo@bar:~$ ./scripts/SimpleServeClientTest/with_e0f0_key/simpleTest_Server 
-92 main: *****************************************
-144 serverListen: Listening to incoming connection
-157 serverListen: Connection from 127.0.0.1, port :0xe48f
-144 serverListen: Listening to incoming connection
-236 doServerConnected: Engine ID : trustm_engine
-242 doServerConnected: Init TrustM Engine. Ok
-248 doServerConnected: Set Default Engine Ok.
-261 doServerConnected: Load Certificate ok
-269 doServerConnected: Private Key Match the Server Certificate.
-278 doServerConnected: Load CA cert ok
-301 doServerConnected: Performing Handshking ......... 
-306 doServerConnected: Connection using : TLS_AES_256_GCM_SHA384
-307 doServerConnected:                  : TLSv1.3
-308 doServerConnected: ++++++++++++++++++++++++++++++++++++++++++++++
-328 doServerConnected: [12081] Received : 1
-328 doServerConnected: [12081] Received : 2
-328 doServerConnected: [12081] Received : 3
-328 doServerConnected: [12081] Received : 4
-328 doServerConnected: [12081] Received : 5
-```
-
-The above console screen show a successful server/client connection via TLS1.3. After the TLS handshake is completed the client will send count from 1 to 100 to the server. When server received the data from client it will is display the info received and send back the Process ID (PID) and data received to the client. The client when received the data from the service, it will display them on the screen.
-
-To run multiple client connection, open another new terminal in the system and ensure *Infineon OPTIGA(TM) Trust M CA 300.pem* is in the current folder. Run simpleTest_Client.
-
-#### More about simpleTest_Server
+##### <a name="simpleTest_Server Code Configuration"></a>simpleTest_Server Code Configuration
 
 ```c
 // Macro for Keys/Certificates
@@ -1697,7 +1622,11 @@ In the *simpleTest_Server.c* code ~ line number 54-66. List the macro for changi
 - DEFAULT_PORT   *\<Port to use for connection>*
 - SECURE_COMM   *\<SSL Protocol to be used TLS/DTLS>*
 
-#### More about simpleTest_Client
+#### Client Setup
+
+Ensure *Infineon OPTIGA(TM) Trust M CA 300 Root CA 2.pem* is in the current directory.
+
+##### <a name="simpleTest_Client Code Configuration"></a>simpleTest_Client Code Configuration
 
 ```
 // Macro for Keys/Certificates
@@ -1720,6 +1649,111 @@ In the *simpleTest_Client.c* code ~ line number 53-63. List the macro for changi
 - DEFAULT_IP         *\<IP address, not important for server>*
 - DEFAULT_PORT   *\<Port to use for connection>*
 - SECURE_COMM   *\<SSL Protocol to be used TLS/DTLS>*
+
+
+
+#### Running the demonstration
+
+As the default IP is set to a loopback IP 127.0.0.1 both the server and client need to be run on the same system. To run the client and server on a different system please refer to [simpleTest_Server Code Configuration](#simpleTest_Server Code Configuration) and [simpleTest_Client Code Configuration](#simpleTest_Client Code Configuration)
+
+To build the demo refer to [First time building the library](#build_lib)
+
+#### Running the Server
+
+Open a new terminal in the system and ensure ***test_e0e0.crt*** and ***Infineon OPTIGA(TM) Trust M CA 300 Root CA 2.pem*** is in the current folder. 
+
+In this example, ***test_e0e0.crt***  need to be copied into folder "**scripts/SimpleServeClientTest/with_e0f0_key/**" where ***Infineon OPTIGA(TM) Trust M CA 300 Root CA 2.pem*** is located.  Run "***update latest exe.sh***" to copy simpleTest_Server and simpleTest_Client into this folder before running simpleTest_Server
+
+Configure the path parameters in "**config.sh**" as follow:
+
+```
+EXEPATH="/home/pi/linux-optiga-trust-m/bin"
+CERT_PATH="/home/pi/linux-optiga-trust-m/scripts/certificates"
+```
+
+Execute the "***update latest exe.sh***":
+
+```
+foo@bar:~/linux-optiga-trust-m/scripts/SimpleServeClientTest/with_e0f0_key $ ./update_latest_exe.sh 
+Copy simpleTest executable into current directory
+Read out Certificate
+========================================================
+OID              : 0xE0E0 
+Output File Name : test_e0e0.crt 
+Success!!!
+========================================================
+foo@bar:~/linux-optiga-trust-m/scripts/SimpleServeClientTest/with_e0f0_key $ ls -l
+total 48
+-rwxr-xr-x 1 pi pi   107 Sep  9 10:00  config.sh
+-rw-r--r-- 1 pi pi  2034 Sep  8 16:34 'Infineon OPTIGA(TM) Trust M CA 300 Root CA 2.pem'
+-rwxr-xr-x 1 pi pi 13688 Sep  9 10:23  simpleTest_Client
+-rwxr-xr-x 1 pi pi 14596 Sep  9 10:23  simpleTest_Server
+-rw-r--r-- 1 pi pi   741 Sep  9 10:23  test_e0e0.crt
+-rwxr-xr-x 1 pi pi   201 Sep  9 10:22  update_latest_exe.sh
+```
+
+
+
+Example of simpleTest_Server running without client connection
+
+```console
+foo@bar:~/linux-optiga-trust-m/scripts/SimpleServeClientTest/with_e0f0_key $ ./simpleTest_Server 
+89 main: *****************************************
+141 serverListen: Listening to incoming connection
+```
+
+#### Running the Client
+
+Open another new terminal in the system and ensure *Infineon OPTIGA(TM) Trust M CA 300 Root CA 2.pem* is in the current folder. Run simpleTest_Client
+
+Example of simpleTest_Client running with connection to server
+
+```
+foo@bar:~/linux-optiga-trust-m/scripts/SimpleServeClientTest/with_e0f0_key $ ./simpleTest_Client 
+88 main: *****************************************
+113 doClientConnect: s_ipaddr : 127.0.0.1
+150 doClientConnect: Connecting to server ....
+168 doClientConnect: Connected to 127.0.0.1, port :0x8813
+190 doClientConnect: Performing Handshaking .....
+199 doClientConnect: Connection using : TLS_AES_256_GCM_SHA384
+200 doClientConnect:                  : TLSv1.3
+From Server [11072] : 001
+From Server [11072] : 002
+From Server [11072] : 003
+From Server [11072] : 004
+From Server [11072] : 005
+```
+
+Server terminal output
+
+```console
+foo@bar:~/linux-optiga-trust-m/scripts/SimpleServeClientTest/with_e0f0_key $ ./simpleTest_Server 
+89 main: *****************************************
+144 serverListen: Listening to incoming connection
+157 serverListen: Connection from 127.0.0.1, port :0xe48f
+144 serverListen: Listening to incoming connection
+236 doServerConnected: Engine ID : trustm_engine
+242 doServerConnected: Init TrustM Engine. Ok
+248 doServerConnected: Set Default Engine Ok.
+261 doServerConnected: Load Certificate ok
+269 doServerConnected: Private Key Match the Server Certificate.
+278 doServerConnected: Load CA cert ok
+301 doServerConnected: Performing Handshking ......... 
+306 doServerConnected: Connection using : TLS_AES_256_GCM_SHA384
+307 doServerConnected:                  : TLSv1.3
+308 doServerConnected: ++++++++++++++++++++++++++++++++++++++++++++++
+328 doServerConnected: [12081] Received : 1
+328 doServerConnected: [12081] Received : 2
+328 doServerConnected: [12081] Received : 3
+328 doServerConnected: [12081] Received : 4
+328 doServerConnected: [12081] Received : 5
+```
+
+The above console screen show a successful server/client connection via TLS1.3. After the TLS handshake is completed the client will send count from 1 to 100 to the server. When server received the data from client it will is display the info received and send back the Process ID (PID) and data received to the client. The client when received the data from the service, it will display them on the screen.
+
+To run multiple client connection, open another new terminal in the system and ensure *Infineon OPTIGA(TM) Trust M CA 300.pem* is in the current folder. Run simpleTest_Client.
+
+
 
 ## <a name="known_observations"></a>Known observations
 
