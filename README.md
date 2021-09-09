@@ -37,7 +37,9 @@
     * [Testing TLS connection with ECC key](#test_tls_ecc)
     * [Testing TLS connection with RSA key](#test_tls_rsa)
     * [Using Trust M OpenSSL engine to sign and issue certificate](#issue_cert)
-    * [Simple Example on OpenSSL using C language](#opensslc)
+    * [Simple Server and Client Examples on OpenSSL using C language](#opensslc)
+      * [Server and Client example with pre-provisioned key(0xE0F0) and Certificate(0xE0E0)](#server_client_preprovisioned)
+      * [Server and Client example with key (0xE0F1) with external public key and Certificate](./scripts/SimpleServeClientTest/SimpleServeClient_with_pubkeyfile/)
 5. [AWS IoT C-SDK](./ex_aws-iot-device-sdk-embedded-C-1.1.2/README.md)
 6. [Known observations](#known_observations)
 
@@ -1533,13 +1535,13 @@ foo@bar:~$ openssl x509 -CAkeyform engine -engine trustm_engine \
 -extensions cert_ext
 ```
 
-### <a name="opensslC"></a>Simple Example on OpenSSL using C language
+### <a name="opensslc"></a>Simple Server and Client Examples on OpenSSL using C language
 
-In this section, we will describe and demo how the OPTIGA™ Trust M OpenSSL engine could be coded in 'C' to perform TLD/DTLS communication.
+In this section, we will describe and demo how the OPTIGA™ Trust M OpenSSL engine could be coded in 'C' to perform TLS/DTLS communication.
 
 *Note : The code only shows example on using OPTIGA™ Trust M for authentication and the secure communication is done via OpenSSL.*
 
-#### Setting up the environment for the demonstration
+#### <a name="server_client_preprovisioned"></a>Server and Client example with pre-provisioned key(0xE0F0) and Certificate(0xE0E0)
 
 For easy setup, the demo uses the following input for :
 
@@ -1753,7 +1755,9 @@ The above console screen show a successful server/client connection via TLS1.3. 
 
 To run multiple client connection, open another new terminal in the system and ensure *Infineon OPTIGA(TM) Trust M CA 300.pem* is in the current folder. Run simpleTest_Client.
 
+#### Server and Client example with key (0xE0F1) with external public key and Certificate
 
+Go to the subsection at  [Server and Client example with key (0xE0F1) with external public key and Certificate](./scripts/SimpleServeClientTest/SimpleServeClient_with_pubkeyfile/)
 
 ## <a name="known_observations"></a>Known observations
 
