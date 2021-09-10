@@ -33,7 +33,7 @@ The following example show how to use the key slot 0xE0F1 to generate new key, s
 
 * Configure the path parameters in "**config.sh**" as follow according to the project directory path for "bin" and "certificates" folders :
 
-  ```shell
+  ```sh
   EXEPATH="/home/pi/linux-optiga-trust-m/bin"
   CERT_PATH="/home/pi/linux-optiga-trust-m/scripts/certificates"
   ```

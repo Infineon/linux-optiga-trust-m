@@ -1521,7 +1521,7 @@ Following demonstrate how you can issue and sign certificate with OPTIGA™ Trus
 
 *Note : Refer to [Generating a Test Server Certificate](#testServercert)  for openssl.cnf*
 
-```
+```console
 foo@bar:~$ openssl x509 -CAkeyform engine -engine trustm_engine \
 -req \
 -in test_e0f3.csr \
@@ -1630,7 +1630,7 @@ Ensure *Infineon OPTIGA(TM) Trust M CA 300 Root CA 2.pem* is in the current dire
 
 ##### <a name="simpleTest_Client_Code_Configuration"></a>simpleTest_Client Code Configuration
 
-```
+```c
 // Macro for Keys/Certificates
 #define CA_CERT      "Infineon OPTIGA(TM) Trust M CA 300 Root CA 2.pem"
 
@@ -1668,7 +1668,7 @@ In this example, ***test_e0e0.crt***  need to be copied into folder "**scripts/S
 
 Configure the path parameters in "**config.sh**" as follow:
 
-```shell
+```sh
 EXEPATH="/home/pi/linux-optiga-trust-m/bin"
 CERT_PATH="/home/pi/linux-optiga-trust-m/scripts/certificates"
 ```
