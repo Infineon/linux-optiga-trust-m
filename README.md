@@ -1668,14 +1668,14 @@ In this example, ***test_e0e0.crt***  need to be copied into folder "**scripts/S
 
 Configure the path parameters in "**config.sh**" as follow:
 
-```
+```shell
 EXEPATH="/home/pi/linux-optiga-trust-m/bin"
 CERT_PATH="/home/pi/linux-optiga-trust-m/scripts/certificates"
 ```
 
 Execute the "***update latest exe.sh***":
 
-```
+```console
 foo@bar:~/linux-optiga-trust-m/scripts/SimpleServeClientTest/with_e0f0_key $ ./update_latest_exe.sh 
 Copy simpleTest executable into current directory
 Read out Certificate
@@ -1710,7 +1710,7 @@ Open another new terminal in the system and ensure *Infineon OPTIGA(TM) Trust M 
 
 Example of simpleTest_Client running with connection to server
 
-```
+```console
 foo@bar:~/linux-optiga-trust-m/scripts/SimpleServeClientTest/with_e0f0_key $ ./simpleTest_Client 
 88 main: *****************************************
 113 doClientConnect: s_ipaddr : 127.0.0.1

@@ -6,7 +6,7 @@ The following example show how to use the key slot 0xE0F1 to generate new key, s
 
   The simpleTest_Server.c has been modified as follow to use external public key file:
 
-  ```
+  ```c
   #define SERVER_CERT "server1.crt"
   #define SERVER_KEY "0xe0f1:server1.pub"
   #define CA_CERT "OPTIGA_Trust_M_Infineon_Test_CA.pem"
@@ -18,7 +18,7 @@ The following example show how to use the key slot 0xE0F1 to generate new key, s
 
   The simpleTest_Client.c  has been modified as follow:
 
-  ```
+  ```c
   // Macro for Keys/Certificates
   #define CA_CERT "OPTIGA_Trust_M_Infineon_Test_CA.pem"
   ```
@@ -33,7 +33,7 @@ The following example show how to use the key slot 0xE0F1 to generate new key, s
 
 * Configure the path parameters in "**config.sh**" as follow according to the project directory path for "bin" and "certificates" folders :
 
-  ```
+  ```shell
   EXEPATH="/home/pi/linux-optiga-trust-m/bin"
   CERT_PATH="/home/pi/linux-optiga-trust-m/scripts/certificates"
   ```
@@ -42,7 +42,7 @@ The following example show how to use the key slot 0xE0F1 to generate new key, s
 
 * Run **step1a_generate_keys_wo_pkey_store.sh** to generate keypair, external public key and server certificate as follow:
 
-  ```
+  ```console
   pi@raspberrypi:~/linux-optiga-trust-m/scripts/SimpleServeClientTest/SimpleServeClient_with_pubkeyfile $ ./step1a_generate_keys_wo_pkey_store.sh 
   Server1:-----> Creates new ECC 256 key length and Auth/Enc/Sign usage and generate a certificate request
   engine "trustm_engine" set.
@@ -98,7 +98,7 @@ The following example show how to use the key slot 0xE0F1 to generate new key, s
 
 * Execute the "***update latest exe.sh***":
 
-  ```
+  ```console
   pi@raspberrypi:~/linux-optiga-trust-m/scripts/SimpleServeClientTest/SimpleServeClient_with_pubkeyfile $ ./update_latest_exe.sh 
   Copy simpleTest executable into current directory
   pi@raspberrypi:~/linux-optiga-trust-m/scripts/SimpleServeClientTest/SimpleServeClient_with_pubkeyfile $ ls -l
@@ -137,7 +137,7 @@ The following example show how to use the key slot 0xE0F1 to generate new key, s
 
   Example of simpleTest_Client running with connection to server
 
-  ```
+  ```console
   pi@raspberrypi:~/linux-optiga-trust-m/scripts/SimpleServeClientTest/SimpleServeClient_with_pubkeyfile $ ./simpleTest_Client 
   88 main: *****************************************
   113 doClientConnect: s_ipaddr : 127.0.0.1
