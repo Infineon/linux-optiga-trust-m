@@ -436,7 +436,7 @@ void trustmdecodeMetaData(uint8_t * metaData)
                 case 0xC1:
                     // len is always 2
                     len = *(metaData+(i++));
-                    printf("Ver:%.2x%.2x, ", *(metaData+(i+1)),*(metaData+(i+2)));
+                    printf("Version:%.2x%.2x, ", *(metaData+i),*(metaData+(i+1)));
                     i++;
                     i++;
                     break;
