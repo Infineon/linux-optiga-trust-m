@@ -133,7 +133,7 @@ The following example show how to use the key slot 0xE0F1 to generate new key, s
 
   #### Running the Client
 
-  Open another new terminal in the system and ensure *Infineon OPTIGA(TM) Trust M CA 300 Root CA 2.pem* is in the current folder. Run simpleTest_Client
+  Open another new terminal in the system and ensure *OPTIGA_Trust_M_Infineon_Test_CA.pem* is in the current folder. Run simpleTest_Client
 
   Example of simpleTest_Client running with connection to server
 
