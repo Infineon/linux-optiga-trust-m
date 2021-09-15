@@ -799,6 +799,11 @@ uint16_t trustmReadPEM(uint8_t *buf, uint32_t *len, const char *filename, char *
     }
     
     pkey = PEM_read_PUBKEY(fp,NULL,NULL,NULL);
+    if(pkey == NULL)
+    {        
+         TRUSTM_HELPER_ERRFN("Pubkey is invalid!");
+         return 1;
+    }
     i = EVP_PKEY_id(pkey);
     *keyType = (uint16_t) i;
     TRUSTM_HELPER_DBGFN("pkey id : %d [%X]\n",i,i);
