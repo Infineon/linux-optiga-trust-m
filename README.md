@@ -29,6 +29,7 @@
     * [trustm_symmetric_dec](#trustm_symmetric_dec)
     * [trustm_hkdf](#trustm_hkdf)
     * [trustm_hmac](#trustm_hmac)
+    * [trustm_hmac_verify_Auth](#trustm_hmac_verify_Auth)
 4. [Trust M1/M3 OpenSSL Engine usage](#engine_usage)
     * [rand](#rand)
     * [req](#req)
@@ -1119,6 +1120,32 @@ MAC data :
 ========================================================
 
 ```
+
+###  <a name="trustm_hmac_verify_Auth"></a>trustm_hmac_verify_Auth
+
+Simple demo to show the process to do hmac verification with authorization reference(the secret installed in OPTIGA™ Trust M).
+
+```console
+foo@bar:~$ ./bin/trustm_hmac_verify_Auth -h
+Help menu: trustm_hmac_verify_Auth <option> ...<option>
+option:- 
+-I <OID>      : Input secret OID 0xNNNN 
+                [default 0xF1D0]
+-T <OID>      : Input target OID 0xNNNN 
+                [default 0xF1D5]
+-w <filename> : Write Data into target OID
+-o <filename> : Output Data stored inside target OID
+-X            : Bypass Shielded Communication 
+-h            : Print this help
+```
+
+Precondition: Write shared secret into the data object and change the metadata of this data object to AUTHREF.
+
+Note: For detailed use case, please refer to the sample test scripts inside  "**linux-optiga-trust-m/scripts/hmac_secure_storage/**"
+
+Run hmac_authenticated_storage_provisioning_step1.sh to do the provision for secret OID and Target OID.
+
+Run hmac_authenticated_read_write_step2.sh to write in or readout the data in target OID after hmac verify successfully.
 
 ## <a name="engine_usage"></a>OPTIGA™ Trust M3 OpenSSL Engine usage
 

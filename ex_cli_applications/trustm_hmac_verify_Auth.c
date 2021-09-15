@@ -72,12 +72,12 @@ union _uOptFlag {
 
 void helpmenu(void)
 {
-    printf("\nHelp menu: trustm_hmac_verify <option> ...<option>\n");
+    printf("\nHelp menu: trustm_hmac_verify_Auth <option> ...<option>\n");
     printf("option:- \n");
     printf("-I <OID>      : Input secret OID 0xNNNN \n");
     printf("                [default 0xF1D0]\n");
     printf("-T <OID>      : Input target OID 0xNNNN \n");
-    printf("                [default 0xF1D2]\n");
+    printf("                [default 0xF1D5]\n");
     printf("-w <filename> : Write Data into target OID\n");
     printf("-o <filename> : Output Data stored inside target OID\n");
     printf("-X            : Bypass Shielded Communication \n");
@@ -186,7 +186,7 @@ int main (int argc, char **argv)
 {
     optiga_lib_status_t return_status;
     uint16_t secret_oid = 0xF1D0;// default secret OID;
-    uint16_t target_oid = 0xF1D2;// default target OID;
+    uint16_t target_oid = 0xF1D5;// default target OID;
     uint8_t hmac_type=0x20;// default HMAC_SHA256
     uint16_t offset, bytes_to_read;
     uint8_t read_data_buffer[100];
