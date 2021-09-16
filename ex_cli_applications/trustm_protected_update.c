@@ -63,9 +63,9 @@ union _uOptFlag {
 
 void _helpmenu(void)
 {
-    printf("\nHelp menu: trustm_rsa_verify <option> ...<option>\n");
+    printf("\nHelp menu: trustm_protected_update <option> ...<option>\n");
     printf("option:- \n");
-    printf("-k <OID Key>   : Target OID \n");
+    printf("-k <OID>       : Target OID \n");
     printf("-f <filename>  : Fragment file\n");
     printf("-m <filename>  : Manifest file\n");
     printf("-X             : Bypass Shielded Communication \n");
@@ -120,8 +120,8 @@ int main (int argc, char **argv)
     optiga_lib_status_t return_status;
 
     uint16_t target_oid = 0xE0E2;
-    uint8_t manifest_metadata[300];  
-    uint8_t metadata_final_fragment_array[50];    
+    uint8_t manifest_metadata[2048];  
+    uint8_t metadata_final_fragment_array[2048];    
     uint16_t manifestLen = sizeof(manifest_metadata);
     uint16_t fragmentLen = sizeof(metadata_final_fragment_array);
 
@@ -194,7 +194,7 @@ int main (int argc, char **argv)
     #endif 
     else
         trustm_hibernate_flag = 0; // disable hibernate Context Save
-
+    
     return_status = trustm_Open();
     if (return_status != OPTIGA_LIB_SUCCESS)
         exit(1);
@@ -220,6 +220,11 @@ int main (int argc, char **argv)
         {
             printf("Error manifest reading file!!!\n");
             break;
+        }       
+        if (manifestLen > 2048)
+        {
+            printf("Error: OPTIGA device Invalid Manifest!!!\n");
+            break;
         }
         fragmentLen = trustmreadFrom(metadata_final_fragment_array, (uint8_t *) fragmentFile);
         if (fragmentLen == 0)
@@ -227,7 +232,11 @@ int main (int argc, char **argv)
             printf("Error fragment reading file!!!\n");
             break;
         }
-        
+        if (fragmentLen > 2048)
+        {
+            printf("Error: OPTIGA device Invalid fragment!!!\n");
+            break;
+        }
         printf("OID            : 0x%.4X\n",target_oid);
         printf("Manifest File Name : %s \n", manifestFile);
         printf("Manifest : \n");
