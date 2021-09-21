@@ -30,6 +30,7 @@
     * [trustm_hkdf](#trustm_hkdf)
     * [trustm_hmac](#trustm_hmac)
     * [trustm_hmac_verify_Auth](#trustm_hmac_verify_Auth)
+    * [trustm_protected_update](#trustm_protected_update)
 4. [Trust M1/M3 OpenSSL Engine usage](#engine_usage)
     * [rand](#rand)
     * [req](#req)
@@ -1146,6 +1147,120 @@ Note: For detailed use case, please refer to the sample test scripts inside  "**
 Run hmac_authenticated_storage_provisioning_step1.sh to do the provision for secret OID and Target OID.
 
 Run hmac_authenticated_read_write_step2.sh to write in or readout the data in target OID after hmac verify successfully.
+
+###  <a name="trustm_protected_update"></a>trustm_protected_update
+
+Simple demo to show the process to do protected update for metadata of target OID by using the trust Anchor installed in OPTIGA™ Trust M and/or the secret installed in OPTIGA™ Trust M .
+
+```console
+foo@bar:~$ ./bin/trustm_protected_update -h
+Help menu: trustm_protected_update <option> ...<option>
+option:- 
+-k <OID>       : Target OID 
+-f <filename>  : Fragment file
+-m <filename>  : Manifest file
+-X             : Bypass Shielded Communication 
+-h             : Print this help 
+```
+
+Example for integrity protection: 
+
+1. Write Trust Anchor into the data object(can choose from 0xE0E1-0xE0E3, 0xE0E8-0XE0E9) and change the metadata of this data object to TA.
+
+   Note: In this test script protected_update_provisioning_step1.sh inside  "**linux-optiga-trust-m/scripts/protected_update_metadata/**", the data object 0xE0E3 is used to store the trust anchor. 
+
+2. Write certificate into the target data object and change the metadata of the target OID accordingly. The version number,metadata update descriptor and Reset type are the parts which are needed to be changed. 
+
+   For example, the metadata of the target OID can be set as shown as below: 
+
+   ```console
+   foo@bar:~$ ./bin/trustm_metadata -r 0xe0e1
+   
+   ========================================================
+   Device Public Key           [0xE0E1] 
+   [Size 0039] : 
+   	20 25 C0 01 01 C1 02 00 00 C4 02 06 C0 C5 02 03 
+   	2E D0 03 E1 FC 07 D1 01 00 D3 01 00 D8 03 21 E0 
+   	E3 E8 01 12 F0 01 11 
+   	LcsO:0x01, Version:0000, Max Size:1728, Used Size:814, Change:LcsO<0x07, Read:ALW, Execute:ALW, MUD:Int-0xE0E3, Data Type:DEVCERT, Reset Type:SETCRE/FLUSH, 
+   ```
+
+   In this example, the version number is 0000, this data object is integrity protected by trust anchor inside 0xE0E3.After reset, the data inside this data object will be flushed.
+
+3. Set the Lcos to Operational state by running the command below:
+
+   ```console
+   foo@bar:~$ ./bin/trustm_metadata -w 0xe0e1 -O
+   ========================================================
+   Device Public Key           [0xE0E1] 
+   
+   	20 03 C0 01 07 
+   	LcsO:0x07, 
+   Write Success.
+   ========================================================
+   ```
+
+   The metadata of the target OID is shown as below:
+
+   ```console
+   foo@bar:~$ ./bin/trustm_metadata -w 0xe0e1 -O
+   ========================================================
+   Device Public Key           [0xE0E1] 
+   [Size 0039] : 
+   	20 25 C0 01 07 C1 02 00 00 C4 02 06 C0 C5 02 03 
+   	2E D0 03 E1 FC 07 D1 01 00 D3 01 00 D8 03 21 E0 
+   	E3 E8 01 12 F0 01 11 
+   	LcsO:0x07, Version:0000, Max Size:1728, Used Size:814, Change:LcsO<0x07, Read:ALW, Execute:ALW, MUD:Int-0xE0E3, Data Type:DEVCERT, Reset Type:SETCRE/FLUSH,  
+   ```
+
+4. 
+
+   ```console
+   foo@bar:~$ ./bin/trustm_metadata -r 0xe0e1
+   
+   ========================================================
+   Device Public Key           [0xE0E1] 
+   [Size 0039] : 
+   	20 25 C0 01 01 C1 02 00 00 C4 02 06 C0 C5 02 03 
+   	2E D0 03 E1 FC 07 D1 01 00 D3 01 00 D8 03 21 E0 
+   	E3 E8 01 12 F0 01 11 
+   	LcsO:0x01, Version:0000, Max Size:1728, Used Size:814, Change:LcsO<0x07, Read:ALW, Execute:ALW, MUD:Int-0xE0E3, Data Type:DEVCERT, Reset Type:SETCRE/FLUSH, 
+   ```
+
+   In this example, the version number is 0000, this data object is integrity protected by trust anchor inside 0xE0E3.After reset, 
+
+5. Run the windows program to get the correct manifest and fragment 
+
+   1) Go to \trustm_lib\examples\tools\protected_update_data_set\samples and open command prompt
+
+   2) Run this example command:
+
+      C: \optiga-trust-m\examples\tools\protected_update_data_set\samples> ..\bin\protected_update_data_set.exe payload_version=4 trust_anchor_oid=E0E3 target_oid=E0E1 sign_algo=ES_256 priv_key=..\samples\integrity\sample_ec_256_priv.pem payload_type=metadata metadata=..\samples\payload\metadata\metadata.txt content_reset=0
+
+      Note:
+
+      1. There are some options to configure in this command. For more details, please go to https://github.com/Infineon/optiga-trust-m/tree/master/examples/tools/protected_update_data_set
+
+      2. The example metadata.txt for used here is: 200BC00101D10100D003E1FC07
+
+      3. The private key for Test Trust Anchor must be available in the corresponding folder
+
+6.  Convert the manifest and fragment and transfer them to Linux tools 
+
+7.  Use the manifest and fragment as input for trustm_protected_update as stated in protected_update_step2.sh  "**linux-optiga-trust-m/scripts/protected_update_metadata/**"
+
+   If the protected update is successful, Lcos of this data object will be changed back to creation mode and the certificate inside the target data object will be flushed.
+
+   ```console
+   Device Public Key           [0xE0E1] 
+   [Size 0039] : 
+   	20 25 C0 01 01 C1 02 00 03 C4 02 06 C0 C5 02 00 
+   	00 D0 03 E1 FC 07 D1 01 00 D3 01 00 D8 03 21 E0 
+   	E3 E8 01 12 F0 01 11 
+   	LcsO:0x01, Version:0003, Max Size:1728, Used Size:0, Change:LcsO<0x07, Read:ALW, Execute:ALW, MUD:Int-0xE0E3, Data Type:DEVCERT, Reset Type:SETCRE/FLUSH,  
+   ```
+
+Note: For detailed use case, please refer to the sample test scripts inside  "**linux-optiga-trust-m/scripts/protected_update_metadata/**"
 
 ## <a name="engine_usage"></a>OPTIGA™ Trust M3 OpenSSL Engine usage
 
