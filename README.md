@@ -470,25 +470,25 @@ option:-
                              n:NEV,
                              i:Lsc0 < 0x03,
                              o:Lsc0 < 0x07,
-                             t:Lsc0 < 0xFF,
+                             t:Lsc0 < 0x0F,
                              f:<input file for complex setting>)
 -R <data> : Set Read mode   (a:ALW,
                              n:NEV,
                              i:Lsc0 < 0x03,
                              o:Lsc0 < 0x07,
-                             t:Lsc0 < 0xFF,
+                             t:Lsc0 < 0x0F,
                              f:<input file for complex setting>)
 -E <data> : Set Change mode (a:ALW,
                              n:NEV,
                              i:Lsc0 < 0x03,
                              o:Lsc0 < 0x07,
-                             t:Lsc0 < 0xFF,
+                             t:Lsc0 < 0x0F,
                              f:<input file for complex setting>)
 -F <file> : Custom input
           : (Need to input the full Metadata to be written)
 -I        : Set Initialization State (Lsc0: 0x03)
 -O        : Set Operational State (Lsc0: 0x07)
--T        : Set Termination State (Lsc0: 0xFF)
+-T        : Set Termination State (Lsc0: 0x0F)
 -X        : Bypass Shielded Communication 
 -h        : Print this help 
 ```
@@ -1176,7 +1176,7 @@ Example for integrity protection:
 
    E8 means data object Type, the following "01" means the length of the coming data, and the last"11" means Trust Anchor type.
 
-   After running  "**protected_update_provision_step1.sh**", the data object type is set to Trust Anchor. 
+   After running  "**protected_update_provisioning_step1.sh**", the data object type is set to Trust Anchor. 
 
    ```console
    foo@bar:~$ ./bin/trustm_metadata -r 0xe0e3
@@ -1219,23 +1219,7 @@ Example for integrity protection:
    	LcsO:0x01, Version:0000, Max Size:1728, Used Size:506, Change:LcsO<0x07, Read:ALW, Execute:ALW, MUD:Int-0xE0E3, Data Type:DEVCERT, Reset Type:SETCRE/FLUSH, 
    ```
 
-3. For example, the metadata of the target OID can be set as shown as below: 
-
-   ```console
-   foo@bar:~$ ./bin/trustm_metadata -r 0xe0e1
-   
-   ========================================================
-   Device Public Key           [0xE0E1] 
-   [Size 0039] : 
-   	20 25 C0 01 01 C1 02 00 00 C4 02 06 C0 C5 02 03 
-   	2E D0 03 E1 FC 07 D1 01 00 D3 01 00 D8 03 21 E0 
-   	E3 E8 01 12 F0 01 11 
-   	LcsO:0x01, Version:0000, Max Size:1728, Used Size:814, Change:LcsO<0x07, Read:ALW, Execute:ALW, MUD:Int-0xE0E3, Data Type:DEVCERT, Reset Type:SETCRE/FLUSH, 
-   ```
-
-   In this example, the version number is 0000, this data object is integrity protected by trust anchor inside 0xE0E3.After reset, the data inside this data object will be flushed.
-
-4. Set the Lcso to Operational state by running the command below:
+3. Set the Lcso to Operational state by running the command below:
 
    ```console
    foo@bar:~$ ./bin/trustm_metadata -w 0xe0e1 -O
@@ -1261,25 +1245,9 @@ Example for integrity protection:
    	LcsO:0x07, Version:0000, Max Size:1728, Used Size:506, Change:LcsO<0x07, Read:ALW, Execute:ALW, MUD:Int-0xE0E3, Data Type:DEVCERT, Reset Type:SETCRE/FLUSH,  
    ```
 
-5. 
-
-   ```console
-   foo@bar:~$ ./bin/trustm_metadata -r 0xe0e1
-   
-   ========================================================
-   Device Public Key           [0xE0E1] 
-   [Size 0039] : 
-   	20 25 C0 01 01 C1 02 00 00 C4 02 06 C0 C5 02 03 
-   	2E D0 03 E1 FC 07 D1 01 00 D3 01 00 D8 03 21 E0 
-   	E3 E8 01 12 F0 01 11 
-   	LcsO:0x01, Version:0000, Max Size:1728, Used Size:814, Change:LcsO<0x07, Read:ALW, Execute:ALW, MUD:Int-0xE0E3, Data Type:DEVCERT, Reset Type:SETCRE/FLUSH, 
-   ```
-
-   In this example, the version number is 0000, this data object is integrity protected by trust anchor inside 0xE0E3.After reset, 
-
 6. Run the windows program to get the correct manifest and fragment 
 
-   1) Go to \trustm_lib\examples\tools\protected_update_data_set\samples and open command prompt
+   1) Go to  "**\trustm_lib\examples\tools\protected_update_data_set\samples**" and open command prompt
 
    2) Run this example command:
 
@@ -1291,9 +1259,9 @@ Example for integrity protection:
 
       2. The example metadata.txt used here as sample is: 200BC00101D10100D003E1FC07
 
-      3. The private key for sample_ec_256_cert.pem must be available in the corresponding folder
+      3. The private key for sample_ec_256_cert.pem and metadata.txt must be available in the corresponding folder
 
-7.  Convert the manifest and fragment and transfer them to Linux tools 
+7.   Transfer the manifest and fragment to Raspberry Pi and convert them to manifest.dat and fragment.dat file
 
 8.  Use the manifest and fragment as input for trustm_protected_update as stated in "**protected_update_step2.sh **"under "**linux-optiga-trust-m/scripts/protected_update_metadata/**"
 
