@@ -1163,7 +1163,7 @@ option:-
 -h             : Print this help 
 ```
 
-For detailed example for Integrity and Confidentiality Protected Update, please go to  "**linux-optiga-trust-m\scripts\protected_update_metadata**"
+For detailed example for Integrity and Confidentiality Protected Update, please go to  ["**linux-optiga-trust-m\scripts\protected_update_metadata**"](./scripts/protected_update_metadata/)
 
 ## <a name="engine_usage"></a>OPTIGA™ Trust M3 OpenSSL Engine usage
 
