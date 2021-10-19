@@ -31,6 +31,7 @@
     * [trustm_hmac](#trustm_hmac)
     * [trustm_hmac_verify_Auth](#trustm_hmac_verify_Auth)
     * [trustm_protected_update](#trustm_protected_update)
+      * [Integrity and Confidentiality Protected Update example](./scripts/protected_update_metadata/)
 4. [Trust M1/M3 OpenSSL Engine usage](#engine_usage)
     * [rand](#rand)
     * [req](#req)
@@ -1163,7 +1164,7 @@ option:-
 -h             : Print this help 
 ```
 
-For detailed example for Integrity and Confidentiality Protected Update, please go to  ["**linux-optiga-trust-m\scripts\protected_update_metadata**"](./scripts/protected_update_metadata/)
+For detailed example for Integrity and Confidentiality Protected Update, Go to the subsection at [Integrity and Confidentiality Protected Update example](./scripts/protected_update_metadata/)
 
 ## <a name="engine_usage"></a>OPTIGA™ Trust M3 OpenSSL Engine usage
 
