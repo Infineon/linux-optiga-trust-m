@@ -40,8 +40,6 @@ shared_mutex_t shared_mutex_init(const char *name)
   shared_mutex_t mutex = {NULL, 0, NULL, 0,NULL};
   trustm_mutex_t *addr;
   trustm_mutex_t *mutex_ptr;
-  errno = 0;
-  
 
   // Open existing shared memory object, or create one.
   // Two separate calls are needed here, to mark fact of creation
@@ -51,7 +49,7 @@ shared_mutex_t shared_mutex_init(const char *name)
   pthread_mutex_lock(&shm_lock); 
   TRUSTM_MUTEX_DBGFN("pthread lock successfully");
   mutex.shm_fd = shm_open(name, O_RDWR, 0660);
-  if (errno == ENOENT) {
+  if (mutex.shm_fd == -1 && errno == ENOENT) {
     mutex.shm_fd = shm_open(name, O_RDWR|O_CREAT, 0660);
     mutex.created = 1;
     TRUSTM_MUTEX_DBGFN("create new shm");
