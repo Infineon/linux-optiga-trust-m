@@ -1,2 +1,3 @@
-EXEPATH="/home/pi/Desktop/WIP1/TrustM/linux-optiga-trust-m/bin"
-CERT_PATH="/home/pi/Desktop/WIP1/TrustM/linux-optiga-trust-m/scripts/certificates"
+PROJECT_DIR="/home/pi/Desktop/WIP1/linux-optiga-trust-m"
+EXEPATH="$PROJECT_DIR/bin"
+CERT_PATH="$PROJECT_DIR/scripts/certificates"
