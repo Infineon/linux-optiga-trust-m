@@ -1302,8 +1302,8 @@ Issue the certificate with keyUsage=digitalSignature,keyEncipherment on the clie
 
 ```console
 foo@bar:~$ openssl x509 -req -in test_e0f1.csr \
--CA trustm_lib/certificates/OPTIGA_Trust_M_Infineon_Test_CA.pem \
--CAkey trustm_lib/certificates/OPTIGA_Trust_M_Infineon_Test_CA_Key.pem \
+-CA scripts/certificates/OPTIGA_Trust_M_Infineon_Test_CA.pem \
+-CAkey scripts/certificates/OPTIGA_Trust_M_Infineon_Test_CA_Key.pem \
 -CAcreateserial \
 -out test_e0f1.crt \
 -days 365 \
@@ -1320,7 +1320,7 @@ foo@bar:~$ openssl s_server \
 -key privkey.pem -accept 5000 \
 -verify_return_error \
 -Verify 1 \
--CAfile trustm_lib/certificates/OPTIGA_Trust_M_Infineon_Test_CA.pem 
+-CAfile scripts/certificates/OPTIGA_Trust_M_Infineon_Test_CA.pem 
 ```
 
 Running the test client : *(open a new console)* 
@@ -1333,7 +1333,7 @@ foo@bar:~$ openssl s_client \
 -engine trustm_engine \
 -cert test_e0f1.crt -key 0xe0f1:^ \
 -tls1_2 \
--CAfile trustm_lib/certificates/OPTIGA_Trust_M_Infineon_Test_CA.pem \
+-CAfile scripts/certificates/OPTIGA_Trust_M_Infineon_Test_CA.pem \
 -verify 1
 ```
 
@@ -1352,8 +1352,8 @@ Issue the certificate with keyUsage=keyCertSign, cRLSign, digitalSignature on th
 
 ```console
 foo@bar:~$ openssl x509 -req -in test_e0f2.csr \
--CA trustm_lib/certificates/OPTIGA_Trust_M_Infineon_Test_CA.pem \
--CAkey trustm_lib/certificates/OPTIGA_Trust_M_Infineon_Test_CA_Key.pem \
+-CA scripts/certificates/OPTIGA_Trust_M_Infineon_Test_CA.pem \
+-CAkey scripts/certificates/OPTIGA_Trust_M_Infineon_Test_CA_Key.pem \
 -CAcreateserial \
 -out test_e0f2.crt \
 -days 365 \
@@ -1370,7 +1370,7 @@ foo@bar:~$ openssl s_server -keyform engine -engine trustm_engine \
 -key 0xe0f2:^ \
 -accept 5000 \
 -verify_return_error \
--CAfile trustm_lib/certificates/OPTIGA_Trust_M_Infineon_Test_CA.pem \
+-CAfile scripts/certificates/OPTIGA_Trust_M_Infineon_Test_CA.pem \
 -sigalgs ECDSA+SHA256
 ```
 
@@ -1378,7 +1378,7 @@ Running the test client : *(open a new console)*
 
 ```console
 foo@bar:~$ openssl s_client \
--CAfile trustm_lib/certificates/OPTIGA_Trust_M_Infineon_Test_CA.pem \
+-CAfile scripts/certificates/OPTIGA_Trust_M_Infineon_Test_CA.pem \
 -connect 127.0.0.1:5000 -tls1_2
 ```
 
@@ -1403,8 +1403,8 @@ Issue the certificate with keyUsage=digitalSignature,keyEncipherment on the clie
 
 ```console
 foo@bar:~$ openssl x509 -req -in test_e0fc.csr \
--CA trustm_lib/certificates/OPTIGA_Trust_M_Infineon_Test_CA.pem \
--CAkey trustm_lib/certificates/OPTIGA_Trust_M_Infineon_Test_CA_Key.pem \
+-CA scripts/certificates/OPTIGA_Trust_M_Infineon_Test_CA.pem \
+-CAkey scripts/certificates/OPTIGA_Trust_M_Infineon_Test_CA_Key.pem \
 -CAcreateserial \
 -out test_e0fc.crt \
 -days 365 \
@@ -1421,7 +1421,7 @@ foo@bar:~$ openssl s_server \
 -key privkey.pem -accept 5000 \
 -verify_return_error \
 -Verify 1 \
--CAfile trustm_lib/certificates/OPTIGA_Trust_M_Infineon_Test_CA.pem 
+-CAfile scripts/certificates/OPTIGA_Trust_M_Infineon_Test_CA.pem 
 ```
 
 Running the test client : *(open a new console)* 
@@ -1434,7 +1434,7 @@ foo@bar:~$ openssl s_client -connect 127.0.0.1:5000 \
 -cert test_e0fc.crt \
 -key 0xe0fc:^ \
 -tls1_2 \
--CAfile trustm_lib/certificates/OPTIGA_Trust_M_Infineon_Test_CA.pem \
+-CAfile scripts/certificates/OPTIGA_Trust_M_Infineon_Test_CA.pem \
 -verify 1
 ```
 
@@ -1453,8 +1453,8 @@ Issue the certificate with keyUsage=keyCertSign, cRLSign, digitalSignature on th
 
 ```console
 foo@bar:~$ openssl x509 -req -in test_e0fd.csr \
--CA trustm_lib/certificates/OPTIGA_Trust_M_Infineon_Test_CA.pem \
--CAkey trustm_lib/certificates/OPTIGA_Trust_M_Infineon_Test_CA_Key.pem \
+-CA scripts/certificates/OPTIGA_Trust_M_Infineon_Test_CA.pem \
+-CAkey scripts/certificates/OPTIGA_Trust_M_Infineon_Test_CA_Key.pem \
 -CAcreateserial \
 -out test_e0fd.crt \
 -days 365 \
@@ -1471,7 +1471,7 @@ foo@bar:~$ openssl s_server -keyform engine -engine trustm_engine \
 -key 0xe0fd:^ \
 -accept 5000 \
 -verify_return_error \
--CAfile trustm_lib/certificates/OPTIGA_Trust_M_Infineon_Test_CA.pem \
+-CAfile scripts/certificates/OPTIGA_Trust_M_Infineon_Test_CA.pem \
 -sigalgs RSA+SHA256
 ```
 
@@ -1479,7 +1479,7 @@ Running the test client : *(open a new console)*
 
 ```console
 foo@bar:~$ openssl s_client \
--CAfile trustm_lib/certificates/OPTIGA_Trust_M_Infineon_Test_CA.pem \
+-CAfile scripts/certificates/OPTIGA_Trust_M_Infineon_Test_CA.pem \
 -connect 127.0.0.1:5000 -tls1_2
 ```
 
@@ -1514,8 +1514,8 @@ Issue the certificate with keyUsage=keyCertSign, cRLSign, digitalSignature on th
 
 ```console
 foo@bar:~$ openssl x509 -req -in test_opensslserver.csr \
--CA trustm_lib/certificates/OPTIGA_Trust_M_Infineon_Test_CA.pem \
--CAkey trustm_lib/certificates/OPTIGA_Trust_M_Infineon_Test_CA_Key.pem \
+-CA scripts/certificates/OPTIGA_Trust_M_Infineon_Test_CA.pem \
+-CAkey scripts/certificates/OPTIGA_Trust_M_Infineon_Test_CA_Key.pem \
 -CAcreateserial \
 -out test_opensslserver.crt \
 -days 365 \
