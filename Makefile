@@ -27,6 +27,7 @@ TRUSTM = trustm_lib
 
 BUILD_FOR_RPI = YES
 BUILD_FOR_ULTRA96 = NO
+USE_LIBGPIOD_RPI = NO
 
 PALDIR =  $(TRUSTM)/pal/linux
 LIBDIR = $(TRUSTM)/optiga/util
@@ -57,6 +58,7 @@ INCDIR += trustm_helper/include
 INCDIR += trustm_engine
 INCDIR += $(TRUSTM)/externals/mbedtls/include
 
+
 ifdef INCDIR
 INCSRC := $(shell find $(INCDIR) -name '*.h')
 INCDIR := $(addprefix -I ,$(INCDIR))
@@ -65,7 +67,16 @@ endif
 ifdef LIBDIR
 	ifdef PALDIR
 	        LIBSRC =  $(PALDIR)/pal.c
-	        LIBSRC += $(PALDIR)/pal_gpio.c
+	       
+	        ifeq ($(BUILD_FOR_RPI), YES)
+	                 LIBSRC += $(PALDIR)/pal_gpio.c
+        	endif
+	        ifeq ($(BUILD_FOR_ULTRA96), YES)
+	                 LIBSRC += $(PALDIR)/pal_gpio.c
+        	endif
+	        ifeq ($(USE_LIBGPIOD_RPI), YES)
+	                 LIBSRC += $(PALDIR)/pal_gpio_gpiod.c
+        	endif
 	        LIBSRC += $(PALDIR)/pal_i2c.c
 			LIBSRC += $(PALDIR)/pal_logger.c
 			LIBSRC += $(PALDIR)/pal_os_datastore.c
@@ -77,7 +88,10 @@ ifdef LIBDIR
 	        ifeq ($(BUILD_FOR_RPI), YES)
 	                LIBSRC += $(PALDIR)/target/rpi3/pal_ifx_i2c_config.c
         	endif
-
+        	
+        	ifeq ($(USE_LIBGPIOD_RPI), YES)
+	                LIBSRC += $(PALDIR)/target/gpiod/pal_ifx_i2c_config.c
+        	endif
 	        ifeq ($(BUILD_FOR_ULTRA96), YES)
                 	LIBSRC += $(PALDIR)/target/ultra96/pal_ifx_i2c_config.c
         	endif
@@ -112,11 +126,17 @@ CFLAGS += -c
 #CFLAGS += $(DEBUG)
 CFLAGS += $(INCDIR)
 CFLAGS += -Wall
+ifeq ($(USE_LIBGPIOD_RPI), YES)
+	  CFLAGS += -DHAS_LIBGPIOD
+endif
 CFLAGS += -DENGINE_DYNAMIC_SUPPORT
 #CFLAGS += -DMODULE_ENABLE_DTLS_MUTUAL_AUTH
 
 LDFLAGS += -lpthread
 LDFLAGS += -lssl
+ifeq ($(USE_LIBGPIOD_RPI), YES)
+  LDFLAGS += -lgpiod
+endif  
 LDFLAGS += -lcrypto
 LDFLAGS += -lrt
 
