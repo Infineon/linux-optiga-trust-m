@@ -335,7 +335,7 @@ optiga_lib_status_t trustmEngine_Close(void)
     {   TRUSTM_ENGINE_DBGFN("optiga_util_destroy\n");
         return_status=optiga_util_destroy(me_util);   
     }
-    TRUSTM_WORKAROUND_TIMER_DISARM;
+    //~ TRUSTM_WORKAROUND_TIMER_DISARM;
 
     // No point deinit the GPIO as it is a fix pin
     //pal_gpio_deinit(&optiga_reset_0);
@@ -768,7 +768,7 @@ static EVP_PKEY * engine_load_privkey(ENGINE *e, const char *key_id, UI_METHOD *
         }
         
     }while(FALSE);
-    TRUSTM_WORKAROUND_TIMER_DISARM;
+    //~ TRUSTM_WORKAROUND_TIMER_DISARM;
     trustm_ipc_release(&ssl_mutex);
     TRUSTM_ENGINE_DBGFN("<");
     return key;
