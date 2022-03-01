@@ -23,6 +23,8 @@
 #
 #*/
 
+#~ Uncomment this for AARCH64 or pass it as argument in command line
+#~ AARCH64 = YES
 TRUSTM = trustm_lib
 
 BUILD_FOR_RPI = YES
@@ -43,7 +45,11 @@ LIBDIR += trustm_helper
 BINDIR = bin
 APPDIR = ex_cli_applications
 ENGDIR = trustm_engine
+ifdef AARCH64
+LIB_INSTALL_DIR = /usr/lib/aarch64-linux-gnu
+else
 LIB_INSTALL_DIR = /usr/lib/arm-linux-gnueabihf
+endif
 ENGINE_INSTALL_DIR = $(LIB_INSTALL_DIR)/engines-1.1
 
 INCDIR = $(TRUSTM)/optiga/include
@@ -66,8 +72,7 @@ endif
 
 ifdef LIBDIR
 	ifdef PALDIR
-	        LIBSRC =  $(PALDIR)/pal.c
-	       
+	        LIBSRC =  $(PALDIR)/pal.c	       
 	        ifeq ($(BUILD_FOR_RPI), YES)
 	                 LIBSRC += $(PALDIR)/pal_gpio.c
         	endif
@@ -123,6 +128,9 @@ CC = gcc
 DEBUG = -g
 
 CFLAGS += -c
+ifdef AARCH64
+CFLAGS += -fPIC
+endif
 #CFLAGS += $(DEBUG)
 CFLAGS += $(INCDIR)
 CFLAGS += -Wall
