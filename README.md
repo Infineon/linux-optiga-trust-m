@@ -107,15 +107,18 @@ foo@bar:~$ sudo apt-get install libssl-dev
 ```
 Go to the repository directory "linux-optiga-trust-m"
 ```console 
+foo@bar:~$ make clean
 foo@bar:~$ make
 ```
- to install
+ *Note : make clean to ensure a clean build.*
 
-*Note : In case install fail try performing the uninstall and redo make.*
+to install
 
 ```console 
 foo@bar:~$ sudo make install
 ```
+
+*Note : In case install fail try performing the uninstall and redo make.*
 
 to uninstall
 
@@ -123,6 +126,31 @@ to uninstall
 foo@bar:~$ sudo make uninstall
 ```
 
+To build for AARCH64, uncomment  this Marco in Makefile
+
+```console 
+#~ Uncomment this for AARCH64 or pass it as argument in command line
+#~ AARCH64 = YES
+```
+
+Or pass AARCH64 = YES as argument in command line:
+
+```console 
+foo@bar:~$ make clean
+foo@bar:~$ make -j5 AARCH64=YES
+```
+
+ to install
+
+```console 
+foo@bar:~$ sudo make install AARCH64=YES
+```
+
+to uninstall
+
+```console 
+foo@bar:~$ sudo make uninstall AARCH64=YES
+```
 ## <a name="cli_usage"></a>CLI Tools Usage
 
 ### Important Notes:  
@@ -1196,33 +1224,33 @@ Following is the input format:
 where :
 
 - **OID** for OPTIGA™ Trust M key
-  
+
   - if OID 0xE0F0 is used no other input is needed
 - **public key input**
-  
+
   - public key file name in PEM format
   - \* = no public input
   - ^ = public key store in Application OID Key
     - 0xE0F1 store in 0xF1D1,
-    
+
     - 0xE0F2 store in 0xF1D2,
-    
+
     - 0xE0F3 store in 0xF1D3,
-    
+
     - 0xE0FC store in 0xF1E0,
-    
+
     - 0xE0FD store in 0xF1E1
-    
+
       Note: For ECC521/BRAINPOOL512, the public key store in Application OID list as below:
-    
+
     - 0xE0F1 store in 0xF1E0,
-    
+
     - 0xE0F2 store in 0xF1E1
 - **NEW**
-  
+
   - Generate new key pair in OPTIGA™ Trust M
 - **key size**
-  
+
   - ECC
     - 0x03 = 256 key length  for NIST  256
     - 0x04 = 384 key length  for NIST  384
@@ -1234,7 +1262,7 @@ where :
     - 0x41 = 1024 key length
     - 0x42 = 2048 key length
 - **Key usage** 
-  
+
   - Auth : 0x01 
   - Enc : 0x02 
   - HFWU : 0x04 
