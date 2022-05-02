@@ -147,6 +147,7 @@ ifeq ($(USE_LIBGPIOD_RPI), YES)
 endif  
 LDFLAGS += -lcrypto
 LDFLAGS += -lrt
+LDFLAGS += -Wl,--no-undefined
 
 LDFLAGS_1 = -L$(BINDIR) -Wl,-R$(BINDIR)
 LDFLAGS_1 += -ltrustm
@@ -187,7 +188,7 @@ clean :
 $(BINDIR)/$(ENG): %: $(ENGOBJ) $(INCSRC) $(BINDIR)/$(LIB)
 	@echo "******* Linking $@ "
 	@mkdir -p bin
-	@$(CC) $(LDFLAGS_1) $(LDFLAGS) $(ENGOBJ) -shared -o $@
+	@$(CC)   $(ENGOBJ) $(LDFLAGS) $(LDFLAGS_1) -shared -o $@
 
 $(APPS): %: $(OTHOBJ) $(INCSRC) $(BINDIR)/$(LIB) %.o
 	@echo "******* Linking $@ "
@@ -198,7 +199,7 @@ $(APPS): %: $(OTHOBJ) $(INCSRC) $(BINDIR)/$(LIB) %.o
 $(BINDIR)/$(LIB): %: $(LIBOBJ) $(INCSRC)
 	@echo "******* Linking $@ "
 	@mkdir -p bin
-	@$(CC) $(LDFLAGS) $(LIBOBJ) -shared -o $@
+	@$(CC) $(LIBOBJ) $(LDFLAGS)  -shared -o $@
 
 $(LIBOBJ): %.o: %.c $(INCSRC)
 	@echo "+++++++ Generating lib object: $< "
