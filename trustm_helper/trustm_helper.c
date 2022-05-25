@@ -1188,11 +1188,12 @@ optiga_lib_status_t trustm_Close(void)
         return_status=optiga_util_destroy(me_util);
     }
 #else
-    TRUSTM_HELPER_DBGFN("optiga_util_close_application:Skip");    
+    TRUSTM_HELPER_DBGFN("optiga_util_close_application:Skip"); 
+    TRUSTM_CLI_WORKAROUND_TIMER_DISARM;   
 #endif   
     
     /// IPC Release 
-    TRUSTM_CLI_WORKAROUND_TIMER_DISARM;
+    //~ TRUSTM_CLI_WORKAROUND_TIMER_DISARM;
     trustm_ipc_release(&trustm_mutex);
     TRUSTM_HELPER_DBGFN("Release shared memory mutex.\n");
     TRUSTM_HELPER_DBGFN("<");
