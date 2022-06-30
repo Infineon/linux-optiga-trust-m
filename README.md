@@ -31,7 +31,9 @@
     * [trustm_hmac](#trustm_hmac)
     * [trustm_hmac_verify_Auth](#trustm_hmac_verify_Auth)
     * [trustm_protected_update](#trustm_protected_update)
-      * [Integrity and Confidentiality Protected Update example](./scripts/protected_update_metadata/)
+      * [Integrity and Confidentiality Protected Update example for Metadata](./scripts/protected_update_metadata/)
+    * [trustm_protected_update_aeskey](#trustm_protected_update_aeskey)
+      * [Integrity and Confidentiality Protected Update example for aeskey](./scripts/protected_update_aeskey/)
 4. [Trust M1/M3 OpenSSL Engine usage](#engine_usage)
     * [rand](#rand)
     * [req](#req)
@@ -1193,6 +1195,24 @@ option:-
 ```
 
 For detailed example for Integrity and Confidentiality Protected Update, Go to the subsection at [Integrity and Confidentiality Protected Update example](./scripts/protected_update_metadata/)
+
+###  <a name="trustm_protected_update_aeskey"></a>trustm_protected_update_aeskey
+
+Simple demo to show the process to do protected update for AES key of target OID(0xE200) by using the trust Anchor installed in OPTIGA™ Trust M and/or the secret installed in OPTIGA™ Trust M .
+
+```console
+foo@bar:~$ ./bin/trustm_protected_update_aeskey -h
+Help menu: trustm_protected_update_aeskey <option> ...<option>
+option:- 
+-k <OID>       : Target key OID: 0xE200 
+-f <filename>  : Fragment file
+-m <filename>  : Manifest file
+-X             : Bypass Shielded Communication 
+-h             : Print this help 
+
+```
+
+For detailed example for Integrity and Confidentiality Protected Update for AES Key, Go to the subsection at [Integrity and Confidentiality Protected Update example for AES Key](./scripts/protected_update_aeskey/)
 
 ## <a name="engine_usage"></a>OPTIGA™ Trust M3 OpenSSL Engine usage
 
