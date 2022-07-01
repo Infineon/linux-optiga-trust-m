@@ -1236,7 +1236,7 @@ For detailed example for Integrity and Confidentiality Protected Update for ECC 
 
 ###  <a name="trustm_protected_update_rsakey"></a>trustm_protected_update_rsakey
 
-Simple demo to show the process to do protected update for ECC key of target OID(0xE0F1-E0F3) by using the trust Anchor installed in OPTIGA™ Trust M and/or the secret installed in OPTIGA™ Trust M .
+Simple demo to show the process to do protected update for RSA key of target OID(0xE0FC-E0FD) by using the trust Anchor installed in OPTIGA™ Trust M and/or the secret installed in OPTIGA™ Trust M .
 
 ```console
 foo@bar:~$ ./bin/trustm_protected_update_rsakey -h
@@ -1250,6 +1250,25 @@ option:-
 ```
 
 For detailed example for Integrity and Confidentiality Protected Update for RSA Key, Go to the subsection at  [Integrity and Confidentiality Protected Update example for RSA Key](./scripts/protected_update_rsakey/)
+
+###  <a name="trustm_protected_update_data"></a>trustm_protected_update_data
+
+Simple demo to show the process to do protected update for data of target OID(0xE0E1-E0E3,0xF1D0-F1DB) by using the trust Anchor installed in OPTIGA™ Trust M and/or the secret installed in OPTIGA™ Trust M .
+
+```console
+./bin/trustm_protected_update_data -h
+Help menu: trustm_protected_update_data <option> ...<option>
+option:- 
+-k <OID>       : Target OID 
+-c <filename>  : Continue Fragment file
+-f <filename>  : Fianl Fragment file
+-m <filename>  : Manifest file
+-X             : Bypass Shielded Communication 
+-h             : Print this help 
+
+```
+
+For detailed example for Integrity and Confidentiality Protected Update for data, Go to the subsection at   [Integrity and Confidentiality Protected Update example for data](./scripts/protected_update_data/)
 
 ## <a name="engine_usage"></a>OPTIGA™ Trust M3 OpenSSL Engine usage
 
