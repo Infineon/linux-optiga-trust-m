@@ -38,6 +38,8 @@
       * [Integrity and Confidentiality Protected Update example for ecckey](./scripts/protected_update_ecckey/)
     * [trustm_protected_update_rsakey](#trustm_protected_update_rsakey)
       * [Integrity and Confidentiality Protected Update example for rsakey](./scripts/protected_update_rsakey/)
+    * [trustm_protected_update_data](#trustm_protected_update_data)
+      * [Integrity and Confidentiality Protected Update example for data](./scripts/protected_update_data/)
 4. [Trust M1/M3 OpenSSL Engine usage](#engine_usage)
     * [rand](#rand)
     * [req](#req)
