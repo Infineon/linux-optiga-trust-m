@@ -63,9 +63,9 @@ union _uOptFlag {
 
 void _helpmenu(void)
 {
-    printf("\nHelp menu: trustm_protected_update_ecckey <option> ...<option>\n");
+    printf("\nHelp menu: trustm_protected_update_rsakey <option> ...<option>\n");
     printf("option:- \n");
-    printf("-k <OID>       : Target ECC Key OID[0xE0F1-0xE0F3]  \n");
+    printf("-k <OID>       : Target RSA Key OID[0xE0FC-0xE0FD] \n");
     printf("-f <filename>  : Fragment file\n");
     printf("-m <filename>  : Manifest file\n");
     printf("-X             : Bypass Shielded Communication \n");
@@ -121,11 +121,11 @@ int main (int argc, char **argv)
 {
     optiga_lib_status_t return_status;
 
-    uint16_t target_key_oid = 0xE0F1; 
-    uint8_t manifest_ecc_key[512]; 
-    uint8_t ecc_key_final_fragment_array[512];    
-    uint16_t manifestLen = sizeof(manifest_ecc_key);
-    uint16_t fragmentLen = sizeof(ecc_key_final_fragment_array);
+    uint16_t target_key_oid = 0xE0FC; 
+    uint8_t manifest_rsa_key[512]; 
+    uint8_t rsa_key_final_fragment_array[512];    
+    uint16_t manifestLen = sizeof(manifest_rsa_key);
+    uint16_t fragmentLen = sizeof(rsa_key_final_fragment_array);
 
     uint16_t data_config = 0;
 
@@ -217,7 +217,7 @@ int main (int argc, char **argv)
             break;
         }
         
-        manifestLen = trustmreadFrom(manifest_ecc_key, (uint8_t *) manifestFile);
+        manifestLen = trustmreadFrom(manifest_rsa_key, (uint8_t *) manifestFile);
         if (manifestLen == 0)
         {
             printf("Error manifest reading file!!!\n");
@@ -228,7 +228,7 @@ int main (int argc, char **argv)
             printf("Error: OPTIGA device Invalid Manifest!!!\n");
             break;
         }
-        fragmentLen = trustmreadFrom(ecc_key_final_fragment_array, (uint8_t *) fragmentFile);
+        fragmentLen = trustmreadFrom(rsa_key_final_fragment_array, (uint8_t *) fragmentFile);
         if (fragmentLen == 0)
         {
             printf("Error fragment reading file!!!\n");
@@ -242,29 +242,29 @@ int main (int argc, char **argv)
         printf("OID            : 0x%.4X\n",target_key_oid);
         printf("Manifest File Name : %s \n", manifestFile);
         printf("Manifest : \n");
-        trustmHexDump(manifest_ecc_key, manifestLen);
+        trustmHexDump(manifest_rsa_key, manifestLen);
         printf("Fragment File Name     : %s \n", fragmentFile);
         printf("final fragment : \n");
-        trustmHexDump(ecc_key_final_fragment_array,fragmentLen);
+        trustmHexDump(rsa_key_final_fragment_array,fragmentLen);
 
-   optiga_protected_update_manifest_fragment_configuration_t data_ecc_key_configuration = 
+ optiga_protected_update_manifest_fragment_configuration_t data_rsa_key_configuration = 
                                                                 {    
                                                                      0x01,
-                                                                     manifest_ecc_key,
+                                                                     manifest_rsa_key,
                                                                      manifestLen,
                                                                      NULL,
                                                                      0,
-                                                                     ecc_key_final_fragment_array,
+                                                                     rsa_key_final_fragment_array,
                                                                      fragmentLen
-                                                                };                                                                                                                   
+                                                                };                                                                                                                                                                                
   const optiga_protected_update_data_configuration_t  optiga_protected_update_data_set[] =
     {
-          {
-        0xE0F1,
+{
+        0xE0FC,
         target_key_oid_metadata,
         sizeof(target_key_oid_metadata),
-        &data_ecc_key_configuration,
-        "Protected Update - ECC Key"
+        &data_rsa_key_configuration, 
+        "Protected Update - RSA Key"
     },
     };
         
@@ -343,7 +343,7 @@ int main (int argc, char **argv)
             if (return_status != OPTIGA_LIB_SUCCESS)
                 break;
             else
-                printf("ECC Key protected update Successful.\n");
+                printf("RSA Key protected update Successful.\n");
 
             printf("\n");
         }

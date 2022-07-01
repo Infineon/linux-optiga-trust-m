@@ -36,6 +36,8 @@
       * [Integrity and Confidentiality Protected Update example for aeskey](./scripts/protected_update_aeskey/)
     * [trustm_protected_update_ecckey](#trustm_protected_update_ecckey)
       * [Integrity and Confidentiality Protected Update example for ecckey](./scripts/protected_update_ecckey/)
+    * [trustm_protected_update_rsakey](#trustm_protected_update_rsakey)
+      * [Integrity and Confidentiality Protected Update example for rsakey](./scripts/protected_update_rsakey/)
 4. [Trust M1/M3 OpenSSL Engine usage](#engine_usage)
     * [rand](#rand)
     * [req](#req)
@@ -1221,17 +1223,33 @@ Simple demo to show the process to do protected update for ECC key of target OID
 
 ```console
 foo@bar:~$ ./bin/trustm_protected_update_ecckey -h
-
 Help menu: trustm_protected_update_ecckey <option> ...<option>
 option:- 
--k <OID>       : Target key OID[0xE0F1-0xE0F3]  
+-k <OID>       : Target ECC Key OID[0xE0F1-0xE0F3]  
 -f <filename>  : Fragment file
 -m <filename>  : Manifest file
 -X             : Bypass Shielded Communication 
 -h             : Print this help
 ```
 
-For detailed example for Integrity and Confidentiality Protected Update for AES Key, Go to the subsection at [Integrity and Confidentiality Protected Update example for AES Key
+For detailed example for Integrity and Confidentiality Protected Update for ECC Key, Go to the subsection at  [Integrity and Confidentiality Protected Update example for ECC Key](./scripts/protected_update_ecckey/)
+
+###  <a name="trustm_protected_update_rsakey"></a>trustm_protected_update_rsakey
+
+Simple demo to show the process to do protected update for ECC key of target OID(0xE0F1-E0F3) by using the trust Anchor installed in OPTIGA™ Trust M and/or the secret installed in OPTIGA™ Trust M .
+
+```console
+foo@bar:~$ ./bin/trustm_protected_update_rsakey -h
+Help menu: trustm_protected_update_rsakey <option> ...<option>
+option:- 
+-k <OID>       : Target RSA Key OID[0xE0FC-0xE0FD] 
+-f <filename>  : Fragment file
+-m <filename>  : Manifest file
+-X             : Bypass Shielded Communication 
+-h             : Print this help 
+```
+
+For detailed example for Integrity and Confidentiality Protected Update for RSA Key, Go to the subsection at  [Integrity and Confidentiality Protected Update example for RSA Key](./scripts/protected_update_rsakey/)
 
 ## <a name="engine_usage"></a>OPTIGA™ Trust M3 OpenSSL Engine usage
 
