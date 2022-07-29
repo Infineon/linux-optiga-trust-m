@@ -24,12 +24,13 @@
 #*/
 
 #~ Uncomment this for AARCH64 or pass it as argument in command line
-#~ AARCH64 = YES
+AARCH64 = YES
 TRUSTM = trustm_lib
 
 BUILD_FOR_RPI = YES
 BUILD_FOR_ULTRA96 = NO
 USE_LIBGPIOD_RPI = NO
+BUILD_FOR_OPENWRT = YES
 
 PALDIR =  $(TRUSTM)/pal/linux
 LIBDIR = $(TRUSTM)/optiga/util
@@ -45,12 +46,15 @@ LIBDIR += trustm_helper
 BINDIR = bin
 APPDIR = ex_cli_applications
 ENGDIR = trustm_engine
+
+ifeq ($(BUILD_FOR_OPENWRT), NO)
 ifdef AARCH64
 LIB_INSTALL_DIR = /usr/lib/aarch64-linux-gnu
 else
 LIB_INSTALL_DIR = /usr/lib/arm-linux-gnueabihf
 endif
 ENGINE_INSTALL_DIR = $(LIB_INSTALL_DIR)/engines-1.1
+endif
 
 INCDIR = $(TRUSTM)/optiga/include
 INCDIR += $(TRUSTM)/optiga/include/optiga
@@ -158,17 +162,19 @@ all : $(BINDIR)/$(LIB) $(APPS) $(BINDIR)/$(ENG)
 
 
 install:
+ifeq ($(BUILD_FOR_OPENWRT), NO)	
 	@echo "Create symbolic link to the openssl engine $(ENGINE_INSTALL_DIR)/$(ENG)"
 	@ln -s $(realpath $(BINDIR)/$(ENG)) $(ENGINE_INSTALL_DIR)/$(ENG)
 	@echo "Create symbolic link to trustx_lib $(LIB_INSTALL_DIR)/$(LIB)"
 	@ln -s $(realpath $(BINDIR)/$(LIB)) $(LIB_INSTALL_DIR)/$(LIB)
-	
+endif	
 uninstall: clean
+ifeq ($(BUILD_FOR_OPENWRT), NO)
 	@echo "Removing openssl symbolic link from $(ENGINE_INSTALL_DIR)"	
 	@-rm $(ENGINE_INSTALL_DIR)/$(ENG)
 	@echo "Removing trustm_lib $(LIB_INSTALL_DIR)/$(LIB)"
 	@-rm $(LIB_INSTALL_DIR)/$(LIB)
-
+endif
 clean :
 	@echo "Removing *.o from $(LIBDIR)" 
 	@rm -rf $(LIBOBJ)
