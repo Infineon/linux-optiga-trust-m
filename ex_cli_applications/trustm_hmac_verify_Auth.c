@@ -47,13 +47,13 @@
 #include "mbedtls/ssl.h"
    
 typedef struct _OPTFLAG {
+        uint16_t        secretoid       : 1;
         uint16_t        secret          : 1;
-        uint16_t        target          : 1;
+        uint16_t        read            : 1;
         uint16_t        write           : 1;
+        uint16_t        input           : 1;
         uint16_t        output          : 1;
         uint16_t        bypass          : 1;
-        uint16_t        dummy5          : 1;
-        uint16_t        dummy6          : 1;
         uint16_t        dummy7          : 1;
         uint16_t        dummy8          : 1;
         uint16_t        dummy9          : 1;
@@ -76,9 +76,9 @@ void helpmenu(void)
     printf("option:- \n");
     printf("-I <OID>      : Input secret OID 0xNNNN \n");
     printf("                [default 0xF1D0]\n");
-    printf("-T <OID>      : Input target OID 0xNNNN \n");
-    printf("                [default 0xF1D5]\n");
-    printf("-w <filename> : Write Data into target OID\n");
+    printf("-s <filename> : Input user secret \n");
+    printf("-r <OID>      : Read from target OID\n");
+    printf("-w <OID>      : Write into target OID 0xNNNN \n");
     printf("-o <filename> : Output Data stored inside target OID\n");
     printf("-X            : Bypass Shielded Communication \n");
     printf("-h            : Print this help \n");
@@ -137,19 +137,8 @@ pal_status_t CalcHMAC(const uint8_t * secret_key,
 }
 
 pal_status_t pal_return_status;
-uint16_t offset, bytes_to_read;
+uint16_t offset, bytes_to_read,bytes_to_read1;
 uint8_t read_data_buffer[100];
-
-/**
- * Shared secret data
- */
-const uint8_t user_secret[] = 
-{
-    0x49, 0xC9, 0xF4, 0x92, 0xA9, 0x92, 0xF6, 0xD4, 0xC5, 0x4F, 0x5B, 0x12, 0xC5, 0x7E, 0xDB, 0x27, 
-    0xCE, 0xD2, 0x24, 0x04, 0x8F, 0x25, 0x48, 0x2A, 0xA1, 0x49, 0xC9, 0xF4, 0x92, 0xA9, 0x92, 0xF6, 
-    0x49, 0xC9, 0xF4, 0x92, 0xA9, 0x92, 0xF6, 0xD4, 0xC5, 0x4F, 0x5B, 0x12, 0xC5, 0x7E, 0xDB, 0x27, 
-    0xCE, 0xD2, 0x24, 0x04, 0x8F, 0x25, 0x48, 0x2A, 0xA1, 0x49, 0xC9, 0xF4, 0x92, 0xA9, 0x92, 0xF6
-};
 
 /**
  * Optional data
@@ -188,10 +177,12 @@ int main (int argc, char **argv)
     uint16_t secret_oid = 0xF1D0;// default secret OID;
     uint16_t target_oid = 0xF1D5;// default target OID;
     uint8_t hmac_type=0x20;// default HMAC_SHA256
-    uint16_t offset, bytes_to_read;
+    uint16_t offset, bytes_to_read,bytes_to_read1;
     uint8_t read_data_buffer[100];
+    uint8_t user_secret[64];
     
     char *inFile = NULL;
+    char *secFile = NULL;
     char *outFile = NULL;
     
     int option = 0;                    // Command line option.
@@ -211,13 +202,13 @@ int main (int argc, char **argv)
         opterr = 0; // Disable getopt error messages in case of unknown parameters
 
         // Loop through parameters with getopt.
-        while (-1 != (option = getopt(argc, argv, "I:T:w:o:Xh")))
+        while (-1 != (option = getopt(argc, argv, "I:r:s:w:i:o:Xh")))
         {
             switch (option)
             {
                 
                 case 'I': // Secret OID
-                        uOptFlag.flags.secret = 1;
+                        uOptFlag.flags.secretoid = 1;
                         secret_oid = trustmHexorDec(optarg);
                         printf("Input Secret OID: 0x%.4X\n",secret_oid);
                         if((secret_oid < 0xF1D0) || (secret_oid > 0xF1DB))
@@ -226,19 +217,27 @@ int main (int argc, char **argv)
                                 exit(0);
                         }
                         break;
-                case 'T': // Target OID
-                        uOptFlag.flags.target = 1;
+                case 's': // write secret from file
+                        uOptFlag.flags.secret = 1;
+                        secFile = optarg;
+                        break;
+                case 'r': // Read from Target OID
+                        uOptFlag.flags.read = 1;
                         target_oid = trustmHexorDec(optarg);
                         printf("Target OID: 0x%.4X\n",target_oid);
                         break;
-                case 'w': // write data from file
+                case 'w': // Write into Target OID
                         uOptFlag.flags.write = 1;
+                        target_oid = trustmHexorDec(optarg);
+                        printf("Target OID: 0x%.4X\n",target_oid);
+                        break;
+                case 'i': // write data from file
+                        uOptFlag.flags.input = 1;
                         inFile = optarg;
                         break;
                 case 'o': // output the data stored inside target OID
                         uOptFlag.flags.output = 1;
                         outFile = optarg;
-                        printf("output the data stored inside target OID. \n");
                         break;
                 case 'X': // Bypass Shielded Communication
                         uOptFlag.flags.bypass = 1;
@@ -271,23 +270,25 @@ int main (int argc, char **argv)
 
     do
     {
-       if(uOptFlag.flags.secret == 1)
+       if(uOptFlag.flags.secretoid == 1)
         {
-            if(uOptFlag.flags.output != 1)
+           if(uOptFlag.flags.secret != 1)
             {
-                printf("Output filename missing!!!\n");
+                printf("Secret filename missing!!!\n");
                 break;
             }
-
             printf("HMAC Type         : 0x%.4X \n",hmac_type);
-            printf("Output File Name : %s \n", outFile);
+            
             if(uOptFlag.flags.bypass != 1)
             { 
             // OPTIGA Comms Shielded connection settings to enable the protection
             OPTIGA_CRYPT_SET_COMMS_PROTOCOL_VERSION(me_crypt, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
             OPTIGA_CRYPT_SET_COMMS_PROTECTION_LEVEL(me_crypt, OPTIGA_COMMS_FULL_PROTECTION);
             }
-               
+        bytes_to_read1 = 0;
+        trustmReadDER(user_secret, (uint32_t *)&bytes_to_read1, secFile);
+        printf("Input secret : \n");
+        trustmHexDump(user_secret,bytes_to_read1);              
         optiga_lib_status = OPTIGA_LIB_BUSY;
         return_status = optiga_crypt_generate_auth_code(me_crypt,
                                                         OPTIGA_RNG_TYPE_TRNG,
@@ -354,7 +355,11 @@ int main (int argc, char **argv)
                
         if(uOptFlag.flags.write == 1)
         {   
- 
+            if(uOptFlag.flags.input != 1)
+            {
+                printf("Input filename missing!!!\n");
+                break;
+            }
          bytes_to_read = 0;
          trustmReadDER(read_data_buffer, (uint32_t *)&bytes_to_read, inFile);
          printf("Input data : \n");
@@ -380,6 +385,15 @@ int main (int argc, char **argv)
             }  
           } 
         
+        if(uOptFlag.flags.read == 1)
+        {
+           if(uOptFlag.flags.output != 1)
+            {
+                printf("Output filename missing!!!\n");
+                break;
+            }
+           printf("Output the data stored inside target OID. \n");
+           printf("Output File Name : %s \n", outFile);
         bytes_to_read = sizeof(read_data_buffer);  
         optiga_lib_status = OPTIGA_LIB_BUSY;
         
@@ -407,7 +421,7 @@ int main (int argc, char **argv)
                     printf("Error when saving file!!!\n");
                 }
             }  
-                                              
+          }                                    
         }
     
     }while(FALSE);

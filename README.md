@@ -1169,12 +1169,12 @@ Help menu: trustm_hmac_verify_Auth <option> ...<option>
 option:- 
 -I <OID>      : Input secret OID 0xNNNN 
                 [default 0xF1D0]
--T <OID>      : Input target OID 0xNNNN 
-                [default 0xF1D5]
--w <filename> : Write Data into target OID
+-s <filename> : Input user secret 
+-r <OID>      : Read from target OID
+-w <OID>      : Write into target OID 0xNNNN 
 -o <filename> : Output Data stored inside target OID
 -X            : Bypass Shielded Communication 
--h            : Print this help
+-h            : Print this help 
 ```
 
 Precondition: Write shared secret into the data object and change the metadata of this data object to AUTHREF.

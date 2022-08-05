@@ -6,6 +6,9 @@ SHARED_SECRET_OID=f1d0
 # Data object OID
 DATA_OBJECT_OID=f1d5
 
+echo "Print out secret."
+echo "49C9F492A992F6D4C54F5B12C57EDB27CED224048F25482AA149C9F492A992F649C9F492A992F6D4C54F5B12C57EDB27CED224048F25482AA149C9F492A992F6" | xxd -r -p > secret.dat
+#~ xxd secret.dat
 echo "Print out data."
 echo "49C9F492A992F6D4C54F5B12C57EDB27CED224048F25482AA149C9F492A992F6" | xxd -r -p > data.dat
 #~ xxd data.dat
@@ -20,18 +23,19 @@ for i in $(seq 1 1); do
 echo "test $i"
 
 echo "Step2: Read out data after HMAC verify sucessfully"
-$EXEPATH/trustm_hmac_verify_Auth -I 0x$SHARED_SECRET_OID -T 0x$DATA_OBJECT_OID -o data_$DATA_OBJECT_OID.bin 
+$EXEPATH/trustm_hmac_verify_Auth -I 0x$SHARED_SECRET_OID -s secret.dat -r 0x$DATA_OBJECT_OID -o data_$DATA_OBJECT_OID.bin  
 xxd data_$DATA_OBJECT_OID.bin 
 
 echo "Verify HMAC SHA256 at 0x$SHARED_SECRET_OID and write new data into 0x$DATA_OBJECT_OID"
-$EXEPATH/trustm_hmac_verify_Auth -I 0x$SHARED_SECRET_OID -T 0x$DATA_OBJECT_OID -w new_data.dat -o newdata_$DATA_OBJECT_OID.bin 
-xxd newdata_$DATA_OBJECT_OID.bin
+$EXEPATH/trustm_hmac_verify_Auth -I 0x$SHARED_SECRET_OID -s secret.dat -w 0x$DATA_OBJECT_OID -i new_data.dat 
 
-echo "Retore to initial value"
-rm data_$DATA_OBJECT_OID.bin
-$EXEPATH/trustm_hmac_verify_Auth -I 0x$SHARED_SECRET_OID -T 0x$DATA_OBJECT_OID -w data.dat -o data_$DATA_OBJECT_OID.bin 
+echo "Verify HMAC SHA256 at 0x$SHARED_SECRET_OID and read out the new data in 0x$DATA_OBJECT_OID"
+$EXEPATH/trustm_hmac_verify_Auth -I 0x$SHARED_SECRET_OID -s secret.dat -r 0x$DATA_OBJECT_OID -o data_$DATA_OBJECT_OID.bin 
+xxd data_$DATA_OBJECT_OID.bin 
+
+echo "Verify HMAC SHA256 at 0x$SHARED_SECRET_OID and write original data back into 0x$DATA_OBJECT_OID"
+$EXEPATH/trustm_hmac_verify_Auth -I 0x$SHARED_SECRET_OID -s secret.dat -w 0x$DATA_OBJECT_OID -i data.dat 
 xxd data_$DATA_OBJECT_OID.bin
-
 
 #~ echo "Caution: Once the life cycle has been set to operational state,it is not reversible!!!!"
 #~ echo "Set 0x$DATA_OBJECT_OID to OP"
