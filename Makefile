@@ -165,9 +165,9 @@ install:
 	
 uninstall: clean
 	@echo "Removing openssl symbolic link from $(ENGINE_INSTALL_DIR)"	
-	@-rm $(ENGINE_INSTALL_DIR)/$(ENG)
+	@rm -rf $(ENGINE_INSTALL_DIR)/$(ENG)
 	@echo "Removing trustm_lib $(LIB_INSTALL_DIR)/$(LIB)"
-	@-rm $(LIB_INSTALL_DIR)/$(LIB)
+	@rm -rf $(LIB_INSTALL_DIR)/$(LIB)
 
 clean :
 	@echo "Removing *.o from $(LIBDIR)" 

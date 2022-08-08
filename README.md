@@ -113,7 +113,31 @@ Install required dependencies:
 ```console
 foo@bar:~$ sudo apt-get install libssl-dev
 ```
-Go to the repository directory "linux-optiga-trust-m"
+Go to the repository directory "**linux-optiga-trust-m/ex_protected_update_data_set/Linux**"
+
+```console 
+foo@bar:~$ make clean
+foo@bar:~$ make
+```
+
+ *Note :  This folder is used to generate the manifest and fragment for protected update. you need to install this first before install under directory "linux-optiga-trust-m".   make clean to ensure a clean build.*
+
+to install
+
+```console 
+foo@bar:~$ sudo make install
+```
+
+*Note : In case install fail try performing the uninstall and redo make.*
+
+to uninstall
+
+```console 
+foo@bar:~$ sudo make uninstall
+```
+
+Go to the repository directory "**linux-optiga-trust-m**"
+
 ```console 
 foo@bar:~$ make clean
 foo@bar:~$ make
