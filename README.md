@@ -113,29 +113,6 @@ Install required dependencies:
 ```console
 foo@bar:~$ sudo apt-get install libssl-dev
 ```
-Go to the repository directory "**linux-optiga-trust-m/ex_protected_update_data_set/Linux**"
-
-```console 
-foo@bar:~$ make clean
-foo@bar:~$ make
-```
-
- *Note :  This folder is used to generate the manifest and fragment for protected update. you need to install this first before install under directory "linux-optiga-trust-m".   make clean to ensure a clean build.*
-
-to install
-
-```console 
-foo@bar:~$ sudo make install
-```
-
-*Note : In case install fail try performing the uninstall and redo make.*
-
-to uninstall
-
-```console 
-foo@bar:~$ sudo make uninstall
-```
-
 Go to the repository directory "**linux-optiga-trust-m**"
 
 ```console 
@@ -1226,6 +1203,9 @@ option:-
 
 For detailed example for Integrity and Confidentiality Protected Update, Go to the subsection at [Integrity and Confidentiality Protected Update example](./scripts/protected_update_metadata/)
 
+*Note :*  
+*To generate the manifest and fragment for Integrity and Confidentiality Protected Update, please refer to the [README.md](./ex_protected_update_data_set) for more instruction*
+
 ###  <a name="trustm_protected_update_aeskey"></a>trustm_protected_update_aeskey
 
 Simple demo to show the process to do protected update for AES key of target OID(0xE200) by using the trust Anchor installed in OPTIGA™ Trust M and/or the secret installed in OPTIGA™ Trust M .
@@ -1242,6 +1222,9 @@ option:-
 ```
 
 For detailed example for Integrity and Confidentiality Protected Update for AES Key, Go to the subsection at [Integrity and Confidentiality Protected Update example for AES Key](./scripts/protected_update_aeskey/)
+
+*Note :*  
+*To generate the manifest and fragment for Integrity and Confidentiality Protected Update, please refer to the [README.md](./ex_protected_update_data_set) for more instruction*
 
 ###  <a name="trustm_protected_update_ecckey"></a>trustm_protected_update_ecckey
 
@@ -1260,6 +1243,9 @@ option:-
 
 For detailed example for Integrity and Confidentiality Protected Update for ECC Key, Go to the subsection at  [Integrity and Confidentiality Protected Update example for ECC Key](./scripts/protected_update_ecckey/)
 
+*Note :*  
+*To generate the manifest and fragment for Integrity and Confidentiality Protected Update, please refer to the [README.md](./ex_protected_update_data_set) for more instruction*
+
 ###  <a name="trustm_protected_update_rsakey"></a>trustm_protected_update_rsakey
 
 Simple demo to show the process to do protected update for RSA key of target OID(0xE0FC-E0FD) by using the trust Anchor installed in OPTIGA™ Trust M and/or the secret installed in OPTIGA™ Trust M .
@@ -1276,6 +1262,9 @@ option:-
 ```
 
 For detailed example for Integrity and Confidentiality Protected Update for RSA Key, Go to the subsection at  [Integrity and Confidentiality Protected Update example for RSA Key](./scripts/protected_update_rsakey/)
+
+*Note :*  
+*To generate the manifest and fragment for Integrity and Confidentiality Protected Update, please refer to the [README.md](./ex_protected_update_data_set) for more instruction*
 
 ###  <a name="trustm_protected_update_data"></a>trustm_protected_update_data
 
@@ -1295,6 +1284,9 @@ option:-
 ```
 
 For detailed example for Integrity and Confidentiality Protected Update for data, Go to the subsection at   [Integrity and Confidentiality Protected Update example for data](./scripts/protected_update_data/)
+
+*Note :*  
+*To generate the manifest and fragment for Integrity and Confidentiality Protected Update, please refer to the [README.md](./ex_protected_update_data_set) for more instruction*
 
 ## <a name="engine_usage"></a>OPTIGA™ Trust M3 OpenSSL Engine usage
 
