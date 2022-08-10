@@ -1,6 +1,6 @@
-# Linux Tools for Protected Update 
+# Linux Tools for Integrity and Confidentiality Protected Update 
 
-This Linux tools are used to generate manifest and fragment for Protected Update function.
+This Linux tools are used to generate manifest and fragment for Integrity and Confidentiality Protected Update function.
 
 Installation:
 
@@ -11,7 +11,7 @@ foo@bar:~$ make clean
 foo@bar:~$ make
 ```
 
- *Note :  This folder is used to generate the manifest and fragment for protected update. you need to install this first before install under directory "linux-optiga-trust-m".   make clean to ensure a clean build.*
+ *Note :  This folder is used to generate the manifest and fragment for Integrity and Confidentiality protected update. It can be built and installed after the trustm_lib.so and trustm_engine.so are built and installed.   make clean to ensure a clean build.*
 
 to install
 
