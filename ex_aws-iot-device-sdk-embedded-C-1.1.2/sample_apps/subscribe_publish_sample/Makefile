@@ -44,7 +44,8 @@ MQTT_SRC_FILES += $(MQTT_C_DIR)/MQTTClient.c
 TLS_LIB_DIR = /usr/lib/
 TLS_INCLUDE_DIR = -I /usr/include/openssl
 EXTERNAL_LIBS += -L$(TLS_LIB_DIR)
-LD_FLAG := -ldl -lssl -lcrypto -lwiringPi
+#LD_FLAG := -ldl -lssl -lcrypto -lwiringPi
+LD_FLAG := -ldl -lssl -lcrypto 
 LD_FLAG += -Wl,-rpath,$(TLS_LIB_DIR)
 
 #Aggregate all include and src directories
