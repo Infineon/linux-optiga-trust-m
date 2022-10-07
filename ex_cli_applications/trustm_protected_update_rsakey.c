@@ -123,7 +123,7 @@ int main (int argc, char **argv)
 
     uint16_t target_key_oid = 0xE0FC; 
     uint8_t manifest_rsa_key[512]; 
-    uint8_t rsa_key_final_fragment_array[512];    
+    uint8_t rsa_key_final_fragment_array[1024];    
     uint16_t manifestLen = sizeof(manifest_rsa_key);
     uint16_t fragmentLen = sizeof(rsa_key_final_fragment_array);
 
@@ -234,7 +234,7 @@ int main (int argc, char **argv)
             printf("Error fragment reading file!!!\n");
             break;
         }
-        if (fragmentLen > 512)
+        if (fragmentLen > 1024)
         {
             printf("Error: OPTIGA device Invalid fragment!!!\n");
             break;
