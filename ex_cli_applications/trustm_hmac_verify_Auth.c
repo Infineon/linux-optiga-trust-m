@@ -394,9 +394,14 @@ int main (int argc, char **argv)
             }
            printf("Output the data stored inside target OID. \n");
            printf("Output File Name : %s \n", outFile);
-        bytes_to_read = sizeof(read_data_buffer);  
-        optiga_lib_status = OPTIGA_LIB_BUSY;
-        
+           bytes_to_read = sizeof(read_data_buffer);  
+           if(uOptFlag.flags.bypass != 1)
+            {
+                // OPTIGA Comms Shielded connection settings to enable the protection
+                OPTIGA_UTIL_SET_COMMS_PROTOCOL_VERSION(me_util, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
+                OPTIGA_UTIL_SET_COMMS_PROTECTION_LEVEL(me_util, OPTIGA_COMMS_FULL_PROTECTION);
+            }
+        optiga_lib_status = OPTIGA_LIB_BUSY;        
         return_status = optiga_util_read_data(me_util,
                                               target_oid,
                                               offset,
