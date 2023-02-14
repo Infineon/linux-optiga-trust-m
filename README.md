@@ -1275,8 +1275,9 @@ Simple demo to show the process to do protected update for data of target OID(0x
 Help menu: trustm_protected_update_data <option> ...<option>
 option:- 
 -k <OID>       : Target OID 
--c <filename>  : Continue Fragment file
--f <filename>  : Fianl Fragment file
+-c <filename>  : Continue 1 Fragment file
+-d <filename>  : Continue 2 Fragment file
+-f <filename>  : Final Fragment file
 -m <filename>  : Manifest file
 -X             : Bypass Shielded Communication 
 -h             : Print this help 
