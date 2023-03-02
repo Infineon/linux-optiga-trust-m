@@ -30,6 +30,9 @@
 
 #include "trustm_helper.h"
 
+#define MESSAGE_FRAGMENT_LEN    16
+#define PADDING_START_BYTE      0xFF
+
 typedef struct _OPTFLAG {
     uint16_t    mode        : 1;
     uint16_t    input       : 1;
@@ -73,7 +76,7 @@ int main (int argc, char **argv)
 
     uint8_t message[64];     
     uint32_t messagelen = sizeof(message);
-    uint8_t encyptdata[64];
+    uint8_t encyptdata[2048];
     uint32_t encyptdatalen = sizeof(encyptdata);
     uint8_t iv[64];     
     uint16_t ivlen = sizeof(iv);
@@ -86,6 +89,18 @@ int main (int argc, char **argv)
     optiga_symmetric_encryption_mode_t encryption_mode;
     encryption_mode = OPTIGA_SYMMETRIC_CBC;
     
+
+    // 2d array to store larger data files
+    uint8_t *messageFragment;
+    uint8_t *encryptedFragment;
+
+
+    // keeping track of fragments
+    int numOfFragments = 0;
+
+    // index to terminate padding 
+    int paddingIndex = 0;
+    int messageCounter = 0;
 
 
     int option = 0;                    // Command line option.
@@ -189,6 +204,12 @@ int main (int argc, char **argv)
                 break;
             }
 
+            if (encyptdatalen > 2048)
+            {
+                printf("File size exceeded 2048 bytes!!!\n");
+                break;
+            }
+
             printf("Input data : \n");
             trustmHexDump(encyptdata,encyptdatalen);
             
@@ -205,6 +226,35 @@ int main (int argc, char **argv)
             printf("Initialized value : \n");
             trustmHexDump(iv,ivlen);}
 
+            // if the encrypted size is more than 16 bytes
+            int i;
+                // calculate total number of fragments needed
+            numOfFragments = encyptdatalen / MESSAGE_FRAGMENT_LEN + ((encyptdatalen % MESSAGE_FRAGMENT_LEN) != 0);
+
+            printf("Number of fragments: %d\n", numOfFragments);
+            printf("Total data length: %d\n", encyptdatalen);
+                
+
+            // allocating memeory
+            messageFragment = (uint8_t*) calloc(numOfFragments * MESSAGE_FRAGMENT_LEN, sizeof(uint8_t));
+            encryptedFragment = (uint8_t*) calloc(numOfFragments * MESSAGE_FRAGMENT_LEN, sizeof(uint8_t));      
+
+            // copying whole data file into fragments
+            int bytesToRead = encyptdatalen;
+
+            for (i = 0; i < numOfFragments; i++) {
+                if (bytesToRead > MESSAGE_FRAGMENT_LEN) 
+                {
+                    memcpy(&encryptedFragment[MESSAGE_FRAGMENT_LEN * i], &encyptdata[MESSAGE_FRAGMENT_LEN * i], MESSAGE_FRAGMENT_LEN);
+                    bytesToRead -= MESSAGE_FRAGMENT_LEN;
+                }
+                    
+                else 
+                {
+                    memcpy(&encryptedFragment[MESSAGE_FRAGMENT_LEN * i], &encyptdata[MESSAGE_FRAGMENT_LEN * i], bytesToRead);
+                }
+            }
+
             if(uOptFlag.flags.bypass != 1)
             {
                 // OPTIGA Comms Shielded connection settings to enable the protection
@@ -214,41 +264,199 @@ int main (int argc, char **argv)
 
             optiga_lib_status = OPTIGA_LIB_BUSY;
             symmetric_key = OPTIGA_KEY_ID_SECRET_BASED;
-            if(encryption_mode == OPTIGA_SYMMETRIC_CBC){
-                return_status = optiga_crypt_symmetric_decrypt(me_crypt,
+
+            if (encyptdatalen > MESSAGE_FRAGMENT_LEN)
+            {
+                // keeping track of each fragment
+                int fragmentCounter;
+
+                // start fragment
+                optiga_lib_status = OPTIGA_LIB_BUSY;
+                if(encryption_mode == OPTIGA_SYMMETRIC_CBC){
+                    return_status = optiga_crypt_symmetric_decrypt_start(me_crypt,
                                                              encryption_mode,
                                                              symmetric_key,
-                                                             encyptdata,
-                                                             encyptdatalen,
+                                                             &encryptedFragment[0],
+                                                             MESSAGE_FRAGMENT_LEN,
                                                              iv,
                                                              ivlen,
                                                              NULL,
                                                              0,
+                                                             0,
                                                              message,
                                                              &messagelen);}
-            else{
-                 return_status = optiga_crypt_symmetric_decrypt(me_crypt,
+                else{
+                    return_status = optiga_crypt_symmetric_encrypt_start(me_crypt,
                                                              encryption_mode,
                                                              symmetric_key,
-                                                             encyptdata,
-                                                             encyptdatalen,
+                                                             &encryptedFragment[0],
+                                                             MESSAGE_FRAGMENT_LEN,
                                                              NULL,
                                                              0,
                                                              NULL,
+                                                             0,
                                                              0,
                                                              message,
-                                                             &messagelen); }                                                                                                    
-            if (OPTIGA_LIB_SUCCESS != return_status)
-                break;
-            //Wait until the optiga_util_read_metadata operation is completed
-            trustm_WaitForCompletion(BUSY_WAIT_TIME_OUT);
-            return_status = optiga_lib_status;
-            if (return_status != OPTIGA_LIB_SUCCESS)
-                break;
+                                                             &messagelen);}
+                if (OPTIGA_LIB_SUCCESS != return_status)
+                {
+                    break;
+                }
+                //Wait until the optiga_util_read_metadata operation is completed
+                trustm_WaitForCompletion(BUSY_WAIT_TIME_OUT);
+                return_status = optiga_lib_status;
+                if (return_status != OPTIGA_LIB_SUCCESS)
+                {
+                    break;
+                }
+
+                if (messagelen != MESSAGE_FRAGMENT_LEN)
+                {
+                    printf("Decryption failed. Exiting...\n");
+                    break;
+                }
+
+                // copy decrypted data
+                memcpy(&messageFragment[0], message, messagelen);
+
+                // continue fragments
+                for (fragmentCounter = 1; fragmentCounter < numOfFragments - 1; fragmentCounter++) {
+                    optiga_lib_status = OPTIGA_LIB_BUSY;
+                    
+                    return_status = optiga_crypt_symmetric_decrypt_continue(me_crypt,
+                                                             &encryptedFragment[fragmentCounter * MESSAGE_FRAGMENT_LEN],
+                                                             MESSAGE_FRAGMENT_LEN,
+                                                             message,
+                                                             &messagelen);
+                     
+                    if (OPTIGA_LIB_SUCCESS != return_status)
+                    {
+                        trustmPrintErrorCode(return_status);
+                        exit(1);
+                    }
+                    //Wait until the optiga_util_read_metadata operation is completed
+                    trustm_WaitForCompletion(BUSY_WAIT_TIME_OUT);
+                    return_status = optiga_lib_status;
+                    if (return_status != OPTIGA_LIB_SUCCESS)
+                    { 
+                        trustmPrintErrorCode(return_status);
+                        trustm_Close();
+                        exit(1);
+                    }
+
+                    if (messagelen != MESSAGE_FRAGMENT_LEN)
+                    {
+                        printf("Decryption failed. Exiting...\n");
+                        trustm_Close();
+                        exit(1);
+                    }
+
+                    // copy decrypted data
+                    memcpy(&messageFragment[fragmentCounter * MESSAGE_FRAGMENT_LEN], message, messagelen);
+                }
+
+                // final fragment
+                optiga_lib_status = OPTIGA_LIB_BUSY;
+                return_status = optiga_crypt_symmetric_decrypt_final(me_crypt,
+                                                             &encryptedFragment[fragmentCounter * MESSAGE_FRAGMENT_LEN],
+                                                             MESSAGE_FRAGMENT_LEN,
+                                                             message,
+                                                             &messagelen);
+
+                if (OPTIGA_LIB_SUCCESS != return_status)
+                {
+                    break;
+                }
+                //Wait until the optiga_util_read_metadata operation is completed
+                trustm_WaitForCompletion(BUSY_WAIT_TIME_OUT);
+                return_status = optiga_lib_status;
+                if (return_status != OPTIGA_LIB_SUCCESS)
+                {
+                    break;
+                }
+
+                if (messagelen != MESSAGE_FRAGMENT_LEN)
+                {
+                    printf("Decryption failed. Exiting...\n");
+                    break;
+                }
+
+                else
+                {
+                    // copy decrypted data
+                    memcpy(&messageFragment[fragmentCounter * MESSAGE_FRAGMENT_LEN], message, messagelen);
+
+                    // find and remove padding
+                    while (messageCounter < numOfFragments * MESSAGE_FRAGMENT_LEN) 
+                    {
+                        if (messageFragment[messageCounter] == PADDING_START_BYTE)
+                        {
+                            paddingIndex = messageCounter;
+                        }
+
+                        messageCounter++;
+                    }
+
+
+                    // writing everything to output file
+                    trustmwriteTo(messageFragment, paddingIndex, outFile);
+                    printf("Success\n");
+                }        
+
+                // free everything
+                free(messageFragment);
+                free(encryptedFragment);
+            }
+
             else
             {
-                trustmwriteTo(message, messagelen, outFile);
-                printf("Success\n");
+                if(encryption_mode == OPTIGA_SYMMETRIC_CBC){
+                    return_status = optiga_crypt_symmetric_decrypt(me_crypt,
+                                                             encryption_mode,
+                                                             symmetric_key,
+                                                             encryptedFragment,
+                                                             MESSAGE_FRAGMENT_LEN,
+                                                             iv,
+                                                             ivlen,
+                                                             NULL,
+                                                             0,
+                                                             messageFragment,
+                                                             &messagelen);}
+                else{
+                    return_status = optiga_crypt_symmetric_decrypt(me_crypt,
+                                                             encryption_mode,
+                                                             symmetric_key,
+                                                             encryptedFragment,
+                                                             MESSAGE_FRAGMENT_LEN,
+                                                             NULL,
+                                                             0,
+                                                             NULL,
+                                                             0,
+                                                             messageFragment,
+                                                             &messagelen); }                                                                                                    
+                if (OPTIGA_LIB_SUCCESS != return_status)
+                    break;
+                //Wait until the optiga_util_read_metadata operation is completed
+                trustm_WaitForCompletion(BUSY_WAIT_TIME_OUT);
+                return_status = optiga_lib_status;
+                if (return_status != OPTIGA_LIB_SUCCESS)
+                    break;
+                else
+                {
+                    // find and remove padding
+                    while (messageCounter < numOfFragments * MESSAGE_FRAGMENT_LEN) 
+                    {
+                        if (messageFragment[messageCounter] == PADDING_START_BYTE)
+                        {
+                            paddingIndex = messageCounter;
+                        }
+
+                        messageCounter++;
+                    }
+
+                    trustmwriteTo(messageFragment, paddingIndex, outFile);
+                    printf("Success\n");
+                }
             }
         }
 
@@ -256,7 +464,13 @@ int main (int argc, char **argv)
 
     // Capture OPTIGA Trust M error
     if (return_status != OPTIGA_LIB_SUCCESS)
+    {
         trustmPrintErrorCode(return_status);
+
+        // free everything
+        free(messageFragment);
+        free(encryptedFragment);
+    }
 
     printf("========================================================\n");
 
