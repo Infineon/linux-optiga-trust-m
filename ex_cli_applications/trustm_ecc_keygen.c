@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdint.h>
+#include <sys/time.h>
 
 #include "optiga/ifx_i2c/ifx_i2c_config.h"
 #include "optiga/optiga_util.h"
@@ -47,6 +48,7 @@ typedef struct _OPTFLAG {
         uint16_t        keysize         : 1;
         uint16_t        savepubkey      : 1;
         uint16_t        bypass          : 1;
+        uint16_t        tstamp          : 1;
         uint16_t        dummy6          : 1;
         uint16_t        dummy7          : 1;
         uint16_t        dummy8          : 1;
@@ -80,6 +82,7 @@ void helpmenu(void)
     printf("-s              : Save Pubkey in <Key OID + 0x10E0>\n");
     printf("                  For ECC521/BRAINPOOL512: \n");
     printf("                  Save Pubkey in <Key OID + 0x10EF>\n");
+    printf("-p              : Output time taken to complete optiga related operation\n");
     printf("-X              : Bypass Shielded Communication \n");
     printf("-h              : Print this help \n");
 }
@@ -88,6 +91,10 @@ int main (int argc, char **argv)
 {
     optiga_lib_status_t return_status;
     optiga_key_id_t optiga_key_id;
+    struct timeval start;
+    struct timeval end;
+    double time_taken;
+
     uint8_t eccheader256[] = {0x30,0x59, // SEQUENCE
                                 0x30,0x13, // SEQUENCE
                                 0x06,0x07, // OID:1.2.840.10045.2.1
@@ -152,7 +159,7 @@ int main (int argc, char **argv)
         opterr = 0; // Disable getopt error messages in case of unknown parameters
 
         // Loop through parameters with getopt.
-        while (-1 != (option = getopt(argc, argv, "g:t:k:o:sXh")))
+        while (-1 != (option = getopt(argc, argv, "g:t:k:o:spXh")))
         {
             switch (option)
             {
@@ -189,6 +196,9 @@ int main (int argc, char **argv)
                         break;
                 case 's': // Save pubkey
                         uOptFlag.flags.savepubkey = 1;
+                        break;
+                case 'p': // Enable performance measurements
+                        uOptFlag.flags.tstamp = 1;
                         break;
                 case 'X': // Bypass Shielded Communication
                     uOptFlag.flags.bypass = 1;
@@ -280,6 +290,12 @@ int main (int argc, char **argv)
                 OPTIGA_CRYPT_SET_COMMS_PROTOCOL_VERSION(me_crypt, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
                 OPTIGA_CRYPT_SET_COMMS_PROTECTION_LEVEL(me_crypt, OPTIGA_COMMS_FULL_PROTECTION);
             }
+
+            if (uOptFlag.flags.tstamp)
+            {
+                // Start performance timer
+                gettimeofday(&start, NULL);
+            }
             
             optiga_lib_status = OPTIGA_LIB_BUSY;
             return_status = optiga_crypt_ecc_generate_keypair(me_crypt,
@@ -298,6 +314,16 @@ int main (int argc, char **argv)
                 break;
             else
             {
+                if (uOptFlag.flags.tstamp)
+                {
+                    // stop performance timer.
+                    gettimeofday(&end, NULL);
+                    // Calculating total time taken by the program.
+                    time_taken = (end.tv_sec - start.tv_sec) * 1e6;
+                    time_taken = (time_taken + (end.tv_usec -
+                                            start.tv_usec)) * 1e-6;
+                    printf("Operation took: %0.4f\n", time_taken);
+                }
                 printf("Pubkey :\n");
                 trustmHexDump(pubKey, (uint32_t) pubKeyLen+i);
 
@@ -307,6 +333,8 @@ int main (int argc, char **argv)
                 {
                     printf("Error when saving file!!!\n");
                 }
+
+                
             }
         }
 
