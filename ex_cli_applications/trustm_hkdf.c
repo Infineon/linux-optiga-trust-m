@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdint.h>
+#include <sys/time.h>
 
 #include "optiga/ifx_i2c/ifx_i2c_config.h"
 #include "optiga/optiga_util.h"
@@ -82,6 +83,11 @@ void helpmenu(void)
 int main (int argc, char **argv)
 {
     optiga_lib_status_t return_status;
+
+    struct timeval start;
+    struct timeval end;
+    double time_taken;
+
     uint16_t optiga_oid;
     uint8_t decryption_key [16] = {0};
 
@@ -222,7 +228,10 @@ int main (int argc, char **argv)
 
             printf("Info data : \n");
             trustmHexDump(info,infolen);
-                      
+
+            // Start performance timer
+            gettimeofday(&start, NULL);
+
             if(uOptFlag.flags.bypass != 1)
             { 
             // OPTIGA Comms Shielded connection settings to enable the protection
@@ -251,6 +260,13 @@ int main (int argc, char **argv)
                 break;
             else
             {
+                // stop performance timer.
+                gettimeofday(&end, NULL);
+                // Calculating total time taken by the program.
+                time_taken = (end.tv_sec - start.tv_sec) * 1e6;
+                time_taken = (time_taken + (end.tv_usec - start.tv_usec)) * 1e-6;
+                printf("OPTIGA execution time: %0.4f sec.\n", time_taken);
+
                 printf("Success\n");
                 printf("Decryption Key :\n");
                 trustmHexDump(decryption_key, (uint32_t) sizeof(decryption_key));

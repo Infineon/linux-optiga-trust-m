@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdint.h>
+#include <sys/time.h>
 
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
@@ -80,6 +81,11 @@ void helpmenu(void)
 int main (int argc, char **argv)
 {
     optiga_lib_status_t return_status;
+
+    struct timeval start;
+    struct timeval end;
+    double time_taken;
+
     uint16_t offset =0;
     uint16_t bytes_to_read;
     uint16_t optiga_oid;
@@ -184,6 +190,9 @@ int main (int argc, char **argv)
             offset = 0x00;
             bytes_to_read = sizeof(read_data_buffer);
 
+            // Start performance timer
+            gettimeofday(&start, NULL);
+
             if(uOptFlag.flags.bypass != 1)
             {
                 // OPTIGA Comms Shielded connection settings to enable the protection
@@ -225,6 +234,13 @@ int main (int argc, char **argv)
                 
                 if (pCert != NULL)
                 {
+                    // stop performance timer.
+                    gettimeofday(&end, NULL);
+                    // Calculating total time taken by the program.
+                    time_taken = (end.tv_sec - start.tv_sec) * 1e6;
+                    time_taken = (time_taken + (end.tv_usec - start.tv_usec)) * 1e-6;
+                    printf("OPTIGA execution time: %0.4f sec.\n", time_taken);
+
                     x509Cert = d2i_X509(NULL, (const uint8_t **)&pCert, certLen);
                     if(!x509Cert)
                     {
@@ -245,7 +261,7 @@ int main (int argc, char **argv)
                 }
             }   
         }
-
+        
         if(uOptFlag.flags.write == 1)
         {
             if(uOptFlag.flags.input != 1)
@@ -261,6 +277,9 @@ int main (int argc, char **argv)
                 if(certLen != 0)
                 {
                     
+                    // Start performance timer
+                    gettimeofday(&start, NULL);
+
                     if(uOptFlag.flags.bypass != 1)
                     {
                         // OPTIGA Comms Shielded connection settings to enable the protection
@@ -281,9 +300,19 @@ int main (int argc, char **argv)
                     trustm_WaitForCompletion(BUSY_WAIT_TIME_OUT);
                     return_status = optiga_lib_status;
                     if (return_status != OPTIGA_LIB_SUCCESS)
+                    {
                         break;
+                    }
                     else
+                    {
+                        // stop performance timer.
+                        gettimeofday(&end, NULL);
+                        // Calculating total time taken by the program.
+                        time_taken = (end.tv_sec - start.tv_sec) * 1e6;
+                        time_taken = (time_taken + (end.tv_usec - start.tv_usec)) * 1e-6;
+                        printf("OPTIGA execution time: %0.4f sec.\n", time_taken);
                         printf("Success!!!\n");
+                    }
                 }
                 else
                 {
@@ -301,6 +330,9 @@ int main (int argc, char **argv)
             bytes_to_read = 0x01; 
             read_data_buffer[0] = 0;
             offset = 0;
+
+            // Start performance timer
+            gettimeofday(&start, NULL);
 
             if(uOptFlag.flags.bypass != 1)
             {
@@ -324,7 +356,15 @@ int main (int argc, char **argv)
             if (return_status != OPTIGA_LIB_SUCCESS)
                 break;
             else
+            {
+                // stop performance timer.
+                gettimeofday(&end, NULL);
+                // Calculating total time taken by the program.
+                time_taken = (end.tv_sec - start.tv_sec) * 1e6;
+                time_taken = (time_taken + (end.tv_usec - start.tv_usec)) * 1e-6;
+                printf("OPTIGA execution time: %0.4f sec.\n", time_taken);
                 printf("Cleared.\n");
+            }
         }
     }while(FALSE);
     

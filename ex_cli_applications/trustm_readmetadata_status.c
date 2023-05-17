@@ -25,6 +25,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/time.h>
+
 #include "optiga/ifx_i2c/ifx_i2c_config.h"
 #include "optiga/optiga_util.h"
 
@@ -66,6 +68,11 @@ void helpmenu(void)
 int main (int argc, char **argv)
 {
     optiga_lib_status_t return_status;
+
+    struct timeval start;
+    struct timeval end;
+    double time_taken;
+
     uint16_t i;
 
     uint16_t bytes_to_read;
@@ -129,6 +136,9 @@ int main (int argc, char **argv)
                 printf("========================================================\n");
                 puts(messagebuf);
 
+                // Start performance timer
+                gettimeofday(&start, NULL);
+
                 if(uOptFlag.flags.bypass != 1)
                 {
                     // OPTIGA Comms Shielded connection settings to enable the protection
@@ -151,6 +161,12 @@ int main (int argc, char **argv)
                     break;
                 else
                 {
+                    // stop performance timer.
+                    gettimeofday(&end, NULL);
+                    // Calculating total time taken by the program.
+                    time_taken = (end.tv_sec - start.tv_sec) * 1e6;
+                    time_taken = (time_taken + (end.tv_usec - start.tv_usec)) * 1e-6;
+                    printf("OPTIGA execution time: %0.4f sec.\n", time_taken);
                     printf("[Size %.4d] : \n", bytes_to_read);
                     trustmHexDump(read_data_buffer,bytes_to_read);
                     printf("\t");

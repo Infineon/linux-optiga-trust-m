@@ -25,6 +25,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/time.h>
+
 #include "optiga/ifx_i2c/ifx_i2c_config.h"
 #include "optiga/optiga_util.h"
 
@@ -74,6 +76,10 @@ int main (int argc, char **argv)
 {
     optiga_lib_status_t return_status;
 
+    struct timeval start;
+    struct timeval end;
+    double time_taken;
+
     uint8_t message[64];     
     uint32_t messagelen = sizeof(message);
     uint8_t encyptdata[2048];
@@ -88,7 +94,6 @@ int main (int argc, char **argv)
     optiga_key_id_t symmetric_key;  
     optiga_symmetric_encryption_mode_t encryption_mode;
     encryption_mode = OPTIGA_SYMMETRIC_CBC;
-    
 
     // 2d array to store larger data files
     uint8_t *messageFragment;
@@ -212,7 +217,6 @@ int main (int argc, char **argv)
 
             printf("Input data : \n");
             trustmHexDump(encyptdata,encyptdatalen);
-            
 
             if (encryption_mode == OPTIGA_SYMMETRIC_CBC){
                  printf("IV File Name  : %s \n", ivFile);
@@ -254,6 +258,9 @@ int main (int argc, char **argv)
                     memcpy(&encryptedFragment[MESSAGE_FRAGMENT_LEN * i], &encyptdata[MESSAGE_FRAGMENT_LEN * i], bytesToRead);
                 }
             }
+
+            // Start performance timer
+            gettimeofday(&start, NULL);
 
             if(uOptFlag.flags.bypass != 1)
             {
@@ -383,6 +390,12 @@ int main (int argc, char **argv)
 
                 else
                 {
+                    // stop performance timer.
+                    gettimeofday(&end, NULL);
+                    // Calculating total time taken by the program.
+                    time_taken = (end.tv_sec - start.tv_sec) * 1e6;
+                    time_taken = (time_taken + (end.tv_usec - start.tv_usec)) * 1e-6;
+                    printf("OPTIGA execution time: %0.4f sec.\n", time_taken);
                     // copy decrypted data
                     memcpy(&messageFragment[fragmentCounter * MESSAGE_FRAGMENT_LEN], message, messagelen);
 
@@ -396,7 +409,6 @@ int main (int argc, char **argv)
 
                         messageCounter++;
                     }
-
 
                     // writing everything to output file
                     trustmwriteTo(messageFragment, paddingIndex, outFile);
@@ -443,6 +455,12 @@ int main (int argc, char **argv)
                     break;
                 else
                 {
+                    // stop performance timer.
+                    gettimeofday(&end, NULL);
+                    // Calculating total time taken by the program.
+                    time_taken = (end.tv_sec - start.tv_sec) * 1e6;
+                    time_taken = (time_taken + (end.tv_usec - start.tv_usec)) * 1e-6;
+                    printf("OPTIGA execution time: %0.4f sec.\n", time_taken);
                     // find and remove padding
                     while (messageCounter < numOfFragments * MESSAGE_FRAGMENT_LEN) 
                     {

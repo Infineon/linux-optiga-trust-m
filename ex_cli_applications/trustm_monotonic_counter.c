@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdint.h>
+#include <sys/time.h>
 
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
@@ -76,6 +77,11 @@ static void _helpmenu(void)
 int main (int argc, char **argv)
 {
     optiga_lib_status_t return_status;
+
+    struct timeval start;
+    struct timeval end;
+    double time_taken;
+
     uint32_t inValue = 0;
     uint32_t steps = 0;
     uint16_t optiga_oid;
@@ -185,6 +191,9 @@ int main (int argc, char **argv)
 
             printf("Steps Value : %d [0x%.8X]\n", steps, steps);
 
+            // Start performance timer
+            gettimeofday(&start, NULL);
+
             if(uOptFlag.flags.bypass != 1)
             {
                 // OPTIGA Comms Shielded connection settings to enable the protection
@@ -204,7 +213,15 @@ int main (int argc, char **argv)
             if (return_status != OPTIGA_LIB_SUCCESS)
                 break;
             else
+            {
+                // stop performance timer.
+                gettimeofday(&end, NULL);
+                // Calculating total time taken by the program.
+                time_taken = (end.tv_sec - start.tv_sec) * 1e6;
+                time_taken = (time_taken + (end.tv_usec - start.tv_usec)) * 1e-6;
+                printf("OPTIGA execution time: %0.4f sec.\n", time_taken);
                 printf("Update Counter Success.\n");
+            }
         }
 
        if(uOptFlag.flags.write == 1)

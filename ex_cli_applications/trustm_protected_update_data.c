@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdint.h>
+#include <sys/time.h>
 
 #include "optiga/ifx_i2c/ifx_i2c_config.h"
 #include "optiga/optiga_util.h"
@@ -89,6 +90,10 @@ const uint8_t target_oid_metadata_with_confidentiality[] =
 int main (int argc, char **argv)
 {
     optiga_lib_status_t return_status;
+
+    struct timeval start;
+    struct timeval end;
+    double time_taken;
 
     uint16_t target_oid = 0xE0E1; 
     uint8_t manifest_int_conf[512];  
@@ -368,6 +373,10 @@ int main (int argc, char **argv)
     }
 
     do {
+
+        // Start performance timer
+        gettimeofday(&start, NULL);
+
         if(uOptFlag.flags.bypass != 1)
         {
             // OPTIGA Comms Shielded connection settings to enable the protection
@@ -426,27 +435,35 @@ int main (int argc, char **argv)
             }
         }
         if(uOptFlag.flags.bypass != 1)
-            {
-                // OPTIGA Comms Shielded connection settings to enable the protection
-                OPTIGA_UTIL_SET_COMMS_PROTOCOL_VERSION(me_util, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
-                OPTIGA_UTIL_SET_COMMS_PROTECTION_LEVEL(me_util, OPTIGA_COMMS_FULL_PROTECTION);
-            }
+        {
+            // OPTIGA Comms Shielded connection settings to enable the protection
+            OPTIGA_UTIL_SET_COMMS_PROTOCOL_VERSION(me_util, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
+            OPTIGA_UTIL_SET_COMMS_PROTECTION_LEVEL(me_util, OPTIGA_COMMS_FULL_PROTECTION);
+        }
 
-            optiga_lib_status = OPTIGA_LIB_BUSY;
-            return_status = optiga_util_protected_update_final(me_util,
-                                                               &fragmentArray[fragmentCounter][0],
-                                                               fragmentLen[fragmentCounter]);
-            if (OPTIGA_LIB_SUCCESS != return_status)
-                break;
-            //Wait until the optiga_util_read_metadata operation is completed
-            trustm_WaitForCompletion(BUSY_WAIT_TIME_OUT);
-            return_status = optiga_lib_status;
-            if (return_status != OPTIGA_LIB_SUCCESS)
-                break;
-            else
-                printf("Data protected update Successful.\n");
+        optiga_lib_status = OPTIGA_LIB_BUSY;
+        return_status = optiga_util_protected_update_final(me_util,
+                                                            &fragmentArray[fragmentCounter][0],
+                                                            fragmentLen[fragmentCounter]);
+        if (OPTIGA_LIB_SUCCESS != return_status)
+            break;
+        //Wait until the optiga_util_read_metadata operation is completed
+        trustm_WaitForCompletion(BUSY_WAIT_TIME_OUT);
+        return_status = optiga_lib_status;
+        if (return_status != OPTIGA_LIB_SUCCESS)
+            break;
+        else
+        {
+            // stop performance timer.
+            gettimeofday(&end, NULL);
+            // Calculating total time taken by the program.
+            time_taken = (end.tv_sec - start.tv_sec) * 1e6;
+            time_taken = (time_taken + (end.tv_usec - start.tv_usec)) * 1e-6;
+            printf("OPTIGA execution time: %0.4f sec.\n", time_taken);
+            printf("Data protected update Successful.\n");
+        }
 
-            printf("\n");
+        printf("\n");
             
     } while (FALSE);    
 
