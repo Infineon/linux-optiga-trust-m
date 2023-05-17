@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdint.h>
+#include <sys/time.h>
 
 #include "optiga/ifx_i2c/ifx_i2c_config.h"
 #include "optiga/optiga_util.h"
@@ -80,6 +81,11 @@ void helpmenu(void)
 int main (int argc, char **argv)
 {
     optiga_lib_status_t return_status;
+
+    struct timeval start;
+    struct timeval end;
+    double time_taken;
+
     optiga_key_id_t symmetric_key;                            
     uint8_t keyType=0x02;// default Enc
     optiga_symmetric_key_type_t keySize=0x81;// default 128
@@ -154,6 +160,9 @@ int main (int argc, char **argv)
 
     do
     {
+            // Start performance timer
+            gettimeofday(&start, NULL);
+
             if(uOptFlag.flags.bypass != 1)
             {
                 // OPTIGA Comms Shielded connection settings to enable the protection
@@ -177,6 +186,12 @@ int main (int argc, char **argv)
                 break;
             else
             {
+                // stop performance timer.
+                gettimeofday(&end, NULL);
+                // Calculating total time taken by the program.
+                time_taken = (end.tv_sec - start.tv_sec) * 1e6;
+                time_taken = (time_taken + (end.tv_usec - start.tv_usec)) * 1e-6;
+                printf("OPTIGA execution time: %0.4f sec.\n", time_taken);
                 printf("Successfully Generated Symmetric Key in 0xE200 \n");
             }
     }while(FALSE);

@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdint.h>
+#include <sys/time.h>
 
 #include "optiga/ifx_i2c/ifx_i2c_config.h"
 #include "optiga/optiga_util.h"
@@ -77,6 +78,11 @@ void _helpmenu(void)
 int main (int argc, char **argv)
 {
     optiga_lib_status_t return_status;
+
+    struct timeval start;
+    struct timeval end;
+    double time_taken;
+
     optiga_hash_context_t hash_context;
     hash_data_from_host_t hash_data_host;
     public_key_from_host_t public_key_details;
@@ -318,6 +324,9 @@ int main (int argc, char **argv)
             printf("Signature : \n");
             trustmHexDump(signature,signatureLen);
 
+            // Start performance timer
+            gettimeofday(&start, NULL);
+
             if(uOptFlag.flags.bypass != 1)
             {
                 // OPTIGA Comms Shielded connection settings to enable the protection
@@ -393,6 +402,9 @@ int main (int argc, char **argv)
             public_key_details.length = pubkeyLen;
             public_key_details.key_type = pubkeySize;
 
+            // Start performance timer
+            gettimeofday(&start, NULL);
+
             if(uOptFlag.flags.bypass != 1)
             {
                 // OPTIGA Comms Shielded connection settings to enable the protection
@@ -418,7 +430,15 @@ int main (int argc, char **argv)
             if (return_status != OPTIGA_LIB_SUCCESS)
                 break;
             else
+            {
+                // stop performance timer.
+                gettimeofday(&end, NULL);
+                // Calculating total time taken by the program.
+                time_taken = (end.tv_sec - start.tv_sec) * 1e6;
+                time_taken = (time_taken + (end.tv_usec - start.tv_usec)) * 1e-6;
+                printf("OPTIGA execution time: %0.4f sec.\n", time_taken);
                 printf("Verify Success.\n");
+            }
         }
     }while(FALSE);
 

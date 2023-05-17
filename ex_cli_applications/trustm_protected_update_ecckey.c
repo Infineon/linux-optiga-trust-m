@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdint.h>
+#include <sys/time.h>
 
 #include "optiga/ifx_i2c/ifx_i2c_config.h"
 #include "optiga/optiga_util.h"
@@ -120,6 +121,10 @@ typedef struct optiga_protected_update_data_configuration
 int main (int argc, char **argv)
 {
     optiga_lib_status_t return_status;
+
+    struct timeval start;
+    struct timeval end;
+    double time_taken;
 
     uint16_t target_key_oid = 0xE0F1; 
     uint8_t manifest_ecc_key[512]; 
@@ -247,31 +252,35 @@ int main (int argc, char **argv)
         printf("final fragment : \n");
         trustmHexDump(ecc_key_final_fragment_array,fragmentLen);
 
-   optiga_protected_update_manifest_fragment_configuration_t data_ecc_key_configuration = 
-                                                                {    
-                                                                     0x01,
-                                                                     manifest_ecc_key,
-                                                                     manifestLen,
-                                                                     NULL,
-                                                                     0,
-                                                                     ecc_key_final_fragment_array,
-                                                                     fragmentLen
-                                                                };                                                                                                                   
-  const optiga_protected_update_data_configuration_t  optiga_protected_update_data_set[] =
-    {
-          {
-        0xE0F1,
-        target_key_oid_metadata,
-        sizeof(target_key_oid_metadata),
-        &data_ecc_key_configuration,
-        "Protected Update - ECC Key"
-    },
-    };
+        optiga_protected_update_manifest_fragment_configuration_t data_ecc_key_configuration = 
+                                                                    {    
+                                                                        0x01,
+                                                                        manifest_ecc_key,
+                                                                        manifestLen,
+                                                                        NULL,
+                                                                        0,
+                                                                        ecc_key_final_fragment_array,
+                                                                        fragmentLen
+                                                                    };                                                                                                                   
+        const optiga_protected_update_data_configuration_t  optiga_protected_update_data_set[] =
+        {
+            {
+                0xE0F1,
+                target_key_oid_metadata,
+                sizeof(target_key_oid_metadata),
+                &data_ecc_key_configuration,
+                "Protected Update - ECC Key"
+            },
+        };
         
-     for (data_config = 0; 
-            data_config < \
-            sizeof(optiga_protected_update_data_set)/sizeof(optiga_protected_update_data_configuration_t); data_config++)
-       {
+        for (data_config = 0;
+             data_config < sizeof(optiga_protected_update_data_set)/sizeof(optiga_protected_update_data_configuration_t); 
+             data_config++
+        )
+        {
+
+            // Start performance timer
+            gettimeofday(&start, NULL);
 
             if(uOptFlag.flags.bypass != 1)
             {
@@ -282,9 +291,9 @@ int main (int argc, char **argv)
 
             optiga_lib_status = OPTIGA_LIB_BUSY;
             return_status = optiga_util_protected_update_start(me_util,
-                                                               optiga_protected_update_data_set[data_config].data_config->manifest_version,
-                                                               optiga_protected_update_data_set[data_config].data_config->manifest_data,
-                                                               optiga_protected_update_data_set[data_config].data_config->manifest_length);
+                                                            optiga_protected_update_data_set[data_config].data_config->manifest_version,
+                                                            optiga_protected_update_data_set[data_config].data_config->manifest_data,
+                                                            optiga_protected_update_data_set[data_config].data_config->manifest_length);
             if (OPTIGA_LIB_SUCCESS != return_status)
                 break;
             //Wait until the optiga_util_read_metadata operation is completed
@@ -305,8 +314,8 @@ int main (int argc, char **argv)
                 
                 optiga_lib_status = OPTIGA_LIB_BUSY;
                 return_status = optiga_util_protected_update_continue(me_util,
-                                                                      optiga_protected_update_data_set[data_config].data_config->continue_fragment_data,
-                                                                      optiga_protected_update_data_set[data_config].data_config->continue_fragment_length);
+                                                                    optiga_protected_update_data_set[data_config].data_config->continue_fragment_data,
+                                                                    optiga_protected_update_data_set[data_config].data_config->continue_fragment_length);
                 if (OPTIGA_LIB_SUCCESS != return_status)
                     break;
                 //Wait until the optiga_util_read_metadata operation is completed
@@ -333,8 +342,8 @@ int main (int argc, char **argv)
 
             optiga_lib_status = OPTIGA_LIB_BUSY;
             return_status = optiga_util_protected_update_final(me_util,
-                                                               optiga_protected_update_data_set[data_config].data_config->final_fragment_data,
-                                                               optiga_protected_update_data_set[data_config].data_config->final_fragment_length);
+                                                            optiga_protected_update_data_set[data_config].data_config->final_fragment_data,
+                                                            optiga_protected_update_data_set[data_config].data_config->final_fragment_length);
             if (OPTIGA_LIB_SUCCESS != return_status)
                 break;
             //Wait until the optiga_util_read_metadata operation is completed
@@ -343,7 +352,15 @@ int main (int argc, char **argv)
             if (return_status != OPTIGA_LIB_SUCCESS)
                 break;
             else
+            {
+                // stop performance timer.
+                gettimeofday(&end, NULL);
+                // Calculating total time taken by the program.
+                time_taken = (end.tv_sec - start.tv_sec) * 1e6;
+                time_taken = (time_taken + (end.tv_usec - start.tv_usec)) * 1e-6;
+                printf("OPTIGA execution time: %0.4f sec.\n", time_taken);
                 printf("ECC Key protected update Successful.\n");
+            }
 
             printf("\n");
         }

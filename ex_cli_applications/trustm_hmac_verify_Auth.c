@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdint.h>
+#include <sys/time.h>
 
 #include "optiga/ifx_i2c/ifx_i2c_config.h"
 #include "optiga/optiga_util.h"
@@ -174,6 +175,11 @@ uint8_t hmac_buffer[32] = {0x00};
 int main (int argc, char **argv)
 {
     optiga_lib_status_t return_status;
+
+    struct timeval start;
+    struct timeval end;
+    double time_taken;
+
     uint16_t secret_oid = 0xF1D0;// default secret OID;
     uint16_t target_oid = 0xF1D5;// default target OID;
     uint8_t hmac_type=0x20;// default HMAC_SHA256
@@ -270,171 +276,200 @@ int main (int argc, char **argv)
 
     do
     {
-       if(uOptFlag.flags.secretoid == 1)
+        if(uOptFlag.flags.secretoid == 1)
         {
-           if(uOptFlag.flags.secret != 1)
+            if(uOptFlag.flags.secret != 1)
             {
                 printf("Secret filename missing!!!\n");
                 break;
             }
             printf("HMAC Type         : 0x%.4X \n",hmac_type);
-            
+
+            // Start performance timer
+            gettimeofday(&start, NULL);
+
             if(uOptFlag.flags.bypass != 1)
             { 
-            // OPTIGA Comms Shielded connection settings to enable the protection
-            OPTIGA_CRYPT_SET_COMMS_PROTOCOL_VERSION(me_crypt, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
-            OPTIGA_CRYPT_SET_COMMS_PROTECTION_LEVEL(me_crypt, OPTIGA_COMMS_FULL_PROTECTION);
+                // OPTIGA Comms Shielded connection settings to enable the protection
+                OPTIGA_CRYPT_SET_COMMS_PROTOCOL_VERSION(me_crypt, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
+                OPTIGA_CRYPT_SET_COMMS_PROTECTION_LEVEL(me_crypt, OPTIGA_COMMS_FULL_PROTECTION);
             }
-        bytes_to_read1 = 0;
-        trustmReadDER(user_secret, (uint32_t *)&bytes_to_read1, secFile);
-        printf("Input secret : \n");
-        trustmHexDump(user_secret,bytes_to_read1);              
-        optiga_lib_status = OPTIGA_LIB_BUSY;
-        return_status = optiga_crypt_generate_auth_code(me_crypt,
-                                                        OPTIGA_RNG_TYPE_TRNG,
-                                                        optional_data,
-                                                        sizeof(optional_data),
-                                                        random_data,
-                                                        sizeof(random_data));
+            
+            bytes_to_read1 = 0;
+            trustmReadDER(user_secret, (uint32_t *)&bytes_to_read1, secFile);
+            printf("Input secret : \n");
+            trustmHexDump(user_secret,bytes_to_read1);              
+            optiga_lib_status = OPTIGA_LIB_BUSY;
+            return_status = optiga_crypt_generate_auth_code(me_crypt,
+                                                            OPTIGA_RNG_TYPE_TRNG,
+                                                            optional_data,
+                                                            sizeof(optional_data),
+                                                            random_data,
+                                                            sizeof(random_data));
 
-         if (OPTIGA_LIB_SUCCESS != return_status){
-                break;}
-            //Wait until the optiga_util_read_metadata operation is completed
-            trustm_WaitForCompletion(BUSY_WAIT_TIME_OUT);
-            return_status = optiga_lib_status;
-           if (return_status != OPTIGA_LIB_SUCCESS){
-                break;}  
-                
+            if (OPTIGA_LIB_SUCCESS != return_status)
+            {
+                    break;
+            } 
 
-        /**
-         * Calculate HMAC on host
-         */
-        pal_os_memcpy(input_data_buffer, optional_data, sizeof(optional_data));
-        pal_os_memcpy(&input_data_buffer[sizeof(optional_data)], random_data, sizeof(random_data));
-        pal_os_memcpy(&input_data_buffer[sizeof(optional_data) + sizeof(random_data)], arbitrary_data, sizeof(arbitrary_data));
-        
-        // Function name in line with SRM
-        pal_return_status = CalcHMAC(user_secret,
-                                   sizeof(user_secret),
-                                   input_data_buffer,
-                                   sizeof(input_data_buffer),
-                                   hmac_buffer);
-
-        if (PAL_STATUS_SUCCESS != pal_return_status)
-        {
-            // HMAC calculation on host failed
-            return_status = pal_return_status;
-            break;
-        }        
-                   
-        /**
-         * Perform HMAC verification using OPTIGA
-         */
-        optiga_lib_status = OPTIGA_LIB_BUSY;
-        return_status = optiga_crypt_hmac_verify(me_crypt,
-                                                 hmac_type,
-                                                 secret_oid,
-                                                 input_data_buffer,
-                                                 sizeof(input_data_buffer),
-                                                 hmac_buffer,
-                                                 sizeof(hmac_buffer));     
-                                                 
-            if (OPTIGA_LIB_SUCCESS != return_status){
-                break;}
             //Wait until the optiga_util_read_metadata operation is completed
             trustm_WaitForCompletion(BUSY_WAIT_TIME_OUT);
             return_status = optiga_lib_status;
             if (return_status != OPTIGA_LIB_SUCCESS)
+            {
                 break;
+            }  
+                
+
+            /**
+            * Calculate HMAC on host
+            */
+            pal_os_memcpy(input_data_buffer, optional_data, sizeof(optional_data));
+            pal_os_memcpy(&input_data_buffer[sizeof(optional_data)], random_data, sizeof(random_data));
+            pal_os_memcpy(&input_data_buffer[sizeof(optional_data) + sizeof(random_data)], arbitrary_data, sizeof(arbitrary_data));
+            
+            // Function name in line with SRM
+            pal_return_status = CalcHMAC(user_secret,
+                                    sizeof(user_secret),
+                                    input_data_buffer,
+                                    sizeof(input_data_buffer),
+                                    hmac_buffer);
+
+            if (PAL_STATUS_SUCCESS != pal_return_status)
+            {
+                // HMAC calculation on host failed
+                return_status = pal_return_status;
+                break;
+            }        
+            
+            // Start performance timer
+            gettimeofday(&start, NULL);
+
+            /**
+            * Perform HMAC verification using OPTIGA
+            */
+            optiga_lib_status = OPTIGA_LIB_BUSY;
+            return_status = optiga_crypt_hmac_verify(me_crypt,
+                                                    hmac_type,
+                                                    secret_oid,
+                                                    input_data_buffer,
+                                                    sizeof(input_data_buffer),
+                                                    hmac_buffer,
+                                                    sizeof(hmac_buffer));     
+                                                 
+            if (OPTIGA_LIB_SUCCESS != return_status)
+            {
+                break;
+            }
+
+            //Wait until the optiga_util_read_metadata operation is completed
+            trustm_WaitForCompletion(BUSY_WAIT_TIME_OUT);
+            return_status = optiga_lib_status;
+            if (return_status != OPTIGA_LIB_SUCCESS)
+            {
+                break;
+            }
             else
             {
+                // stop performance timer.
+                gettimeofday(&end, NULL);
+                // Calculating total time taken by the program.
+                time_taken = (end.tv_sec - start.tv_sec) * 1e6;
+                time_taken = (time_taken + (end.tv_usec - start.tv_usec)) * 1e-6;
+                printf("OPTIGA execution time: %0.4f sec.\n", time_taken);
                 printf("HMAC verified successfully \n");
             }
             
-        offset = 0x00;     
+            offset = 0x00;     
                
-        if(uOptFlag.flags.write == 1)
-        {   
-            if(uOptFlag.flags.input != 1)
-            {
-                printf("Input filename missing!!!\n");
-                break;
-            }
-         bytes_to_read = 0;
-         trustmReadDER(read_data_buffer, (uint32_t *)&bytes_to_read, inFile);
-         printf("Input data : \n");
-         trustmHexDump(read_data_buffer,bytes_to_read);
-         if(uOptFlag.flags.bypass != 1)
-            {
-                // OPTIGA Comms Shielded connection settings to enable the protection
-                OPTIGA_UTIL_SET_COMMS_PROTOCOL_VERSION(me_util, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
-                OPTIGA_UTIL_SET_COMMS_PROTECTION_LEVEL(me_util, OPTIGA_COMMS_FULL_PROTECTION);
-            }
-         optiga_lib_status = OPTIGA_LIB_BUSY;
-         return_status = optiga_util_write_data(me_util,
-                                               target_oid,
-                                               OPTIGA_UTIL_ERASE_AND_WRITE,
-                                               0,
-                                               read_data_buffer,
-                                               bytes_to_read);
-
-           if (OPTIGA_LIB_SUCCESS != return_status){
-                break;}
-            //Wait until the optiga_util_read_metadata operation is completed
-            trustm_WaitForCompletion(BUSY_WAIT_TIME_OUT);
-            return_status = optiga_lib_status;
-            if (return_status != OPTIGA_LIB_SUCCESS)
-                break;
-            else
-            {
-                printf("Write new data into target OID successfully \n");
-            }  
-          } 
-        
-        if(uOptFlag.flags.read == 1)
-        {
-           if(uOptFlag.flags.output != 1)
-            {
-                printf("Output filename missing!!!\n");
-                break;
-            }
-           printf("Output the data stored inside target OID. \n");
-           printf("Output File Name : %s \n", outFile);
-           bytes_to_read = sizeof(read_data_buffer);  
-           if(uOptFlag.flags.bypass != 1)
-            {
-                // OPTIGA Comms Shielded connection settings to enable the protection
-                OPTIGA_UTIL_SET_COMMS_PROTOCOL_VERSION(me_util, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
-                OPTIGA_UTIL_SET_COMMS_PROTECTION_LEVEL(me_util, OPTIGA_COMMS_FULL_PROTECTION);
-            }
-        optiga_lib_status = OPTIGA_LIB_BUSY;        
-        return_status = optiga_util_read_data(me_util,
-                                              target_oid,
-                                              offset,
-                                              read_data_buffer,
-                                              &bytes_to_read);
-          if (OPTIGA_LIB_SUCCESS != return_status){
-                break;}
-            //Wait until the optiga_util_read_metadata operation is completed
-            trustm_WaitForCompletion(BUSY_WAIT_TIME_OUT);
-            return_status = optiga_lib_status;
-            if (return_status != OPTIGA_LIB_SUCCESS)
-                break;
-            else
-            {
-                printf("Read data from target OID successfully \n");
-                printf("Data inside target OID :\n");
+            if(uOptFlag.flags.write == 1)
+            {   
+                if(uOptFlag.flags.input != 1)
+                {
+                    printf("Input filename missing!!!\n");
+                    break;
+                }
+                bytes_to_read = 0;
+                trustmReadDER(read_data_buffer, (uint32_t *)&bytes_to_read, inFile);
+                printf("Input data : \n");
                 trustmHexDump(read_data_buffer,bytes_to_read);
 
-                return_status = trustmwriteTo(read_data_buffer,bytes_to_read,outFile);
-                if (return_status != OPTIGA_LIB_SUCCESS)
+                if(uOptFlag.flags.bypass != 1)
                 {
-                    printf("Error when saving file!!!\n");
+                    // OPTIGA Comms Shielded connection settings to enable the protection
+                    OPTIGA_UTIL_SET_COMMS_PROTOCOL_VERSION(me_util, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
+                    OPTIGA_UTIL_SET_COMMS_PROTECTION_LEVEL(me_util, OPTIGA_COMMS_FULL_PROTECTION);
                 }
-            }  
-          }                                    
+
+                optiga_lib_status = OPTIGA_LIB_BUSY;
+                return_status = optiga_util_write_data(me_util,
+                                                    target_oid,
+                                                    OPTIGA_UTIL_ERASE_AND_WRITE,
+                                                    0,
+                                                    read_data_buffer,
+                                                    bytes_to_read);
+
+                if (OPTIGA_LIB_SUCCESS != return_status)
+                {
+                        break;
+                }
+                //Wait until the optiga_util_read_metadata operation is completed
+                trustm_WaitForCompletion(BUSY_WAIT_TIME_OUT);
+                return_status = optiga_lib_status;
+                if (return_status != OPTIGA_LIB_SUCCESS)
+                    break;
+                else
+                {
+                    printf("Write new data into target OID successfully \n");
+                }  
+            } 
+        
+            if(uOptFlag.flags.read == 1)
+            {
+                if(uOptFlag.flags.output != 1)
+                {
+                    printf("Output filename missing!!!\n");
+                    break;
+                }
+                printf("Output the data stored inside target OID. \n");
+                printf("Output File Name : %s \n", outFile);
+                bytes_to_read = sizeof(read_data_buffer);
+
+                if(uOptFlag.flags.bypass != 1)
+                {
+                    // OPTIGA Comms Shielded connection settings to enable the protection
+                    OPTIGA_UTIL_SET_COMMS_PROTOCOL_VERSION(me_util, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
+                    OPTIGA_UTIL_SET_COMMS_PROTECTION_LEVEL(me_util, OPTIGA_COMMS_FULL_PROTECTION);
+                }
+                optiga_lib_status = OPTIGA_LIB_BUSY;        
+                return_status = optiga_util_read_data(me_util,
+                                                    target_oid,
+                                                    offset,
+                                                    read_data_buffer,
+                                                    &bytes_to_read);
+                if (OPTIGA_LIB_SUCCESS != return_status)
+                {
+                    break;
+                }
+                //Wait until the optiga_util_read_metadata operation is completed
+                trustm_WaitForCompletion(BUSY_WAIT_TIME_OUT);
+                return_status = optiga_lib_status;
+                if (return_status != OPTIGA_LIB_SUCCESS)
+                    break;
+                else
+                {
+                    printf("Read data from target OID successfully \n");
+                    printf("Data inside target OID :\n");
+                    trustmHexDump(read_data_buffer,bytes_to_read);
+
+                    return_status = trustmwriteTo(read_data_buffer,bytes_to_read,outFile);
+                    if (return_status != OPTIGA_LIB_SUCCESS)
+                    {
+                        printf("Error when saving file!!!\n");
+                    }
+                }  
+            }                                    
         }
-    
     }while(FALSE);
 
     // Capture OPTIGA Trust M error

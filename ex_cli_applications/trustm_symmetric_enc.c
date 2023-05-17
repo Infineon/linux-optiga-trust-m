@@ -26,6 +26,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <math.h>
+#include <sys/time.h>
+
 #include "optiga/ifx_i2c/ifx_i2c_config.h"
 #include "optiga/optiga_util.h"
 
@@ -77,6 +79,10 @@ void _helpmenu(void)
 int main (int argc, char **argv)
 {
     optiga_lib_status_t return_status;
+
+    struct timeval start;
+    struct timeval end;
+    double time_taken;
 
     uint8_t message[2048];     
     uint32_t messagelen = sizeof(message);
@@ -271,6 +277,9 @@ int main (int argc, char **argv)
             printf("Input data after padding:\n");
             trustmHexDump(messageFragment, MESSAGE_FRAGMENT_LEN * numOfFragments);
             
+            // Start performance timer
+            gettimeofday(&start, NULL);
+
             if(uOptFlag.flags.bypass != 1)
             {
                 // OPTIGA Comms Shielded connection settings to enable the protection
@@ -398,6 +407,13 @@ int main (int argc, char **argv)
 
                 else
                 {
+                    // stop performance timer.
+                    gettimeofday(&end, NULL);
+                    // Calculating total time taken by the program.
+                    time_taken = (end.tv_sec - start.tv_sec) * 1e6;
+                    time_taken = (time_taken + (end.tv_usec - start.tv_usec)) * 1e-6;
+                    printf("OPTIGA execution time: %0.4f sec.\n", time_taken);
+
                     // copy encrypted data
                     memcpy(&encryptedFragment[fragmentCounter * MESSAGE_FRAGMENT_LEN], encyptdata, encyptdatalen);
 
@@ -447,6 +463,12 @@ int main (int argc, char **argv)
                     break;
                 else
                 {
+                    // stop performance timer.
+                    gettimeofday(&end, NULL);
+                    // Calculating total time taken by the program.
+                    time_taken = (end.tv_sec - start.tv_sec) * 1e6;
+                    time_taken = (time_taken + (end.tv_usec - start.tv_usec)) * 1e-6;
+                    printf("OPTIGA execution time: %0.4f sec.\n", time_taken);
                     trustmwriteTo(encyptdata, encyptdatalen, outFile);
                     printf("Success\n");
                 }

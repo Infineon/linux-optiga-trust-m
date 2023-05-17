@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdint.h>
+#include <sys/time.h>
 
 #include "optiga/ifx_i2c/ifx_i2c_config.h"
 #include "optiga/optiga_util.h"
@@ -119,6 +120,10 @@ typedef struct optiga_protected_update_data_configuration
 int main (int argc, char **argv)
 {
     optiga_lib_status_t return_status;
+
+    struct timeval start;
+    struct timeval end;
+    double time_taken;
 
     uint16_t target_key_oid = 0xE200; 
     uint8_t manifest_aes_key[512]; 
@@ -259,21 +264,24 @@ int main (int argc, char **argv)
                                                                      aes_key_final_fragment_array,
                                                                      fragmentLen
                                                                 };                                                                                                                    
-      const optiga_protected_update_data_configuration_t  optiga_protected_update_data_set[] =
+    const optiga_protected_update_data_configuration_t  optiga_protected_update_data_set[] =
     {
-          {
-        0xE200,
-        target_key_oid_metadata,
-        sizeof(target_key_oid_metadata),
-        &data_aes_key_configuration, 
-        "Protected Update - AES Key"
-    },
+        {
+            0xE200,
+            target_key_oid_metadata,
+            sizeof(target_key_oid_metadata),
+            &data_aes_key_configuration, 
+            "Protected Update - AES Key"
+        },
     };
         
      for (data_config = 0; 
             data_config < \
             sizeof(optiga_protected_update_data_set)/sizeof(optiga_protected_update_data_configuration_t); data_config++)
        {
+
+            // Start performance timer
+            gettimeofday(&start, NULL);
 
             if(uOptFlag.flags.bypass != 1)
             {
@@ -345,7 +353,15 @@ int main (int argc, char **argv)
             if (return_status != OPTIGA_LIB_SUCCESS)
                 break;
             else
+            {
+                // stop performance timer.
+                gettimeofday(&end, NULL);
+                // Calculating total time taken by the program.
+                time_taken = (end.tv_sec - start.tv_sec) * 1e6;
+                time_taken = (time_taken + (end.tv_usec - start.tv_usec)) * 1e-6;
+                printf("OPTIGA execution time: %0.4f sec.\n", time_taken);
                 printf("AES Key protected update Successful.\n");
+            }
 
             printf("\n");
         }

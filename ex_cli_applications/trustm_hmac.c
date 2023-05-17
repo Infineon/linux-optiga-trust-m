@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdint.h>
+#include <sys/time.h>
 
 #include "optiga/ifx_i2c/ifx_i2c_config.h"
 #include "optiga/optiga_util.h"
@@ -81,6 +82,11 @@ void helpmenu(void)
 int main (int argc, char **argv)
 {
     optiga_lib_status_t return_status;
+
+    struct timeval start;
+    struct timeval end;
+    double time_taken;
+
     uint16_t optiga_oid;
     uint8_t mac_buffer[64] = {0};
     uint32_t mac_buffer_length = sizeof(mac_buffer);
@@ -197,12 +203,15 @@ int main (int argc, char **argv)
 
             printf("Input data : \n");
             trustmHexDump(message,messagelen);
+            
+            // Start performance timer
+            gettimeofday(&start, NULL);
+
             if(uOptFlag.flags.bypass != 1)
             { 
-            
-            // OPTIGA Comms Shielded connection settings to enable the protection
-            OPTIGA_CRYPT_SET_COMMS_PROTOCOL_VERSION(me_crypt, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
-            OPTIGA_CRYPT_SET_COMMS_PROTECTION_LEVEL(me_crypt, OPTIGA_COMMS_FULL_PROTECTION);
+                // OPTIGA Comms Shielded connection settings to enable the protection
+                OPTIGA_CRYPT_SET_COMMS_PROTOCOL_VERSION(me_crypt, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
+                OPTIGA_CRYPT_SET_COMMS_PROTECTION_LEVEL(me_crypt, OPTIGA_COMMS_FULL_PROTECTION);
             }
             
             optiga_lib_status = OPTIGA_LIB_BUSY;
@@ -224,6 +233,13 @@ int main (int argc, char **argv)
                 break;
             else
             {
+                // stop performance timer.
+                gettimeofday(&end, NULL);
+                // Calculating total time taken by the program.
+                time_taken = (end.tv_sec - start.tv_sec) * 1e6;
+                time_taken = (time_taken + (end.tv_usec - start.tv_usec)) * 1e-6;
+                printf("OPTIGA execution time: %0.4f sec.\n", time_taken);
+
                 printf("MAC data :\n");
                 trustmHexDump(mac_buffer, mac_buffer_length);
 
