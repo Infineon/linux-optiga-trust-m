@@ -1,0 +1,13 @@
+diff --git a/trustm_lib/optiga/include/optiga/optiga_lib_config_m_v3.h b/trustm_lib/optiga/include/optiga/optiga_lib_config_m_v3.h
+index 72039eb..b1fdeac 100644
+--- a/trustm_lib/optiga/include/optiga/optiga_lib_config_m_v3.h
++++ b/trustm_lib/optiga/include/optiga/optiga_lib_config_m_v3.h
+@@ -110,7 +110,7 @@ extern "C" {
+      *         Warm Reset - (2) : This is applicable if the host platform doesn't have GPIO option for VDD. \n
+      *         Any other value will lead to error
+      */
+-    #define OPTIGA_COMMS_DEFAULT_RESET_TYPE     (0U)
++    #define OPTIGA_COMMS_DEFAULT_RESET_TYPE     (1U)
+     
+     /** @brief NULL parameter check.
+      *         To disable the check, undefine the macro
