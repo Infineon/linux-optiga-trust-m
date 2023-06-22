@@ -99,42 +99,24 @@ foo@bar:~$ git checkout development_v3
 foo@bar:~$ git submodule update -f
 ```
 
-Change the reset type to use software reset as follow in the header file at "**linux-optiga-trust-m/trustm_lib/optiga/include/optiga/**"
+### <a name="build_lib"></a>First time building the library
+Run the commands below to install the required dependencies and Linux tools for optiga trust m 
 
-- optiga_lib_config_m_v3.h for OPTIGA™ Trust M3 or 
-- optiga_lib_config_m_v1.h for OPTIGA™ Trust M1
+    foo@bar:~$ cd linux-optiga-trust-m
+    foo@bar:~$ ./trustm_installation_script.sh
+
+Note: 
+
+1)Enable I2C interface for Raspberry Pi to communicate with optiga trustm m
+
+2)The patch applied inside trustm_installation_script.sh will change the reset type to use soft reset as follow in the header file at "linux-optiga-trust-m/trustm_lib/optiga/include/optiga/"
+
+- optiga_lib_config_m_v3.h for OPTIGA™ Trust M3 
+
 
 ```console
 #define OPTIGA_COMMS_DEFAULT_RESET_TYPE     (1U)
 ```
-
-### <a name="build_lib"></a>First time building the library
-Install required dependencies:
-```console
-foo@bar:~$ sudo apt-get install libssl-dev
-```
-Go to the repository directory "**linux-optiga-trust-m**"
-
-```console 
-foo@bar:~$ make clean
-foo@bar:~$ make
-```
- *Note : make clean to ensure a clean build.*
-
-to install
-
-```console 
-foo@bar:~$ sudo make install
-```
-
-*Note : In case install fail try performing the uninstall and redo make.*
-
-to uninstall
-
-```console 
-foo@bar:~$ sudo make uninstall
-```
-
 To build for AARCH64, uncomment  this Marco in Makefile
 
 ```console 
@@ -142,24 +124,12 @@ To build for AARCH64, uncomment  this Marco in Makefile
 #~ AARCH64 = YES
 ```
 
-Or pass AARCH64 = YES as argument in command line:
+Or run the script below:
 
-```console 
-foo@bar:~$ make clean
-foo@bar:~$ make -j5 AARCH64=YES
-```
+    foo@bar:~$ ./trustm_installation_aarch64_script.sh
 
- to install
+Note: AARCH64 = YES is passed as argument in *trustm_installation_aarch64_script.sh*.
 
-```console 
-foo@bar:~$ sudo make install AARCH64=YES
-```
-
-to uninstall
-
-```console 
-foo@bar:~$ sudo make uninstall AARCH64=YES
-```
 ## <a name="cli_usage"></a>CLI Tools Usage
 
 ### Important Notes:  
