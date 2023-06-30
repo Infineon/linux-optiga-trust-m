@@ -160,7 +160,7 @@ all : $(BINDIR)/$(LIB) $(APPS) $(BINDIR)/$(ENG)
 install:
 	@echo "Create symbolic link to the openssl engine $(ENGINE_INSTALL_DIR)/$(ENG)"
 	@ln -s $(realpath $(BINDIR)/$(ENG)) $(ENGINE_INSTALL_DIR)/$(ENG)
-	@echo "Create symbolic link to trustx_lib $(LIB_INSTALL_DIR)/$(LIB)"
+	@echo "Create symbolic link to trustm_lib $(LIB_INSTALL_DIR)/$(LIB)"
 	@ln -s $(realpath $(BINDIR)/$(LIB)) $(LIB_INSTALL_DIR)/$(LIB)
 	
 uninstall: clean

@@ -16,6 +16,7 @@ echo "-----> Apply patch"
 git apply $FILE
 set -e
 echo "-----> Build Trust M Linux Tools"
+make clean
 sudo make uninstall 
 make -j5 
 sudo make install 
