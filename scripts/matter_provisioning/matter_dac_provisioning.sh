@@ -20,3 +20,5 @@ echo "-----> Write DAC into 0xe0e3"
 $EXEPATH/trustm_cert -w 0xe0e3 -i DAC_Cert.pem -X
 echo "-----> DAC display"
 openssl x509 -in DAC_Cert.pem -text -noout
+echo "-----> Write test CD into 0xe0e9"
+$EXEPATH/trustm_data -w 0xe0e9 -i credentials/Chip-Test-CD-Cert.bin -X
