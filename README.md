@@ -620,7 +620,7 @@ Read all data object metadata listed below
 
 *oid : 0xE0F0-0xE0F3,* 
 
-​         *0xF1FC-0xE0FD*
+​         *0xE0FC-0xE0FD*
 
 ### <a name="trustm_readmetadata_status"></a>trustm_readmetadata_status
 
