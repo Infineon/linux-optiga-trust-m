@@ -12,19 +12,19 @@ set -e
 for i in $(seq 1 1); do
 echo "test $i"
 
-echo "Testing HMAC SHA256 function at 0xF1D0"
-echo "Write shared secret into 0xF1D0"
-$EXEPATH/trustm_data -e -w 0xf1d0 -i shared_secret.txt
+echo "Testing HMAC SHA256 function at 0xF1D9"
+echo "Write shared secret into 0xF1D9(The max size for shared secret is 64bytes)"
+$EXEPATH/trustm_data -e -w 0xf1d9 -i shared_secret.txt
 echo -e -n \\x20\\x11\\xC0\\x01\\x01\\xD0\\x03\\xE1\\xFC\\x07\\xD1\\01\\00\\xD3\\x01\\x00\\xE8\\x01\\x21 >metadata.bin
 xxd metadata.bin
-$EXEPATH/trustm_metadata -w 0xf1d0 -F metadata.bin
-$EXEPATH/trustm_hmac -I 0xF1D0 -H 0X20 -i hmac.txt -o hmac_f1d0_256.txt
+$EXEPATH/trustm_metadata -w 0xf1d9 -F metadata.bin
+$EXEPATH/trustm_hmac -I 0xf1d9 -H 0X20 -i hmac.txt -o hmac_f1d9_256.txt
 
 echo "Testing HMAC SHA384 function at 0xF1D0"
-$EXEPATH/trustm_hmac -I 0xF1D0 -H 0X21 -i hmac.txt -o hmac_f1d0_384.txt
+$EXEPATH/trustm_hmac -I 0xf1d9 -H 0X21 -i hmac.txt -o hmac_f1d9_384.txt
 
 echo "Testing HMAC SHA512 function at 0xF1D0"
-$EXEPATH/trustm_hmac -I 0xF1D0 -H 0X21 -i hmac.txt -o hmac_f1d0_512.txt
+$EXEPATH/trustm_hmac -I 0xf1d9 -H 0X22 -i hmac.txt -o hmac_f1d9_512.txt
 
 
 sleep 1
