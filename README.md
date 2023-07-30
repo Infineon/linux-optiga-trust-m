@@ -1941,7 +1941,7 @@ This will setup the NGINX server to use openssl and setting the server key and c
 sudo cp default /etc/nginx/sites-enabled/default
 sudo cp server1.crt.pem /etc/nginx/server1.crt.pem
 sudo cp server1_privkey.pem /etc/nginx/server1_privkey.pem
-
+sudo service nginx restart
 ```
 
 #### Testing CURL Client with OPTIGA™ Trust M Key 
