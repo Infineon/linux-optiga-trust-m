@@ -1920,14 +1920,16 @@ cd scripts/curl_nginx
 ```
 
 #### Generate Server key and certificate
-
+This will generate the server key "server1_privkey.pem" and certificate "server1.crt.pem"
 ```
 openssl ecparam -out server1_privkey.pem -name prime256v1 -genkey
 openssl req -new -x509 -key server1_privkey.pem -subj "/CN=Server/O=Infineon/C=SG" -out server1.crt.pem
 ```
 
 #### Generate  Client key and certificate
+This will generate client private key(ECC 256, Auth/Enc/Sing) in OPTIGA™ Trust M using using OID 0xe0f1 and certificate "client1.crt.pem" 
 
+(see [req](#req) for input details)
 ```
 openssl req -new -x509 -engine trustm_engine -keyform engine -key 0xe0f1:^:NEW:0x03:0x13 -subj "/CN=TrustM/O=Infineon/C=SG" -out client1.crt.pem
 
@@ -1935,18 +1937,27 @@ openssl req -new -x509 -engine trustm_engine -keyform engine -key 0xe0f1:^:NEW:0
 
 #### Setup NGINX 
 
-This will setup the NGINX server to use openssl and setting the server key and certificate to use in the default file setting(/etc/nginx/sites-enabled/default).
+This will setup the NGINX server to use openssl, setting the server key and certificate to use in the default file setting(/etc/nginx/sites-enabled/default).
+The nginx service will be restarted for the new settings to take effect.
 
+
+Run the steps below:
 ```
 sudo cp default /etc/nginx/sites-enabled/default
 sudo cp server1.crt.pem /etc/nginx/server1.crt.pem
 sudo cp server1_privkey.pem /etc/nginx/server1_privkey.pem
 sudo service nginx restart
 ```
-
+After running the steps above, the following changes will be made to "default" file:
+```
+listen 443 ssl default_server;
+listen [::]:443 ssl default_server;
+ssl_certificate server1.crt.pem; 
+ssl_certificate_key server1_privkey.pem;
+```
 #### Testing CURL Client with OPTIGA™ Trust M Key 
 
-This will connect the Client to the web server with engine key interface to use .  
+This will connect the Client to the web server with engine key interface using OPTIGA™ Trust M.  
 
 ```
 curl --insecure --engine trustm_engine --key-type ENG --key 0xe0f1:^ --cert client1.crt.pem https://127.0.0.1
