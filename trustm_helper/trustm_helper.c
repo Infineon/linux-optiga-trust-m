@@ -1476,16 +1476,16 @@ void trustmGetOIDName(uint16_t optiga_oid, char *name)
             sprintf(name,"Root CA Public Key Cert8    [0x%.4X] ", optiga_oid);
             break;
         case 0xE0F0:
-            sprintf(name,"Device EC Privte Key 1         [0x%.4X] ", optiga_oid);
+            sprintf(name,"Device EC Private Key 1         [0x%.4X] ", optiga_oid);
             break;
         case 0xE0F1:
         case 0xE0F2:
         case 0xE0F3:
-            sprintf(name,"Device EC Privte Key x         [0x%.4X] ", optiga_oid);
+            sprintf(name,"Device EC Private Key x         [0x%.4X] ", optiga_oid);
             break;
         case 0xE0FC:
         case 0xE0FD:
-            sprintf(name,"Device RSA Privte Key x         [0x%.4X] ", optiga_oid);
+            sprintf(name,"Device RSA Private Key x         [0x%.4X] ", optiga_oid);
             break;            
         case 0xE100:
         case 0xE101:
