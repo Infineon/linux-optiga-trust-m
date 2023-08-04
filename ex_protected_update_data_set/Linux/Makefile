@@ -28,7 +28,11 @@
 BINDIR = bin
 APPDIR = .
 MBEDTLS_LIB = ../../trustm_lib/externals/mbedtls
+ifdef AARCH64
+LIB_INSTALL_DIR = /usr/lib/aarch64-linux-gnu
+else
 LIB_INSTALL_DIR = /usr/lib/arm-linux-gnueabihf
+endif
 
 #~ OTHDIR = ../src
 #~ OTHDIR += ../pal 
