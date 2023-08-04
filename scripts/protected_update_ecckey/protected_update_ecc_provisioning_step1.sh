@@ -7,7 +7,7 @@ set -e
 
 ## Trust Anchor OID and Metadata settings for integrity protect
 # Trust Anchor OID
-TRUST_ANCHOR_OID=e0e3
+TRUST_ANCHOR_OID=e0e8
 # Trust Anchor metadata setting
 TRUST_ANCHOR_META="2003E80111"
 
@@ -34,29 +34,29 @@ echo $PROTECTED_UPDATE_SECRET | xxd -r -p > protected_update_secret.dat
 for i in $(seq 1 1); do
 echo "test $i"
 
-#~ echo "Step1: Provisioning initial Trust Anchor, metadata for Trust Anchor"
-#~ echo "Write sample_ec_256_cert.pem into 0x$TRUST_ANCHOR_OID"
-#~ $EXEPATH/trustm_cert -w 0x$TRUST_ANCHOR_OID -i $CERT_PATH/sample_ec_256_cert.pem
-#~ echo "Set device type to TA for 0x$TRUST_ANCHOR_OID "
-#~ echo $TRUST_ANCHOR_META | xxd -r -p > trust_anchor_metadata.bin
-#~ echo "Printout trust_anchor_metadata.bin"
-#~ xxd trust_anchor_metadata.bin
-#~ echo "write trust_anchor_metadata.bin as metadata of 0x$TRUST_ANCHOR_OID"
-#~ $EXEPATH/trustm_metadata -w 0x$TRUST_ANCHOR_OID -F trust_anchor_metadata.bin
-#~ echo "Read out metadata for 0x$TRUST_ANCHOR_OID"
-#~ $EXEPATH/trustm_metadata -r  0x$TRUST_ANCHOR_OID
+echo "Step1: Provisioning initial Trust Anchor, metadata for Trust Anchor"
+echo "Write sample_ec_256_cert.pem into 0x$TRUST_ANCHOR_OID"
+$EXEPATH/trustm_cert -w 0x$TRUST_ANCHOR_OID -i $CERT_PATH/sample_ec_256_cert.pem
+echo "Set device type to TA for 0x$TRUST_ANCHOR_OID "
+echo $TRUST_ANCHOR_META | xxd -r -p > trust_anchor_metadata.bin
+echo "Printout trust_anchor_metadata.bin"
+xxd trust_anchor_metadata.bin
+echo "write trust_anchor_metadata.bin as metadata of 0x$TRUST_ANCHOR_OID"
+$EXEPATH/trustm_metadata -w 0x$TRUST_ANCHOR_OID -F trust_anchor_metadata.bin
+echo "Read out metadata for 0x$TRUST_ANCHOR_OID"
+$EXEPATH/trustm_metadata -r  0x$TRUST_ANCHOR_OID
 
-#~ echo "Step2: Provisioning Protected Update Secret OID, metadata for Protected Update Secret OID"
-#~ echo "Write Protected Update Secret into 0x$PROTECTED_UPDATE_SECRET_OID"
-#~ $EXEPATH/trustm_data -e -w 0x$PROTECTED_UPDATE_SECRET_OID -i protected_update_secret.dat
-#~ echo "Set device type to UPDATSEC for 0x$PROTECTED_UPDATE_SECRET_OID "
-#~ echo $PROTECTED_UPDATE_SECRET_META | xxd -r -p > protected_update_secret_metadata.bin
-#~ echo "Printout protected_update_secret_metadata.bin"
-#~ xxd protected_update_secret_metadata.bin
-#~ echo "write protected_update_secret_metadata.bin as metadata of 0x$PROTECTED_UPDATE_SECRET_OID"
-#~ $EXEPATH/trustm_metadata -w 0x$PROTECTED_UPDATE_SECRET_OID -F protected_update_secret_metadata.bin
-#~ echo "Read out metadata for 0x$PROTECTED_UPDATE_SECRET_OID"
-#~ $EXEPATH/trustm_metadata -r  0x$PROTECTED_UPDATE_SECRET_OID
+echo "Step2: Provisioning Protected Update Secret OID, metadata for Protected Update Secret OID"
+echo "Write Protected Update Secret into 0x$PROTECTED_UPDATE_SECRET_OID"
+$EXEPATH/trustm_data -e -w 0x$PROTECTED_UPDATE_SECRET_OID -i protected_update_secret.dat
+echo "Set device type to UPDATSEC for 0x$PROTECTED_UPDATE_SECRET_OID "
+echo $PROTECTED_UPDATE_SECRET_META | xxd -r -p > protected_update_secret_metadata.bin
+echo "Printout protected_update_secret_metadata.bin"
+xxd protected_update_secret_metadata.bin
+echo "write protected_update_secret_metadata.bin as metadata of 0x$PROTECTED_UPDATE_SECRET_OID"
+$EXEPATH/trustm_metadata -w 0x$PROTECTED_UPDATE_SECRET_OID -F protected_update_secret_metadata.bin
+echo "Read out metadata for 0x$PROTECTED_UPDATE_SECRET_OID"
+$EXEPATH/trustm_metadata -r  0x$PROTECTED_UPDATE_SECRET_OID
 
 echo "Step3: Provisioning metadata for 0x$TARGET_OID"
 echo "Set AES protected update for 0x$TARGET_OID (Provision for Protected Update)"

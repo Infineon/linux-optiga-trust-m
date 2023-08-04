@@ -22,7 +22,8 @@
 #* SOFTWARE
 #
 #*/
-
+# Uncomment the following makro if you are running a 64-Bit Linux System
+#~ AARCH64 = YES
 
 BINDIR = bin
 APPDIR = .
@@ -78,6 +79,9 @@ CFLAGS = -c
 #CFLAGS += $(DEBUG)
 CFLAGS += $(INCDIR)
 CFLAGS += -Wall
+ifdef AARCH64
+CFLAGS += -fPIC
+endif
 
 #~ CFLAGS += -DMBEDTLS_PK_PARSE_C
 CFLAGS += -DMBEDTLS_FS_IO
@@ -114,7 +118,7 @@ LDFLAGS_1 += -ltrustm_update
 all :  $(BINDIR)/$(LIB) $(APPS) 
 
 install:
-	@echo "Create symbolic link to trustx_lib $(LIB_INSTALL_DIR)/$(LIB)"
+	@echo "Create symbolic link to trustm_lib $(LIB_INSTALL_DIR)/$(LIB)"
 	@ln -s $(realpath $(BINDIR)/$(LIB)) $(LIB_INSTALL_DIR)/$(LIB)
 	
 

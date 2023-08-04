@@ -348,6 +348,13 @@ int main (int argc, char **argv)
             /**
             * Perform HMAC verification using OPTIGA
             */
+            // OPTIGA Comms Shielded connection settings to enable the protection
+            if(uOptFlag.flags.bypass != 1)
+            { 
+                // OPTIGA Comms Shielded connection settings to enable the protection
+                OPTIGA_CRYPT_SET_COMMS_PROTOCOL_VERSION(me_crypt, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
+                OPTIGA_CRYPT_SET_COMMS_PROTECTION_LEVEL(me_crypt, OPTIGA_COMMS_FULL_PROTECTION);
+            }
             optiga_lib_status = OPTIGA_LIB_BUSY;
             return_status = optiga_crypt_hmac_verify(me_crypt,
                                                     hmac_type,
