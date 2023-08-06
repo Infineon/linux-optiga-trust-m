@@ -141,7 +141,7 @@ openssl x509 -pubkey -noout -in $CLIENT_CERT_NAME | openssl enc -base64 -d > $CL
 
 Run the [step3_client_import_private_key.sh](./step3_client_import_private_key.sh). This will start the **OPTIGA™ Trust M Explorer**
 
-| ![](/pictures/pic1.png) |
+| ![](./pictures/pic1.png) |
 | ----------------------- |
 
 #### Protected Update of ECC Key
@@ -150,7 +150,7 @@ Click on the "key_data" field and select the file "**client1_privkey.pem**" in t
 
 Click **Step1**, **Step2** and **Step3** buttons. Click **Reset Access Condition** to restart the procedure.
 
-| ![](/pictures/ecc.png) |
+| ![](./pictures/ecc.png) |
 | ---------------------- |
 
 #### Protected Update of RSA Key
@@ -159,7 +159,7 @@ Click on the "key_data" field and select the file "client1_privkey.pem" in the c
 
 Click **Step1**, **Step2** and **Step3** buttons. Click **Reset Access Condition** to restart the procedure.
 
-| ![](/pictures/rsa.png) |
+| ![](./pictures/rsa.png) |
 | ---------------------- |
 
 ### Step 4: Update Public Key store
@@ -219,7 +219,7 @@ curl -v --engine trustm_engine --key-type ENG --key $TRUST_M_RSA_KEY_EXT_OID --c
 
 Result after successful TLS connection
 
-| ![](/pictures/test.png) |
+| ![](./pictures/test.png) |
 | ----------------------- |
 
 ### 
