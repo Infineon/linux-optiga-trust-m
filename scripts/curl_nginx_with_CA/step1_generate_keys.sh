@@ -9,9 +9,9 @@ set -e
 
 
 echo "Server1: -----> Generate Server ECC Private Key"
-openssl ecparam -out server1_privkey.pem -name prime256v1 -genkey
+openssl ecparam -out $SERVER_PRIVATE_KEY -name prime256v1 -genkey
 echo "Server1:-----> Generate Server ECC Keys CSR"
-openssl req -new  -key server1_privkey.pem -subj /CN=127.0.0.1/O=Infineon/C=SG -out $SERVER_CSR
+openssl req -new  -key $SERVER_PRIVATE_KEY -subj /CN=127.0.0.1/O=Infineon/C=SG -out $SERVER_CSR
 echo "Server1:-----> Generate Server cetificate by using CA"
 openssl x509 -req -in $SERVER_CSR -CA $CA_CERT  -CAkey $CA_KEY -CAcreateserial -out $SERVER_CERT_NAME -days 3650 -sha256 -extfile openssl.cnf -extensions cert_ext
 #~ openssl x509 -in server1.crt -text -purpose
