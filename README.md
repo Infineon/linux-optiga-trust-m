@@ -51,7 +51,10 @@
     * [Simple Server and Client Examples on OpenSSL using C language](#opensslc)
       * [Server and Client example with pre-provisioned key(0xE0F0) and Certificate(0xE0E0)](#server_client_preprovisioned)
       * [Server and Client example with key (0xE0F1) with external public key and Certificate](./scripts/SimpleServeClientTest/SimpleServeClient_with_pubkeyfile/)
-    * [NGINX Web Server and CURL Client Example](#curl_nginx)
+    * [NGINX Web Server and CURL Client Examples](#curl_nginx)
+      * [CURL and NGINX Simple Server and Client Connection](#curl_nginx_simple)
+      * [CURL and NGINX_with_CA](./scripts/curl_nginx_with_CA)
+      * [CURL and NGINX with CA and Imported_Keys](./scripts/curl_nginx_imported_key)
 5. [AWS IoT C-SDK](./ex_aws-iot-device-sdk-embedded-C-1.1.2/README.md)
 6. [Known observations](#known_observations)
 
@@ -1899,19 +1902,21 @@ To run multiple client connection, open another new terminal in the system and e
 
 Go to the subsection at  [Server and Client example with key (0xE0F1) with external public key and Certificate](./scripts/SimpleServeClientTest/SimpleServeClient_with_pubkeyfile/)
 
-### <a name="curl_nginx"></a>NGINX Web Server and CURL Client Example
+### <a name="curl_nginx"></a>NGINX Web Server and CURL Client Examples
+
+#### <a name="curl_nginx_simple"></a>CURL and NGINX Simple Server and Client Connection
 
 In this section, we will describe and demo how the OPTIGA™ Trust M OpenSSL engine could be used in CURL to connect to a NGINX web server.
 
 *Note : Refer to [curl_ngix script folder](./scripts/curl_nginx)  for scripts to run through the following steps*
 
-#### Install CURL and NGINX
+##### Install CURL and NGINX
 
 ```
 sudo apt-get install -y nginx curl
 ```
 
-#### Server and client keys and certificates
+##### Server and client keys and certificates
 
 Go to the scripts/curl_nginx folder
 
@@ -1919,14 +1924,14 @@ Go to the scripts/curl_nginx folder
 cd scripts/curl_nginx
 ```
 
-#### Generate Server key and certificate
+##### Generate Server key and certificate
 This will generate the server key "server1_privkey.pem" and certificate "server1.crt.pem"
 ```
 openssl ecparam -out server1_privkey.pem -name prime256v1 -genkey
 openssl req -new -x509 -key server1_privkey.pem -subj "/CN=Server/O=Infineon/C=SG" -out server1.crt.pem
 ```
 
-#### Generate  Client key and certificate
+##### Generate  Client key and certificate
 This will generate client private key(ECC 256, Auth/Enc/Sing) in OPTIGA™ Trust M using using OID 0xe0f1 and certificate "client1.crt.pem" 
 
 (see [req](#req) for input details)
@@ -1935,7 +1940,7 @@ openssl req -new -x509 -engine trustm_engine -keyform engine -key 0xe0f1:^:NEW:0
 
 ```
 
-#### Setup NGINX 
+##### Setup NGINX 
 
 This will setup the NGINX server to use openssl, setting the server key and certificate to use in the default file setting(/etc/nginx/sites-enabled/default).
 The nginx service will be restarted for the new settings to take effect.
@@ -1955,7 +1960,7 @@ listen [::]:443 ssl default_server;
 ssl_certificate server1.crt.pem; 
 ssl_certificate_key server1_privkey.pem;
 ```
-#### Testing CURL Client with OPTIGA™ Trust M Key 
+##### Testing CURL Client with OPTIGA™ Trust M Key 
 
 This will connect the Client to the web server with engine key interface using OPTIGA™ Trust M.  
 
@@ -1964,7 +1969,11 @@ curl --insecure --engine trustm_engine --key-type ENG --key 0xe0f1:^ --cert clie
 
 ```
 
+Additional examples:
 
+[CURL and NGINX_with_CA](./scripts/curl_nginx_with_CA)
+
+[CURL and NGINX with CA and Imported_Keys](./scripts/curl_nginx_imported_key)
 
 ## <a name="known_observations"></a>Known observations
 
