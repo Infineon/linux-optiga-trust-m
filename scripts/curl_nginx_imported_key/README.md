@@ -67,7 +67,7 @@ TRUST_M_ECC_PUBKEY_OID=0xf1d1
 
 ###   Step 1: Server Key generation, Certificate Issuance and NGINX Setup
 
-Run the [step1_generate_keys.sh](./step1_generate_keys.sh) , the server and client keys will be generated. Then the corresponding certificates will be issued by a test Certificate Authority(CA).
+Run the [step1_server_generate_keys.sh](./step1_server_generate_keys.sh) , the server and client keys will be generated. Then the corresponding certificates will be issued by a test Certificate Authority(CA).
 
 *Note: Do not use this Test CA in productive usage*
 
