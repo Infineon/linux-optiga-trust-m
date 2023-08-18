@@ -159,7 +159,7 @@ static void _helpmenu(void)
     printf("\nHelp menu: trustm_update_with_PBS_Auto <option> ...<option>\n");
     printf("option:- \n");
     printf("-r <OID>      : Read from OID 0xNNNN \n");
-    printf("-w <OID>      : Write to OID");
+    printf("-w <OID>      : Write to OID\n");
     printf("-i <filename> : Input file \n");
     printf("-I <value>    : Input byte value \n");
     printf("-o <filename> : Output file \n");
@@ -336,7 +336,7 @@ int main (int argc, char **argv)
                 }
             }
 
-            printf("Input data : \n");
+            printf("Input PBS : \n");
             trustmHexDump(pbs_buffer,bytes_to_read);
 
             pal_return_status = pal_os_datastore_write(OPTIGA_PLATFORM_BINDING_SHARED_SECRET_ID,

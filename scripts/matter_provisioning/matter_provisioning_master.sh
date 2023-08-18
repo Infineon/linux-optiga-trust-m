@@ -2,7 +2,24 @@
 source config.sh
 source /etc/environment
 
-# set -e
+show_help()
+{
+    echo "Usage 
+                -t Provision via Test-Setup
+                -b [file] Input Bundle File
+                -k [key] Transport-Key for Bundle File
+                -s [config] Configure the Security Monitor with the input config. If set to "0", the default config will be used. 
+                -i INTERNAL ONLY: Additionally print QR Code
+                -h Print this help
+                Possible combinations:
+                    -t                      	        : Provision Matter Test Credentials
+                    -t -i                               : Provision Matter Test Credentials and print QR Code
+                    -b [FILE.7z]                        : Provision Matter Credentials from Bundle File
+                    -b [FILE.7z] -t [KEY] -s [CONFIG]   : Provision Matter Credentials from Bundle File and Update Security Monitor with Config" 
+                    
+}
+
+set -e
 
 # This should be the master-script, which calls sub-scripts
 # Input options
@@ -16,7 +33,8 @@ source /etc/environment
 test=0
 bundle_file=0
 transport_key=0
-sec_config=0
+sec_flag=0
+sec_config="000050100000000"
 qr=0
 
 previous_chip_id="none"
@@ -27,17 +45,36 @@ do
         t) test=1;;
         b) bundle_file=${OPTARG};;
         k) transport_key=${OPTARG};;
-        s) sec_config=${OPTARG};;
+        s) sec_flag=1
+            if [ ! 0 == ${OPTARG} ]
+            then
+            sec_config=${OPTARG}
+            fi;;
         i) qr=1;;
-        *) echo "Help! 
-                -t Provision via Test-Setup
-                -b [file] Input Bundle File
-                -k [key] Transport-Key for Bundle File
-                -s [config] Configure the Security Monitor with the input config
-                -i INTERNAL ONLY: Additionally print QR Code
-                -h Print this help" ;;
+        *) show_help
+            exit;;
     esac
 done
+
+if [ $OPTIND -eq 1 ]; 
+then 
+    echo "No options were passed";
+    show_help
+    exit
+fi
+
+if [ -s $bundle_file ]
+then
+    echo "Bundle File Argument provided. Will extract the Matter Credentials to a temporary folder."
+    7z x $bundle_file -otmp -y > /dev/null
+    7z x tmp/*_E0E0_Certs.7z -otmp/matter_cred -y > /dev/null
+    if [ -n "$transport_key" ]
+    then 
+        echo "Transport Key Argument provided. Will extract the PBS and Auto Keys to a temporary folder."
+        7z x tmp/*_keys.7z -p$transport_key -otmp/keys -y > /dev/null
+    fi
+    rm tmp/*.7z tmp/README.txt
+fi
 
 while sleep 1s;
 do 
@@ -58,18 +95,20 @@ do
             fi
         elif [ -s $bundle_file ]
         then
-            ./matter_bundle_provisioning.sh $bundle_file $chip_id
+            echo "----> Write Matter Credentials"
+            ./matter_bundle_provisioning.sh -p tmp/matter_cred -c $chip_id
+            if [ -n "$sec_config" ]
+            then
+                echo "----> Update Security Monitor"
+                ./configure_security_monitor.sh -p tmp/keys -c $chip_id -s $sec_config
+            fi
         else 
-            echo "Please make sure that the bundle file exists and is not empty!"
+            echo "Please input a valid Configuration or make sure that the bundle file exists!"
+            show_help
+            break;
         fi
-
-        if [ -n $sec_config ]
-        then
-            echo "here comes the fun part"
-            ./configure_security_monitor.sh $bundle_file $chip_id $transport_key
-        fi
-
     else 
-        echo "Put a new Trust M"
+        echo "Put a new Trust M or press Ctrl+C to exit"
     fi
 done
+rm -rf ./tmp

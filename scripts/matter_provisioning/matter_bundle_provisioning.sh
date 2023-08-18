@@ -2,26 +2,61 @@
 source config.sh
 source /etc/environment
 
+matter_dac_tag="_E0E0.pem"
+matter_pai_tag="PAI-noPID-Cert.pem"
+matter_cd_tag="CD-Cert.bin"
+
+show_help()
+{
+    echo "Usage: 
+                -p [directory] Path to Matter Credential Directory. This should contain the DAC, PAI and CD.
+                -c [ID] Chip ID of Trust M to provision
+                -h Print this help"
+}
+
 set -e
+path_to_credentials=0
+chip_id=0
 
-echo "-----> Read ifx pre-provisioned cert from 0xe0e0"
-$EXEPATH/trustm_cert -r 0xe0e0 -o ifx_cert_e0e0.pem -X
-openssl x509 -in ifx_cert_e0e0.pem -text -noout 
-echo "-----> Extract public key from cert"
-openssl x509 -pubkey -noout -in ifx_cert_e0e0.pem  > pubkey_e0e0.pem
-cat pubkey_e0e0.pem
-echo "---->Generate DAC csr using public key"
-openssl req -new -key credentials/dummy.key -nodes -out request.csr -config openssl_matter.cnf
-echo "---->Generate DAC certificate using public key, Signed by Matter test PAI"
-openssl x509 -req -in request.csr -extfile v3.ext -CA credentials/Matter-Development-PAI-noPID-Cert.pem -CAkey credentials/Matter-Development-PAI-noPID-Key.pem -CAcreateserial -out DAC_Cert.pem -days 500 -sha256 -force_pubkey pubkey_e0e0.pem
-echo "-----> Write test DAC into 0xe0e3"
-$EXEPATH/trustm_cert -w 0xe0e3 -i DAC_Cert.pem -X
+while getopts p:c:h flag
+do 
+    case "${flag}" in
+        p) path_to_credentials=${OPTARG};;
+        c) chip_id=${OPTARG};;
+        *) show_help
+                exit;;
+    esac
+done
+
+if [ $OPTIND -eq 1 ]; 
+then 
+    echo "No options were passed";
+    show_help
+    exit
+fi
+
+if [ ! -r "$path_to_credentials"/"$chip_id$matter_dac_tag" ]
+then
+    echo "No Matter DAC found!"
+    exit
+fi
+if [ ! -r "$path_to_credentials"/*"$matter_pai_tag" ]
+then
+    echo "$path_to_credentials"/*"$matter_pai_tag"
+    echo "No Matter PAI found!"
+    exit
+fi
+if [ ! -r "$path_to_credentials"/*"$matter_cd_tag" ]
+then
+    echo "No Matter CD found!"
+    exit
+fi
+
+echo "-----> Write Matter DAC into 0xe0e3"
+$EXEPATH/trustm_cert -w 0xe0e3 -i "$path_to_credentials"/"$chip_id$matter_dac_tag" -X
 echo "-----> DAC display"
-openssl x509 -in DAC_Cert.pem -text -noout
-echo "-----> Write Matter test PAI into 0xe0e8"
-$EXEPATH/trustm_cert -w 0xe0e8 -i credentials/Matter-Development-PAI-noPID-Cert.pem -X
-echo "-----> Write test CD into 0xf1e0"
-$EXEPATH/trustm_data -e -w 0xf1e0 -i credentials/Chip-Test-CD-Cert.bin -X
-
-rm *.csr
-rm *.pem
+openssl x509 -in "$path_to_credentials"/"$chip_id$matter_dac_tag" -text -noout
+echo "-----> Write Matter PAI into 0xe0e8"
+$EXEPATH/trustm_cert -w 0xe0e8 -i "$path_to_credentials"/*"$matter_pai_tag" -X
+echo "-----> Write Matter CD into 0xf1e0"
+$EXEPATH/trustm_data -e -w 0xf1e0 -i "$path_to_credentials"/*"$matter_cd_tag" -X
