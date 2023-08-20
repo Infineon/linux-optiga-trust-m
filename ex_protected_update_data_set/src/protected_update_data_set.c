@@ -748,7 +748,7 @@ int32_t protected_update_create_manifest(   manifest_t * manifest_data,
     uint16_t offset = 0;
     uint16_t length_marker = 0;
     uint16_t byte_string_len_marker = 0;
-
+    FILE *fp;
     do
     {
 
@@ -1045,6 +1045,20 @@ int32_t protected_update_create_manifest(   manifest_t * manifest_data,
         p_cbor_manifest->data = (uint8_t  * )pal_os_malloc(offset);
         memcpy(p_cbor_manifest->data, local_manifest_buffer, offset);
 
+        fp = fopen("manifest1.dat","wb");
+        if (!fp)
+        {
+            pal_logger_print_message("error creating file!!\n");
+            break;
+        }
+
+        //Write manifest to file
+        fwrite(p_cbor_manifest->data, 1, p_cbor_manifest->data_length, fp);                
+
+        fclose(fp);
+
+
+
         status = 0;
     } while (0);
     return status;
@@ -1064,7 +1078,7 @@ int32_t protected_update_create_fragments(manifest_t * manifest_data,
     uint16_t length_to_digest;
     uint16_t payload_len_to_copy = 0;
     uint16_t max_payload_fragment_size = 0;
-
+    FILE *fp;
     do
     {
 
@@ -1151,6 +1165,20 @@ int32_t protected_update_create_fragments(manifest_t * manifest_data,
         } while (index_for_hashing != 0);
 
         p_cbor_manifest->fragments = fragments;
+            
+
+        fp = fopen("fragment1.dat","wb");
+        if (!fp)
+        {
+            pal_logger_print_message("error creating file!!\n");
+            break;
+        }
+
+        //Write fragment to file
+        fwrite(p_cbor_manifest->fragments, 1, p_cbor_manifest->fragments_length, fp);                
+
+        fclose(fp);
+
         // Below variable can be deleted
         p_cbor_manifest->actual_memory_allocated = max_memory_required;
         status = 0;
