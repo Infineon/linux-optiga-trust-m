@@ -5,40 +5,40 @@ This folder contains scripts to make the provisioning of Matter credentials simp
 
 ![OPTIGA Trust M Matter-ready Objects after Provisioning](../../pictures/mr_object_map.png)
 
-The above image shows the state of the OPTIGA Trust M Matter-ready *after* this provisioning mechanism.
+The above image shows the state of the OPTIGA™ Trust M Matter-ready *after* this provisioning mechanism.
 
 Noted in ocean green color are the objects provisioned by Infineon, like the ECC and RSA Keys and Certificates. This is also information, which can be retrieved from the Cloud Service Provider, who also hosts the CSA certified Matter PKI.
 
 This Cloud Service Provider is used by Matter OEMs to generate device individual Matter Device Attestation Certificates (DACs) and download them in the form of a Bundle File per Reel (4k pcs) or per evaluation sample (1 pcs).
 
-The information inside the bundle file, containing (at least) Matter DAC, PAI and CD is then provisioned to the OPTIGA Trust M Matter-ready via the following scripts, adding the orange colored objects to the Secure Element.
+The information inside the bundle file, containing (at least) Matter DAC, PAI and CD is then provisioned to the OPTIGA™ Trust M Matter-ready via the following scripts, adding the orange colored objects to the Secure Element.
 
-Subsequently, the OPTIGA Trust M Matter-ready contains the following objects:
+Subsequently, the OPTIGA™ Trust M Matter-ready contains the following objects:
 
-| Object ID |         Description         |            Relationship            |  Recommended LcsO  | Read | Change      | Execute |
-|:---------:|:---------------------------:|:----------------------------------:|:--------------:|------|-------------|---------|
-|  0xE0F0   | ECC NIST P256 Private Key 1 | Bound to Cert in 0xE0E0 and 0xE0E3 |  Operational   | NEV  | PBS & Auto* | ALW     |
-|  0xE0F1   | ECC NIST P256 Private Key 2 |      Bound to Cert in 0xE0E1       |  Operational   | NEV  | PBS & Auto* | PBS     |
-|  0xE0FC   |   RSA 2048 Private Key 1    |      Bound to Cert in 0xE0FC       |  Operational   | NEV  | PBS & Auto* | ALW     |
-|  0xE0E0   |      ECC Certificate 1      |       Bound to Key in 0xE0F0       |  Termination   | ALW  | PBS & Auto  | ALW     |
-|  0xE0E1   |      ECC Certificate 2      |       Bound to Key in 0xE0F1       |  Operational   | PBS  | PBS & Auto  | PBS     |
-|  0xE0E2   |      RSA Certificate 1      |       Bound to Key in 0xE0FC       |  Operational   | ALW  | PBS & Auto  | ALW     |
-|  0xE0E3   |         Matter DAC          |       Bound to Key in 0xE0F0       |  Operational   | ALW  | PBS & Auto  | ALW     |
-|  0xE0E8   |         Matter PAI          |                                    |  Operational   | ALW  | PBS & Auto  | ALW     |
-|  0xE140   |  Plattform Binding Secret   |                                    |  Operational   | NEV  | PBS & Auto  | ALW     |
-|  0xF1D0   |   Authorization Reference   |                                    |  Operational   | NEV  | PBS & Auto  | PBS     |
-|  0xF1E0   |          Matter CD          |                                    |  Operational   | ALW  | PBS & Auto  | ALW     |
-| 0xE0E9**  |         Matter NOC          |                                    |  Operational   | ALW  | ALW         | ALW     |
-| 0xF1D8**  |     Matter HKDF & HMAC      |                                    | Initialization | ALW  | ALW         | ALW     |
+|   Object ID | Description                 | Relationship                       | Recommended LcsO | Read | Change      | Execute | Provisioned By |
+|------------:|-----------------------------|------------------------------------|------------------|------|-------------|---------|----------------|
+|      0xE0F0 | ECC NIST P256 Private Key 1 | Bound to Cert in 0xE0E0 and 0xE0E3 | Operational      | NEV  | PBS & Auto* | ALW     | IFX            |
+|      0xE0F1 | ECC NIST P256 Private Key 2 | Bound to Cert in 0xE0E1            | Operational      | NEV  | PBS & Auto* | PBS     | IFX            |
+|      0xE0FC | RSA 2048 Private Key 1      | Bound to Cert in 0xE0FC            | Operational      | NEV  | PBS & Auto* | ALW     | IFX            |
+|      0xE0E0 | ECC Certificate 1           | Bound to Key in 0xE0F0             | Termination      | ALW  | PBS & Auto  | ALW     | IFX            |
+|      0xE0E1 | ECC Certificate 2           | Bound to Key in 0xE0F1             | Operational      | PBS  | PBS & Auto  | PBS     | IFX            |
+|      0xE0E2 | RSA Certificate 1           | Bound to Key in 0xE0FC             | Operational      | ALW  | PBS & Auto  | ALW     | IFX            |
+|      0xE0E3 | Matter DAC                  | Bound to Key in 0xE0F0             | Operational      | ALW  | PBS & Auto  | ALW     | OEM            |
+|      0xE0E8 | Matter PAI                  |                                    | Operational      | ALW  | PBS & Auto  | ALW     | OEM            |
+|      0xE140 | Plattform Binding Secret    |                                    | Operational      | NEV  | PBS & Auto  | ALW     | IFX            |
+|      0xF1D0 | Authorization Reference     |                                    | Operational      | NEV  | PBS & Auto  | PBS     | IFX            |
+|      0xF1E0 | Matter CD                   |                                    | Operational      | ALW  | PBS & Auto  | ALW     | OEM            |
+|    0xE0E9** | Matter NOC                  |                                    | Operational      | ALW  | ALW         | ALW     | Application    |
+| 0xF1D8/D9** | Matter HKDF & HMAC          |                                    | Initialization   | ALW  | ALW         | ALW     | Application    |
 
-\* Keys can never be written to directly, they can only be generated through the OPTIGA Trust M functions.
+\* Keys can never be written to directly, they can only be generated through the OPTIGA™ Trust M functions.
 
 ** These slots _may_ be used during operation of the device. Subject to implementation on the host. They are not provisioned by these scripts.
 
 ## Hardware Prerequisites
 A direct I2C connection to the OPTIGA™ Trust M is required for this provisioning mechanism to work. A connection to the RST Pin of the Trust M is not required, as this can be done as a Software Reset through the Linux Host library.
 
-> Image of Raspberry Pi I2C to Trust M I2C
+![OPTIGA Trust M Schematic Reference](../../pictures/reference_schematic.png)
 
 For production usecases, it is also recommended to apply the RST of any other controllers or devices on the same I2C bus to guarantee uninterrupted communication of RPi and Trust M during the short provisioning phase.
 
@@ -69,16 +69,16 @@ Several scripts have been prepared to make the Matter credential provisioning as
 
 The ```matter_provisioning_master.sh``` script will now be used to flash Matter DAC, PAI and CD certificates to the individual OPTIGA™ Trust M Matter-ready.
 
-> ❗
->> If you want to additionally modify the security monitor of the secure element to enable the full cryptographic support feature set, skip to the next section.
+> [!NOTE]
+>> If you want to additionally modify the security monitor of the secure element to enable the full cryptographic support feature set, skip to the ["Option B"](#option-b-matter-credential-provisioning--modify-security-monitor-configuration).
 > 
->> Per default, the script does not set any metadata options to the OPTIGA Trust M objects, meaning they kcan be rewritten at any point in time. This is good for evaluation purposes, but not recommended for final products. Here, each object LcsO shall be set to "operational". See below section on how to enalble this option in the script.
+>> Per default, the script does not set any metadata options to the OPTIGA™Trust M objects, meaning they kcan be rewritten at any point in time. This is good for evaluation purposes, but not recommended for final products. Here, each object LcsO shall be set to "operational". See below section on how to enalble this option in the script.
 
 ### Option A: Matter Credentials Provisioning
 
 To provision the Matter credentials, the master script needs only a single input: The location of the bundle file. 
 
-Connect the OPTIGA™ Trust M Matter-ready to the Raspberry Pi’s I2C as described in Section 2.1 and execute the master script via:
+Connect the OPTIGA™ Trust M Matter-ready to the Raspberry Pi’s I2C as described in the [Hardware Section](#hardware-prerequisites) and execute the master script via:
 
     ./matter_provisioning_master.sh -b APPNOTE_bundle-file_v1.0.7z
 
@@ -122,7 +122,7 @@ The master script will:
 
 ### Set Objects state to "Operational"
 
-> ⚠️ This is not reversible. Proceed with caution. ⚠️
+> ⚠️ **This is not reversible. Proceed with caution.** ⚠️
 
 Any of the above options only put the credentials to the designated Trust M Credential Slots. Add the following option `-o` to additionally set the metadata configuration and operational LcsO.
 
