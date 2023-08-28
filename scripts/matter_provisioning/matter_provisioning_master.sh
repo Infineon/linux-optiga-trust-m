@@ -3,7 +3,7 @@ source config.sh
 source /etc/environment
 
 show_help() {
-    echo "Usage 
+    echo "Usage: 
                 -t Provision via Test-Setup
                 -b [file] Input Bundle File
                 -k [key] Transport-Key for Bundle File
@@ -21,15 +21,6 @@ show_help() {
 }
 
 set -e
-
-# This should be the master-script, which calls sub-scripts
-# Input options
-# Options:
-#    Provision DAC,PAI,CD from Test Setup
-#    Provision DAC,PAI,CD from Bundle File
-#    Supply Bundle File Transport Key
-#    Disable Security Monitor (Bundle File required)
-#    Internal only: Print QR Code for shield provisioning
 
 test=0
 bundle_file=0
@@ -88,15 +79,15 @@ if [ -s $bundle_file ]; then
     rm tmp/*.7z tmp/README.txt
 fi
 
+## While loop. check if different/any chip is connected via Chip-Id
 while sleep 1s; do
     chip_id=$($EXEPATH/trustm_probe)
-    echo "Chip ID " $chip_id
+    echo "Chip ID: " $chip_id
     if [ -n "$chip_id" ] && [ "$chip_id" != "$previous_chip_id" ]; then
-        ## while loop. check if different/any chip is connected in some way - e.g. via Chip-ID?
         previous_chip_id=$chip_id
         if [ $test -eq 1 ]; then
             echo "----> Flashing Test Credentials"
-            ./matter_test_dac_provisioning.sh
+            ./matter_test_provisioning.sh
             if [ $qr -eq 1 ]; then
                 echo "----> Printing QR-Code Sticker and adding to CSV-List"
                 python3 ./print_sticker.py
@@ -110,7 +101,11 @@ while sleep 1s; do
             fi
             if [ $operational -eq 1 ]; then
                 echo "----> Set AC and LcsO."
-                ./$EXEPATH/trustm_metadata -w 
+                # $EXEPATH/trustm_metadata -w $MATTER_DAC_LOC -F meta_pbs_auto.bin -O -X
+                # $EXEPATH/trustm_metadata -w $MATTER_PAI_LOC -F meta_pbs_auto.bin -O -X
+                # $EXEPATH/trustm_metadata -w $MATTER_CD_TAG -F meta_pbs_auto.bin -O -X
+                # $EXEPATH/trustm_metadata -w 0xE0E0 -T -X
+            fi
         else
             echo "Please input a valid Configuration or make sure that the bundle file exists!"
             show_help

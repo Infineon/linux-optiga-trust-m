@@ -1,62 +1,84 @@
 # Linux tools and examples</br> for OPTIGA™ Trust M1/M3 security solution
 
-1. [About](#about)
-    * [Prerequisites](#prerequisites)
-2. [Getting Started](#getting_started)
-    * [Getting the Code from Github](#getting_code)
-    * [First time building the library](#build_lib)
-3. [CLI Tools Usage](#cli_usage)
-    * [trustm_cert](#trustm_cert)
-    * [trustm_chipinfo](#trustm_chipinfo)
-    * [trustm_data](#trustm_data)
-    * [trustm_ecc_keygen](#trustm_ecc_keygen)
-    * [trustm_ecc_sign](#trustm_ecc_sign)
-    * [trustm_ecc_verify](#trustm_ecc_verify)
-    * [trustm_errorcode](#trustm_errorcode)
-    * [trustm_metadata](#trustm_metadata)
-    * [trustm_monotonic_counter](#trustm_monotonic_counter)
-    * [trustm_readmetadata_data](#trustm_readmetadata_data)
-    * [trustm_readmetadata_private](#trustm_readmetadata_private)
-    * [trustm_readmetadata_status](#trustm_readmetadata_status)
-    * [trustm_read_status](#trustm_read_status)
-    * [trustm_rsa_dec](#trustm_rsa_dec)
-    * [trustm_rsa_enc](#trustm_rsa_enc)
-    * [trustm_rsa_keygen](#trustm_rsa_keygen)
-    * [trustm_rsa_sign](#trustm_rsa_sign)
-    * [trustm_rsa_verify](#trustm_rsa_verify)
-    * [trustm_symmetric_keygen](#trustm_symmetric_keygen)
-    * [trustm_symmetric_enc](#trustm_symmetric_enc)
-    * [trustm_symmetric_dec](#trustm_symmetric_dec)
-    * [trustm_hkdf](#trustm_hkdf)
-    * [trustm_hmac](#trustm_hmac)
-    * [trustm_hmac_verify_Auth](#trustm_hmac_verify_Auth)
-    * [trustm_protected_update](#trustm_protected_update)
-      * [Integrity and Confidentiality Protected Update example for Metadata](./scripts/protected_update_metadata/)
-    * [trustm_protected_update_aeskey](#trustm_protected_update_aeskey)
-      * [Integrity and Confidentiality Protected Update example for aeskey](./scripts/protected_update_aeskey/)
-    * [trustm_protected_update_ecckey](#trustm_protected_update_ecckey)
-      * [Integrity and Confidentiality Protected Update example for ecckey](./scripts/protected_update_ecckey/)
-    * [trustm_protected_update_rsakey](#trustm_protected_update_rsakey)
-      * [Integrity and Confidentiality Protected Update example for rsakey](./scripts/protected_update_rsakey/)
-    * [trustm_protected_update_data](#trustm_protected_update_data)
-      * [Integrity and Confidentiality Protected Update example for data](./scripts/protected_update_data/)
-4. [Trust M1/M3 OpenSSL Engine usage](#engine_usage)
-    * [rand](#rand)
-    * [req](#req)
-    * [pkey](#pkey)
-    * [dgst](#dgst)
-    * [Testing TLS connection with ECC key](#test_tls_ecc)
-    * [Testing TLS connection with RSA key](#test_tls_rsa)
-    * [Using Trust M OpenSSL engine to sign and issue certificate](#issue_cert)
-    * [Simple Server and Client Examples on OpenSSL using C language](#opensslc)
-      * [Server and Client example with pre-provisioned key(0xE0F0) and Certificate(0xE0E0)](#server_client_preprovisioned)
-      * [Server and Client example with key (0xE0F1) with external public key and Certificate](./scripts/SimpleServeClientTest/SimpleServeClient_with_pubkeyfile/)
-    * [NGINX Web Server and CURL Client Examples](#curl_nginx)
-      * [CURL and NGINX Simple Server and Client Connection](#curl_nginx_simple)
-      * [CURL and NGINX_with_CA](./scripts/curl_nginx_with_CA)
-      * [CURL and NGINX with CA and Imported_Keys](./scripts/curl_nginx_imported_key)
-5. [AWS IoT C-SDK](./ex_aws-iot-device-sdk-embedded-C-1.1.2/README.md)
-6. [Known observations](#known_observations)
+- [Linux tools and examples for OPTIGA™ Trust M1/M3 security solution](#linux-tools-and-examples-for-optiga-trust-m1m3-security-solution)
+  - [About](#about)
+    - [Prerequisites](#prerequisites)
+  - [Getting Started](#getting-started)
+    - [Getting the Code from Github](#getting-the-code-from-github)
+    - [First time building the library](#first-time-building-the-library)
+  - [CLI Tools Usage](#cli-tools-usage)
+    - [Important Notes:](#important-notes)
+    - [trustm\_cert](#trustm_cert)
+    - [trustm\_chipinfo](#trustm_chipinfo)
+    - [trustm\_data](#trustm_data)
+    - [trustm\_ecc\_keygen](#trustm_ecc_keygen)
+    - [trustm\_ecc\_sign](#trustm_ecc_sign)
+    - [trustm\_ecc\_verify](#trustm_ecc_verify)
+    - [trustm\_errorcode](#trustm_errorcode)
+    - [trustm\_metadata](#trustm_metadata)
+    - [trustm\_monotonic\_counter](#trustm_monotonic_counter)
+    - [trustm\_read\_data](#trustm_read_data)
+    - [trustm\_readmetadata\_data](#trustm_readmetadata_data)
+    - [trustm\_readmetadata\_private](#trustm_readmetadata_private)
+    - [trustm\_readmetadata\_status](#trustm_readmetadata_status)
+    - [trustm\_read\_status](#trustm_read_status)
+    - [trustm\_rsa\_dec](#trustm_rsa_dec)
+    - [trustm\_rsa\_enc](#trustm_rsa_enc)
+    - [trustm\_rsa\_keygen](#trustm_rsa_keygen)
+    - [trustm\_rsa\_sign](#trustm_rsa_sign)
+    - [trustm\_rsa\_verify](#trustm_rsa_verify)
+    - [trustm\_symmetric\_keygen](#trustm_symmetric_keygen)
+    - [trustm\_symmetric\_enc](#trustm_symmetric_enc)
+    - [trustm\_symmetric\_dec](#trustm_symmetric_dec)
+    - [trustm\_hkdf](#trustm_hkdf)
+    - [trustm\_hmac](#trustm_hmac)
+    - [trustm\_hmac\_verify\_Auth](#trustm_hmac_verify_auth)
+    - [trustm\_protected\_update](#trustm_protected_update)
+    - [trustm\_protected\_update\_aeskey](#trustm_protected_update_aeskey)
+    - [trustm\_protected\_update\_ecckey](#trustm_protected_update_ecckey)
+    - [trustm\_protected\_update\_rsakey](#trustm_protected_update_rsakey)
+    - [trustm\_protected\_update\_data](#trustm_protected_update_data)
+    - [trustm\_update\_with\_PBS\_Auto](#trustm_update_with_pbs_auto)
+    - [trustm\_probe](#trustm_probe)
+  - [OPTIGA™ Trust M3 OpenSSL Engine usage](#optiga-trust-m3-openssl-engine-usage)
+    - [rand](#rand)
+    - [req](#req)
+    - [pkey](#pkey)
+    - [dgst](#dgst)
+    - [Testing TLS connection with ECC key](#testing-tls-connection-with-ecc-key)
+      - [Scenario where Trust M is on the client :](#scenario-where-trust-m-is-on-the-client-)
+      - [Scenario where Trust M is on the server :](#scenario-where-trust-m-is-on-the-server-)
+    - [Testing TLS connection with RSA key](#testing-tls-connection-with-rsa-key)
+      - [Scenario where Trust M is on the client :](#scenario-where-trust-m-is-on-the-client--1)
+      - [Scenario where Trust M is on the server :](#scenario-where-trust-m-is-on-the-server--1)
+    - [Generating a Test Server Certificate](#generating-a-test-server-certificate)
+    - [Using OPTIGA™ Trust M OpenSSL engine to sign and issue certificate](#using-optiga-trust-m-openssl-engine-to-sign-and-issue-certificate)
+      - [Generating CA key pair and Creating OPTIGA™ Trust M CA self sign certificate](#generating-ca-key-pair-and-creating-optiga-trust-m-ca-self-sign-certificate)
+      - [Generating a Certificate Request (CSR)](#generating-a-certificate-request-csr)
+      - [Signing and issuing the Certificate with Trust M](#signing-and-issuing-the-certificate-with-trust-m)
+    - [Simple Server and Client Examples on OpenSSL using C language](#simple-server-and-client-examples-on-openssl-using-c-language)
+      - [Server and Client example with pre-provisioned key(0xE0F0) and Certificate(0xE0E0)](#server-and-client-example-with-pre-provisioned-key0xe0f0-and-certificate0xe0e0)
+      - [Server Setup](#server-setup)
+        - [Getting the 0xE0E0 Certificate in OPTIGA™ Trust M and save it as test\_e0e0.crt](#getting-the-0xe0e0-certificate-in-optiga-trust-m-and-save-it-as-test_e0e0crt)
+        - [CA Certificate](#ca-certificate)
+        - [simpleTest\_Server Code Configuration](#simpletest_server-code-configuration)
+      - [Client Setup](#client-setup)
+        - [simpleTest\_Client Code Configuration](#simpletest_client-code-configuration)
+      - [Running the demonstration](#running-the-demonstration)
+      - [Running the Server](#running-the-server)
+      - [Running the Client](#running-the-client)
+      - [Server and Client example with key (0xE0F1) with external public key and Certificate](#server-and-client-example-with-key-0xe0f1-with-external-public-key-and-certificate)
+    - [NGINX Web Server and CURL Client Examples](#nginx-web-server-and-curl-client-examples)
+      - [CURL and NGINX Simple Server and Client Connection](#curl-and-nginx-simple-server-and-client-connection)
+        - [Install CURL and NGINX](#install-curl-and-nginx)
+        - [Server and client keys and certificates](#server-and-client-keys-and-certificates)
+        - [Generate Server key and certificate](#generate-server-key-and-certificate)
+        - [Generate  Client key and certificate](#generate--client-key-and-certificate)
+        - [Setup NGINX](#setup-nginx)
+        - [Testing CURL Client with OPTIGA™ Trust M Key](#testing-curl-client-with-optiga-trust-m-key)
+  - [Known observations](#known-observations)
+    - [Secure communication bypass](#secure-communication-bypass)
+    - [OPTIGA™ Trust M Sporadic hang](#optiga-trust-m-sporadic-hang)
 
 ## <a name="about"></a>About
 
@@ -238,7 +260,7 @@ option:-
 -I <value>    : Input byte value 
 -o <filename> : Output file 
 -p <offset>   : Offset position 
--e            : Erase and wirte 
+-e            : Erase and write 
 -X            : Bypass Shielded Communication 
 -h            : Print this help  
 ```
@@ -1262,6 +1284,72 @@ For detailed example for Integrity and Confidentiality Protected Update for data
 
 *Note :*  
 *To generate the manifest and fragment for Integrity and Confidentiality Protected Update, please refer to the [README.md](./ex_protected_update_data_set) for more instruction*
+
+### <a name="trustm_update_with_PBS_Auto"></a>trustm_update_with_PBS_Auto
+
+Read/Write/Erase OID data object in raw format. Establish a shielded connection and/or unlock the Authorization Reference state.
+This is relevant for OPTIGA Trust M Express and OPTIGA Trust M Matter-ready Configurations, where some slots are write-protected with PBS and AutoRef Secrets. 
+
+```console
+foo@bar:~$ ./bin/trustm_update_with_PBS_Auto 
+Help menu: trustm_update_with_PBS_Auto <option> ...<option>
+option:- 
+-r <OID>      : Read from OID 0xNNNN 
+-w <OID>      : Write to OID
+-i <filename> : Input file 
+-I <value>    : Input byte value 
+-o <filename> : Output file 
+-p <filename> : Offset position 
+-P <value>    : Input byte value with PBS
+-a <filename> : Input file with Authorization Reference
+-A <value>    : Input byte value with Authorization Reference
+-e            : Erase and write 
+-X            : Bypass Shielded Communication 
+-h            : Print this help  
+```
+
+Example : Writing a new Security Monitor Configuration into protected OID 0xE0C9 and reading after writing. PBS and Authorization Reference are supplied on the CLI but must match the Trust M's dataslots in 0xE140 and 0xF1D0. For readability, PBS and AUTOREF are declared as variables.
+
+```console
+foo@bar:~$ PBS=4AC4E0C890EF3ADE16A95025ADA2F6564DD74BC2374EEF2FE70393F300AA2C37ADAAD66F2615BE82E731B0D3948C84CCEA1E51BF4EF7CFFAB21695E82454EB19
+foo@bar:~$ AUTOREF=D3DEBC1125CBE59E3D5D177B171DA8AF1121976EA5E7155819443FBC20910735E174EF6988E85EB08FB50A267448D3B742B18292AB501FD390BB3B68DC936FDE
+
+foo@bar:~$ ./bin/trustm_update_with_PBS_Auto -w 0xe0c9 -P $PBS -A $AUTOREF -I 3200050100000000
+
+========================================================
+Security Monitor configurations        [0xE0C9] 
+Input data : 
+        4A C4 E0 C8 90 EF 3A DE 16 A9 50 25 AD A2 F6 56 
+        4D D7 4B C2 37 4E EF 2F E7 03 93 F3 00 AA 2C 37 
+        AD AA D6 6F 26 15 BE 82 E7 31 B0 D3 94 8C 84 CC 
+        EA 1E 51 BF 4E F7 CF FA B2 16 95 E8 24 54 EB 19 
+
+Input Authorization Reference: 
+        D3 DE BC 11 25 CB E5 9E 3D 5D 17 7B 17 1D A8 AF 
+        11 21 97 6E A5 E7 15 58 19 44 3F BC 20 91 07 35 
+        E1 74 EF 69 88 E8 5E B0 8F B5 0A 26 74 48 D3 B7 
+        42 B1 82 92 AB 50 1F D3 90 BB 3B 68 DC 93 6F DE 
+
+HMAC verified successfully 
+Offset: 0
+Input data : 
+        32 00 05 01 00 00 00 00 
+OPTIGA execution time: 0.0940 sec.
+Write Success.
+========================================================
+```
+
+### <a name="trustm_probe"></a>trustm_probe
+
+A simple script to probe for a connected Trust M chip on the I2C bus. 
+
+If it finds a connection, the Chip-UID is returned. If no chip is found, returns an error.
+
+```console
+foo@bar:~$ ./bin/trustm_probe
+0A091B5C001500930025
+```
+
 
 ## <a name="engine_usage"></a>OPTIGA™ Trust M3 OpenSSL Engine usage
 

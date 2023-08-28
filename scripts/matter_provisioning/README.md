@@ -3,7 +3,7 @@ This folder contains scripts to make the provisioning of Matter credentials simp
 
 ## OPTIGA™ Trust M Matter-ready Object Map
 
-![OPTIGA Trust M Matter-ready Objects after Provisioning](../../pictures/mr_object_map.png)
+![OPTIGA™ Trust M Matter-ready Objects after Provisioning](../../pictures/mr_object_map.png)
 
 The above image shows the state of the OPTIGA™ Trust M Matter-ready *after* this provisioning mechanism.
 
@@ -29,7 +29,7 @@ Subsequently, the OPTIGA™ Trust M Matter-ready contains the following objects:
 |      0xF1D0 | Authorization Reference     |                                    | Operational      | NEV  | PBS & Auto  | PBS     | IFX            |
 |      0xF1E0 | Matter CD                   |                                    | Operational      | ALW  | PBS & Auto  | ALW     | OEM            |
 |    0xE0E9** | Matter NOC                  |                                    | Operational      | ALW  | ALW         | ALW     | Application    |
-| 0xF1D8/D9** | Matter HKDF & HMAC          |                                    | Initialization   | ALW  | ALW         | ALW     | Application    |
+| 0xF1D8/D9** | Matter HKDF & HMAC          |                                    | Operational      | ALW  | ALW         | ALW     | Application    |
 
 \* Keys can never be written to directly, they can only be generated through the OPTIGA™ Trust M functions.
 
@@ -38,7 +38,7 @@ Subsequently, the OPTIGA™ Trust M Matter-ready contains the following objects:
 ## Hardware Prerequisites
 A direct I2C connection to the OPTIGA™ Trust M is required for this provisioning mechanism to work. A connection to the RST Pin of the Trust M is not required, as this can be done as a Software Reset through the Linux Host library.
 
-![OPTIGA Trust M Schematic Reference](../../pictures/reference_schematic.png)
+![OPTIGA™ Trust M Schematic Reference](../../pictures/reference_schematic.png)
 
 For production usecases, it is also recommended to apply the RST of any other controllers or devices on the same I2C bus to guarantee uninterrupted communication of RPi and Trust M during the short provisioning phase.
 
@@ -126,20 +126,84 @@ The master script will:
 > [!WARNING] 
 > ⚠️ **This is not reversible. Proceed with caution.** ⚠️
 
-Any of the above options only put the credentials to the designated Trust M Credential Slots. Add the following option `-o` to additionally set the metadata configuration and operational LcsO.
+Any of the above options only put the credentials to the designated Trust M Credential Slots. Add the following option `-o` to additionally set the metadata configuration and operational LcsO as described in the configuration table.
 
 
     ./matter_provisioning_master.sh -b APPNOTE_bundle-file_v1.0.7z -k [SAMPLE_TKEY] -s 0 -o
-
-
 
 
 ## Scripts Documentation & Usage
 
 ### matter_provsioning_master.sh
 
-### matter_bundle_provisioning.sh
+Master Script to sequentially provision OPTIGA™ Trust M Matter-ready chips with test or productive Matter credentials.
+If "0" is given as argument for the `-s` option, the Security Monitor will be configured with '000050100000000', effectively disabling the Security Monitor.
 
-### matter_test_dac_provisioning.sh
+**Sample Usage:**
+
+    ./matter_provisioning_master.sh -b APPNOTE_bundle-file_v1.0.7z -k [SAMPLE_TKEY] -s 0 -o
+
+Options: 
+
+| Option      | Description                                                                                  | Sample                         | Additional Info                                    |
+|-------------|----------------------------------------------------------------------------------------------|--------------------------------|----------------------------------------------------|
+| -t          | Provision Matter Test Credentials                                                            |                                | Either -t or -b option                             |
+| -b [file]   | Provision Matter Credentials from Bundle File                                                | -b APPNOTE_bundle-file_v1.0.7z | Either -t or -b option                             |
+| -k [key]    | Transport Key for Bundle File                                                                | -k ABC123DEF567                | Needs to be in combination with -b and -s options. |
+| -s [config] | Security Monitor Configuration, either 0 for the default configuration or some configuration | -s 010050100000000             | Needs to be in combination with -b and -k options. |
+| -o          | Flag to set the Metadata                                                                     |                                | Needs to be combined with at least -b option       |
+| -i          | Flag for internal provisioning methods                                                       |                                |                                                    |
+
+### matter_bundle_provisioning.sh
+Script to provision a single OPTIGA™ Trust M Matter-ready chip with Information in the given folder structure.
+
+
+```
+input_dir
+├── chip_id_matter_DAC.pem
+├── matter_PAI.pem
+└── matter_CD.bin
+```
+
+**Sample Usage:**
+
+    ./matter_bundle_provisioning.sh -p ./tmp/matter_cred -c 0A091B5C0015009A0087
+
+Options: 
+
+| Option   | Description                                                                   | Sample                  | Additional Info               |
+|----------|-------------------------------------------------------------------------------|-------------------------|-------------------------------|
+| -p [dir] | Path to Matter Credential Directory. This should contain the DAC, PAI and CD. | -p ./tmp/matter_cred    | In combination with -c option |
+| -c [CID] | Chip-ID of the current Trust M sample                                         | -c 0A091B5C0015009A0087 | In combination with -p option |
+
+### matter_test_provisioning.sh
+Script to provision a single OPTIGA™ Trust M Matter-ready chip with Matter test credentials.
+
+**Sample Usage:**
+
+    ./matter_test_provisioning.sh
 
 ### configure_security_monitor.sh
+Script to configure the Security Monitor of a single OPTIGA™ Trust M chip with a given configuration.
+
+
+```
+input_dir
+├── auto_keys.txt
+└── PBS_keys.txt
+```
+
+Where the key files are each CSV files containing the chip-ID and respective key as from the Bundle file.#
+If "0" is given as argument for the `-s` option, the Security Monitor will be configured with '000050100000000', effectively disabling the Security Monitor.
+
+**Sample Usage:**
+
+    ./configure_security_monitor.sh -p ./tmp/matter_cred -c 0A091B5C0015009A0087 -s 0
+
+Options: 
+
+| Option      | Description                                                                                  | Sample                  | Additional Info                                    |
+|-------------|----------------------------------------------------------------------------------------------|-------------------------|----------------------------------------------------|
+| -p [dir]    | Path to Keys Directory. This should contain the "PBS_keys.txt" and "auto_keys.txt" files.    | -p ./tmp/keys           | In combination with -c option                      |
+| -c [CID]    | Chip-ID of the current Trust M sample                                                        | -c 0A091B5C0015009A0087 | In combination with -p option                      |
+| -s [config] | Security Monitor Configuration, either 0 for the default configuration or some configuration | -s 010050100000000      | Needs to be in combination with -c and -p options. |
