@@ -1,5 +1,0 @@
-optigatrust 
-Pillow 
-qrcode 
-brother_ql 
-pyusb
