@@ -70,9 +70,10 @@ Several scripts have been prepared to make the Matter credential provisioning as
 The ```matter_provisioning_master.sh``` script will now be used to flash Matter DAC, PAI and CD certificates to the individual OPTIGA™ Trust M Matter-ready.
 
 > [!NOTE]
->> If you want to additionally modify the security monitor of the secure element to enable the full cryptographic support feature set, skip to the ["Option B"](#option-b-matter-credential-provisioning--modify-security-monitor-configuration).
 > 
->> Per default, the script does not set any metadata options to the OPTIGA™Trust M objects, meaning they kcan be rewritten at any point in time. This is good for evaluation purposes, but not recommended for final products. Here, each object LcsO shall be set to "operational". See below section on how to enalble this option in the script.
+> If you want to additionally modify the security monitor of the secure element to enable the full cryptographic support feature set, skip to the ["Option B"](#option-b-matter-credential-provisioning--modify-security-monitor-configuration).
+> 
+> Per default, the script does not set any metadata options to the OPTIGA™Trust M objects, meaning they kcan be rewritten at any point in time. This is good for evaluation purposes, but not recommended for final products. Here, each object LcsO shall be set to "operational". See below section on how to enalble this option in the script.
 
 ### Option A: Matter Credentials Provisioning
 
