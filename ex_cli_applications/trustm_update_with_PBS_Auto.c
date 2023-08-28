@@ -159,7 +159,7 @@ static void _helpmenu(void)
     printf("\nHelp menu: trustm_update_with_PBS_Auto <option> ...<option>\n");
     printf("option:- \n");
     printf("-r <OID>      : Read from OID 0xNNNN \n");
-    printf("-w <OID>      : Write to OID\n");
+    printf("-w <OID>      : Write to OID \n");
     printf("-i <filename> : Input file \n");
     printf("-I <value>    : Input byte value \n");
     printf("-o <filename> : Output file \n");

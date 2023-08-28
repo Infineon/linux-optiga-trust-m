@@ -2,7 +2,6 @@
 source config.sh
 source /etc/environment
 
-
 echo "Perform Matter DAC Provisioning"
 ./matter_dac_provisioning.sh
 echo "Print Shield Sticker"
