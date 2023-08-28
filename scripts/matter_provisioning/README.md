@@ -72,7 +72,7 @@ The ```matter_provisioning_master.sh``` script will now be used to flash Matter 
 > [!NOTE]
 > If you want to additionally modify the security monitor of the secure element to enable the full cryptographic support feature set, skip to the ["Option B"](#option-b-matter-credential-provisioning--modify-security-monitor-configuration).
 
-> [!IMPORTANT][!NOTE]
+> [!NOTE]
 > Per default, the script does not set any metadata options to the OPTIGA™Trust M objects, meaning they kcan be rewritten at any point in time. This is good for evaluation purposes, but not recommended for final products. Here, each object LcsO shall be set to "operational". See Section [Set Operational](#set-objects-state-to-operational) on how to enable this option in the script.
 
 ### Option A: Matter Credentials Provisioning
@@ -123,7 +123,7 @@ The master script will:
 
 ### Set Objects state to "Operational"
 
-> [!WARNING] **This is not reversible. Proceed with caution.**
+> [!NOTE] ⚠️ **This is not reversible. Proceed with caution.** ⚠️
 
 Any of the above options only put the credentials to the designated Trust M Credential Slots. Add the following option `-o` to additionally set the metadata configuration and operational LcsO.
 
