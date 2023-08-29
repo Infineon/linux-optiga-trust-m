@@ -89,8 +89,8 @@ while sleep 1s; do
             echo "----> Flashing Test Credentials"
             ./matter_test_provisioning.sh
             if [ $qr -eq 1 ]; then
-                echo "----> Printing QR-Code Sticker and adding to CSV-List"
-                python3 ./print_sticker.py
+                echo "----> Internal Provisioning"
+                # python3 ./print_sticker.py
             fi
         elif [ -s $bundle_file ]; then
             echo "----> Write Matter Credentials"

@@ -53,6 +53,11 @@ This usecase assumes the usage and provisioning of Matter Test credentials, whic
 
 The Matter DAC is generated and issued based on the individual pre-loaded ECC private key of the OPTIGA™ Trust M. This can be used to speed up development based on test-credentials or to reset your evaluation samples.
 
+The OPTIGA™ Trust M Matter-ready Shield comes pre-provisioned with these Test-Credentials out of the box to make evaluation quick and easy. For all other OPTIGA™ Trust M products, run
+
+    ./matter_provisioning_master.sh -t
+
+to generate and write Matter Test Credentials (DAC, PAI and CD) to the respective OPTIGA™ Trust M object slots. The Test DAC uses the public key extracted from the Infineon pre-provisioned certificate stored in slot 0xE0E0.
 
 ## Usecase 2: Matter Production Credentials
 This usecase assumes the usage and provisioning of "real" Matter credentials which are claimed from the provided Cloud-Services for the individual OPTIGA™ Trust M chips in the form of a so-called "Bundle File".
