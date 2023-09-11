@@ -46,6 +46,7 @@
 
 //Debug Print
 #define CLI_WORKAROUND 1
+//#define DEBUG_TRUSTM_HELPER 1
 //~ #define DEBUG_TRUSTM_HELPER =1
 //~ #define TRUST_CLOSE_APP_ENABLE
 
@@ -157,6 +158,7 @@ void trustmGetOIDName(uint16_t optiga_oid, char *name);
 
 optiga_lib_status_t trustm_readUID(utrustm_UID_t *UID);
 optiga_lib_status_t trustmReadMetadata(uint16_t optiga_oid, trustm_metadata_t *oidMetadata);
+optiga_lib_status_t trustmProviderReadMetadata(optiga_util_t *me_util, uint16_t optiga_oid, trustm_metadata_t *oidMetadata);
 
 uint32_t trustmHexorDec(const char *aArg);
 uint16_t trustmwriteTo(uint8_t *buf, uint32_t len, const char *filename);
