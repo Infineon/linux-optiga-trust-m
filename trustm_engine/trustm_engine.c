@@ -26,6 +26,7 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <openssl/engine.h>
+#include <openssl/pkcs12.h>
 
 #include "optiga/pal/pal_ifx_i2c_config.h"
 #include "trustm_helper.h"
@@ -33,8 +34,18 @@
 
 #include "trustm_engine_common.h"
 
+typedef struct cert_params
+{   const char *cert_id;
+    X509 *cert;
+} cert_params_t;
 
+typedef struct engine_ctrl_params
+{ 
+    char cert_name[256];
+    char p12_passwd[256];
+    X509 *cert;
 
+} engine_ctrl_params_t;
 #ifdef WORKAROUND
 	extern void pal_os_event_disarm(void);
 	extern void pal_os_event_arm(void);
@@ -50,6 +61,9 @@ extern void pal_os_event_disarm(void);
 static const char *engine_id   = "trustm_engine";
 static const char *engine_name = "Infineon OPTIGA TrustM Engine";
 
+static engine_ctrl_params_t eng_ctrl_params;
+
+    
 /**********************************************************************
 * mssleep()
 **********************************************************************/
@@ -425,6 +439,7 @@ static uint32_t parseKeyParams(const char *aArg)
     uint8_t read_data_buffer[2048];
     const char needle[3] = "0x";    
     char *ptr;
+    char *ext;
     TRUSTM_ENGINE_DBGFN(">");
     
     TRUSTM_ENGINE_APP_OPEN_RET(NULL,NULL);
@@ -433,23 +448,64 @@ static uint32_t parseKeyParams(const char *aArg)
     {
 
         TRUSTM_ENGINE_DBGFN("---> Key string = %s",aArg);
-        ptr=strstr(aArg,needle);
-        if (ptr == NULL)
-        {   
-            TRUSTM_ENGINE_ERRFN("No key identifier 0x found");
-            ret = 0;
-            break;
-        }
-        
-        strcpy(in,ptr);
-        TRUSTM_ENGINE_DBGFN("---> processed input string = %s",in);        
-        if (in == NULL)
+        if (!aArg)
         {
-            TRUSTM_ENGINE_ERRFN("No input key parameters present. (key_oid:<pubkeyfile>)");
-            //return EVP_FAIL;
+            TRUSTM_ENGINE_ERRFN("Missing key argument");
             ret = 0;
             break;
         }
+        ext = strrchr(aArg, '.');
+        
+        if (ext) 
+        {           
+            if ( !strcmp((ext+1), "p12") || !strcmp((ext+1), "P12"))
+            { 
+                            
+                strcpy(in,aArg);
+                ptr=strtok(in, ".");
+                if(!strcmp(ptr,"e0f1"))
+                {
+                    strcpy(in,"0xe0f1:^");
+                }else
+                if(!strcmp(ptr,"e0f2"))
+                {
+                    strcpy(in,"0xe0f2:^");
+                } 
+               
+                TRUSTM_ENGINE_DBGFN("---> processed input string = %s",in);    
+                
+            }
+            else
+            {
+                TRUSTM_ENGINE_ERRFN("Unsupport file type: %s",(ext+1));
+                ret = 0;
+                break;
+            }
+            
+        }else
+        {
+            ptr=strstr(aArg,needle);
+            if (ptr == NULL)
+            {   
+                TRUSTM_ENGINE_ERRFN("No key identifier 0x found");
+                ret = 0;
+                break;
+            }
+            
+            strcpy(in,ptr);
+            TRUSTM_ENGINE_DBGFN("---> processed input string = %s",in);        
+            if (in == NULL)
+            {
+                TRUSTM_ENGINE_ERRFN("No input key parameters present. (key_oid:<pubkeyfile>)");
+                //return EVP_FAIL;
+                ret = 0;
+                break;
+            }        
+        
+        }
+
+        
+
           
         i = 0;
         token[0] = strtok(in, ":");
@@ -838,19 +894,163 @@ static EVP_PKEY * engine_load_pubkey(ENGINE *e, const char *key_id, UI_METHOD *u
 }
 
 
+static const ENGINE_CMD_DEFN engine_cmd_defns[] = {
+    { TRUSTM_SET_CERT_CTRL, "SET_CERT_CTRL",
+     "Set Client Certificate)",
+     ENGINE_CMD_FLAG_STRING },
+    { TRUSTM_SET_KEY_CTRL, "SET_KEY_CTRL",
+     "Set Trust M key OID)",
+     ENGINE_CMD_FLAG_STRING },
+    { TRUSTM_SET_P12_PASSWD_CTRL, "SET_P12_PASSWD_CTRL",
+     "Set PKCS12 Password)",
+     ENGINE_CMD_FLAG_STRING },
+
+    { TRUSTM_LOAD_CERT_CTRL, "LOAD_CERT_CTRL",
+     "Load Client Certificate)",
+     ENGINE_CMD_FLAG_STRING },
+
+    {0, NULL, NULL, 0}
+};
+static int process_certificate(engine_ctrl_params_t* eng_params, void* p)
+{
+
+    BIO *cert_bio           = NULL;
+    PKCS12 *p12             = NULL;
+    EVP_PKEY *pri           = NULL;
+    STACK_OF(X509) *ca      = NULL;
+ 
+    char* key_passwd;
+    const char* filename;
+    cert_params_t* params;
+    X509 * x509;
+
+    int ret = TRUSTM_ENGINE_SUCCESS;
+    TRUSTM_ENGINE_DBGFN(">");
+    
+    params =(cert_params_t*)p;
+ 
+    TRUSTM_ENGINE_DBGFN("set_cert_ctrl: %s, size: %d, cert cmd input:%s", eng_params->cert_name, strlen(eng_params->cert_name),params->cert_id);
+
+    if (params->cert_id)
+    {   filename = params->cert_id;
+        key_passwd=eng_params->p12_passwd;
+        
+    }else if(eng_params->cert_name)
+    {
+        filename=strtok(eng_params->cert_name,":");
+        if (!filename) {
+            TRUSTM_ENGINE_ERRFN("set_cert_ctrl:filename missing");
+            return 0;
+        }
+        key_passwd=strtok(NULL,":");
+        
+        if (!key_passwd) {
+            /* no password */
+            TRUSTM_ENGINE_DBGFN("No Password\n");
+        } 
+        
+    }else
+    {   TRUSTM_ENGINE_ERRFN("missing certificate info");
+        return 0;
+    }
+   
+    TRUSTM_ENGINE_DBGFN("open PKCS12 file: %s, password:%s", filename,key_passwd);
+
+    
+    cert_bio = BIO_new(BIO_s_file());
+    if(!cert_bio) {
+        TRUSTM_ENGINE_ERRFN("BIO_new return NULL");
+        return 0;
+    }
+    
+    if(BIO_read_filename(cert_bio, filename) <= 0) {
+        TRUSTM_ENGINE_ERRFN("could not open PKCS12 file %s", filename);
+        return 0;
+    }
+      
+
+      p12 = d2i_PKCS12_bio(cert_bio, NULL);
+      BIO_free(cert_bio);
+
+      if(!p12) {
+        TRUSTM_ENGINE_ERRFN("error reading PKCS12 file '%s'", filename);
+        return 0;
+      }
+
+      PKCS12_PBE_add();
+
+      if(!PKCS12_parse(p12, key_passwd, &pri, &x509,
+                       &ca)) {
+                          
+        TRUSTM_ENGINE_ERRFN("could not parse PKCS12 file, check password");
+        PKCS12_free(p12);
+        return 0;
+      }
+      if(x509) {
+        params->cert=x509;
+      } 
+      else if(ca){
+        
+          TRUSTM_ENGINE_DBGFN("number of cert file: %d", sk_X509_num(ca));
+          if (sk_X509_num(ca)>=1)
+          {
+            params->cert = sk_X509_value(ca, 0);
+            
+           }
+        
+      }
+      else {
+        TRUSTM_ENGINE_ERRFN("certificate not found");
+      }
+        
+      if(!pri) {
+        TRUSTM_ENGINE_DBGFN("No private key found");
+      } else {
+          TRUSTM_ENGINE_DBGFN("Set private key");
+        }
+        
+      PKCS12_free(p12);
+      TRUSTM_ENGINE_DBGFN("x509: %X, Pri: %X, ca:%X, cert_id:%s\n",(unsigned int) x509,(unsigned int)pri,(unsigned int)ca,params->cert_id);
+    
+     
+    
+    TRUSTM_ENGINE_DBGFN("<");
+    return ret;
+}
+
 static int engine_ctrl(ENGINE *e, int cmd, long i, void *p, void (*f) ())
 {
     int ret = TRUSTM_ENGINE_SUCCESS;
-
     TRUSTM_ENGINE_DBGFN(">");
-    TRUSTM_ENGINE_DBGFN(">");
-    TRUSTM_ENGINE_DBGFN("cmd: %d", cmd);
+    
+    switch (cmd) 
+    {
+       case TRUSTM_SET_CERT_CTRL:
+            strcpy(eng_ctrl_params.cert_name,p);
+            TRUSTM_ENGINE_DBGFN("set cert: %s", eng_ctrl_params.cert_name);
+            break;
+       case TRUSTM_SET_KEY_CTRL:
+            if (p)
+            { sscanf(p,"%x",(unsigned int*)&trustm_ctx.key_oid);
+              TRUSTM_ENGINE_DBGFN("set key OID: %s, int: %d", (char*)p, trustm_ctx.key_oid);
+            }else
+            { TRUSTM_ENGINE_DBGFN("No key OID");
+            }
+            break;
 
-    do {
-        //TRUSTM_ENGINE_MSGFN("Function Not implemented.");
-        //Implement code here;
-    }while(FALSE);
-   
+        case TRUSTM_LOAD_CERT_CTRL:
+           
+            process_certificate(&eng_ctrl_params,(void*) p);             
+            break;
+        case TRUSTM_SET_P12_PASSWD_CTRL:
+            strcpy(eng_ctrl_params.p12_passwd,p);
+            TRUSTM_ENGINE_DBGFN("set password: %s", eng_ctrl_params.p12_passwd);
+                            
+            break;
+
+        default:
+            TRUSTM_ENGINE_DBGFN("no matching commmad id");
+    }
     TRUSTM_ENGINE_DBGFN("<");
     return ret;
     
@@ -877,7 +1077,7 @@ static int engine_init(ENGINE *e)
         
 
         //Init TrustM context
-        trustm_ctx.key_oid = 0x0000;
+        trustm_ctx.key_oid = 0xe0f0;
         trustm_ctx.rsa_key_type = OPTIGA_RSA_KEY_2048_BIT_EXPONENTIAL;
         trustm_ctx.rsa_key_usage = OPTIGA_KEY_USAGE_AUTHENTICATION | OPTIGA_KEY_USAGE_ENCRYPTION;
         trustm_ctx.rsa_key_enc_scheme = OPTIGA_RSAES_PKCS1_V15;
@@ -976,12 +1176,12 @@ static int bind(ENGINE *e, const char *id)
             break;
         }
 
-/*
+
         if (!ENGINE_set_cmd_defns(e, engine_cmd_defns)) {
             TRUSTM_ENGINE_DBGFN("ENGINE_set_cmd_defns failed\n");
             break;
         }
-*/
+
         ret = TRUSTM_ENGINE_SUCCESS;
     }while(FALSE);
  

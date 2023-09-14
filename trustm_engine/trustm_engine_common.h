@@ -119,6 +119,13 @@
 #define PUBKEY_SIZE 1024
 
 
+#define TRUSTM_SET_CERT_CTRL ENGINE_CMD_BASE
+#define TRUSTM_SET_KEY_CTRL (ENGINE_CMD_BASE+1)
+#define TRUSTM_SET_P12_PASSWD_CTRL (ENGINE_CMD_BASE + 2)
+#define TRUSTM_LOAD_CERT_CTRL (ENGINE_CMD_BASE + 3)
+
+
+
 //typedefine
 typedef enum trustmEngine_flag
 {
@@ -152,6 +159,7 @@ typedef struct trustm_ctx_str
   uint8_t   ipcInit;
   
 } trustm_ctx_t;
+
 
 //extern
 extern trustm_ctx_t trustm_ctx;
