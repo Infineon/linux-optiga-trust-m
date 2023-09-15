@@ -180,6 +180,7 @@ void trustmEngine_App_Release(void);
 uint16_t trustmEngine_init_rand(ENGINE *e);
 uint16_t trustmEngine_init_rsa(ENGINE *e);
 uint16_t trustmEngine_init_ec(ENGINE *e);
+uint32_t parseKeyParams(const char *aArg);
 
 EVP_PKEY *trustm_rsa_loadkey(void);
 EVP_PKEY *trustm_ec_loadkey(void);

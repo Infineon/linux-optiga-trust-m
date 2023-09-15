@@ -482,6 +482,18 @@ static ECDSA_SIG* trustm_ecdsa_sign(
     optiga_lib_status_t return_status;
 
     TRUSTM_ENGINE_DBGFN(">");
+    BIGNUM *private_key_bn = EC_KEY_get0_private_key(eckey);
+    unsigned char *private_key_bytes = NULL;
+    int private_key_length = BN_num_bytes(private_key_bn);
+    private_key_bytes = (unsigned char *)malloc(private_key_length);
+    BN_bn2bin(private_key_bn, private_key_bytes);
+
+    if (private_key_bytes[0] == 0xbe && private_key_bytes[1] == 0xef) {
+        TRUSTM_ENGINE_DBGFN("Magic number beef detected, load private key now.\n");
+        parseKeyParams("0xe0f1:^");
+    } else {
+        TRUSTM_ENGINE_DBGFN("Magic number beef not detected\n");
+    }
     TRUSTM_ENGINE_DBGFN("oid : 0x%.4x",trustm_ctx.key_oid);
     TRUSTM_ENGINE_DBGFN("dgst len : %d",dgstlen);
 
