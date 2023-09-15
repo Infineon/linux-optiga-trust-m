@@ -5,17 +5,23 @@ UPDATEPATH="$PROJECT_DIR/ex_protected_update_data_set/Linux/bin"
 
 
 #~ Client certificate related definitions
-CLIENT_PKCS12_FILE=client1.p12
-TEMP_PUBKEY_KEY=temp_pubkey.pem
-TEMP_PUBKEY_KEY_DER=temp_pubkey.der
-TEMP_KEY=temp_key.pem
-TEMP_CERT=client1.crt.pem
+TEMP_PUBKEY_KEY_ECC=./generate_p12/temp_pubkey_ecc.pem
+TEMP_PUBKEY_KEY_DER_ECC=./generate_p12/temp_pubkey_ecc.der
+TEMP_PUBKEY_KEY_RSA=./generate_p12/temp_pubkey_rsa.pem
+TEMP_PUBKEY_KEY_DER_RSA=./generate_p12/temp_pubkey_rsa.der
+TEMP_KEY_ECC=./generate_p12/client1_ecc_privkey.pem
+TEMP_CERT_ECC=./generate_p12/client1_ecc.crt.pem
+TEMP_KEY_RSA=./generate_p12/client1_rsa_privkey.pem
+TEMP_CERT_RSA=./generate_p12/client1_rsa.crt.pem
 
 
 #Protected update relate definitions
 PAYLOAD_VER=2
 TRUST_ANCHOR=e0e8
-TARGET_OID=e0f1
+TARGET_OID_ECC=e0f1
+TARGET_OID_RSA=e0fc
+PUBKEY_OID_ECC=f1d1
+PUBKEY_OID_RSA=f1e0
 SECRET_OID=f1d4
 SIGN_ALGO=ES_256
 PRIV_KEY=$CERT_PATH/sample_ec_256_priv.pem
