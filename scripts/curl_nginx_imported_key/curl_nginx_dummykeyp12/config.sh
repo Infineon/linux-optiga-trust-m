@@ -8,14 +8,15 @@ UPDATEPATH="$PROJECT_DIR/ex_protected_update_data_set/Linux/bin"
 CLIENT_PKCS12_FILE=client1.p12
 TEMP_PUBKEY_KEY=temp_pubkey.pem
 TEMP_PUBKEY_KEY_DER=temp_pubkey.der
-TEMP_KEY=temp_key.pem
-TEMP_CERT=client1.crt.pem
+TEMP_KEY=./generate_p12/client1_privkey.pem
+TEMP_CERT=./generate_p12/client1.crt.pem
 
 
 #Protected update relate definitions
 PAYLOAD_VER=1
 TRUST_ANCHOR=e0e8
 TARGET_OID=e0f1
+PUBKEY_OID=f1d1
 SECRET_OID=f1d4
 SIGN_ALGO=ES_256
 PRIV_KEY=$CERT_PATH/sample_ec_256_priv.pem

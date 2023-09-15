@@ -8,6 +8,7 @@ rm *.dat
 rm *.bin
 rm *.der
 rm *.crt
+rm *.p12
 set -e
 
 
