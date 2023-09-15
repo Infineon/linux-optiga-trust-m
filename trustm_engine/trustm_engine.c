@@ -471,6 +471,21 @@ static uint32_t parseKeyParams(const char *aArg)
                 {
                     strcpy(in,"0xe0f2:^");
                 } 
+                else
+                if(!strcmp(ptr,"e0f3"))
+                {
+                    strcpy(in,"0xe0f3:^");
+                } 
+                else
+                if(!strcmp(ptr,"e0fc"))
+                {
+                    strcpy(in,"0xe0fc:^");
+                } 
+                else
+                if(!strcmp(ptr,"e0fd"))
+                {
+                    strcpy(in,"0xe0fd:^");
+                } 
                
                 TRUSTM_ENGINE_DBGFN("---> processed input string = %s",in);    
                 
