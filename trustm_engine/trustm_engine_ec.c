@@ -480,22 +480,44 @@ static ECDSA_SIG* trustm_ecdsa_sign(
     uint16_t    sig_len = 500;
 
     optiga_lib_status_t return_status;
-
-    TRUSTM_ENGINE_DBGFN(">");
-    BIGNUM *private_key_bn = EC_KEY_get0_private_key(eckey);
     unsigned char *private_key_bytes = NULL;
-    int private_key_length = BN_num_bytes(private_key_bn);
-    private_key_bytes = (unsigned char *)malloc(private_key_length);
-    BN_bn2bin(private_key_bn, private_key_bytes);
-
-    if (private_key_bytes[0] == 0xbe && private_key_bytes[1] == 0xef) {
-        TRUSTM_ENGINE_DBGFN("Magic number beef detected, load private key now.\n");
-        parseKeyParams("0xe0f1:^");
-    } else {
-        TRUSTM_ENGINE_DBGFN("Magic number beef not detected\n");
-    }
+    int private_key_length;
+    
+    TRUSTM_ENGINE_DBGFN(">");
+    
+    
     TRUSTM_ENGINE_DBGFN("oid : 0x%.4x",trustm_ctx.key_oid);
     TRUSTM_ENGINE_DBGFN("dgst len : %d",dgstlen);
+
+    
+       if(!trustm_ctx.key_oid)
+        {
+            
+            const BIGNUM *private_key_bn = EC_KEY_get0_private_key(eckey);
+            if (private_key_bn)
+            {
+                TRUSTM_ENGINE_DBGFN("get private key length: %x", (unsigned int)private_key_bn);
+                
+                private_key_length = BN_num_bytes(private_key_bn);
+                
+                
+                private_key_bytes = (unsigned char *)malloc(private_key_length);
+                BN_bn2bin(private_key_bn, private_key_bytes);
+
+                if (private_key_bytes[0] == 0xbe && private_key_bytes[1] == 0xef) {
+                    TRUSTM_ENGINE_DBGFN("Magic number beef detected, load private key now.\n");
+                    parseKeyParams("0xe0f1:^");
+                } else {
+                    TRUSTM_ENGINE_DBGFN("Magic number beef not detected\n");
+                    
+                }
+            }
+            else
+            {   TRUSTM_ENGINE_ERRFN("Invalid Private key");
+                
+            
+            }
+        }
 
     // TODO/HACK:
     if (dgstlen != 32)
@@ -508,6 +530,9 @@ static ECDSA_SIG* trustm_ecdsa_sign(
     TRUSTM_ENGINE_APP_OPEN_RET(ecdsa_sig,NULL);
     do 
     {  
+        
+ 
+    
         optiga_lib_status = OPTIGA_LIB_BUSY;
         if((trustm_ctx.ec_key_curve == OPTIGA_ECC_CURVE_NIST_P_521) || (trustm_ctx.ec_key_curve == OPTIGA_ECC_CURVE_BRAIN_POOL_P_512R1))
         {

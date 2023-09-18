@@ -5,7 +5,7 @@ set -e
 
 
 echo "Client1:-----> Update Public key store into Optiga Trust M"
-$EXEPATH/trustm_data -w 0x$PUBKEY_OID_ECC -i $TEMP_PUBKEY_KEY_ECC_DER -e
+$EXEPATH/trustm_data -w 0x$PUBKEY_OID_ECC -i $TEMP_PUBKEY_KEY_DER_ECC -e
 
 
 echo "Client1:-----> Generate Manifest"
