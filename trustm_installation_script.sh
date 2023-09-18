@@ -6,8 +6,8 @@ CURRENT_DIR="${PWD}"
 PATCH="${PWD}/${FILE}"
 
 
-#~ sudo apt update 
-#~ sudo apt -y install awscli git gcc libssl-dev
+sudo apt update 
+sudo apt -y install awscli git gcc libssl-dev
 
 echo $PATCH
 echo $TRUSTM_LIB_PATH
