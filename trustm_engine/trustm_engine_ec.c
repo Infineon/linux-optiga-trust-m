@@ -538,18 +538,6 @@ static ECDSA_SIG* trustm_ecdsa_sign(
                         parseKeyParams("0xe0f3:^");
                         break;
                     } 
-                    else 
-                    if (private_key_bytes[1] == 0xfc) 
-                    {   
-                        parseKeyParams("0xe0fc:^");
-                        break;
-                    } 
-                    else 
-                    if (private_key_bytes[1] == 0xfd) 
-                    {   
-                        parseKeyParams("0xe0fd:^");
-                        break;
-                    } 
                     TRUSTM_ENGINE_DBGFN("No valid key OID detected\n"); 
                    
                 }
