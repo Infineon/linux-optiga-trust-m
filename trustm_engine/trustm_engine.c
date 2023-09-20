@@ -486,6 +486,11 @@ uint32_t parseKeyParams(const char *aArg)
                 if(!strcmp(ptr,"e0fd"))
                 {
                     strcpy(in,"0xe0fd:^");
+                }else
+                {
+                    TRUSTM_ENGINE_ERRFN("P12 file not supported");
+                    ret = 0;
+                    break;
                 } 
                
                 TRUSTM_ENGINE_DBGFN("---> processed input string = %s",in);    
@@ -506,7 +511,6 @@ uint32_t parseKeyParams(const char *aArg)
                 if (in == NULL)
                 {
                     TRUSTM_ENGINE_ERRFN("No input key parameters present. (key_oid:<pubkeyfile>)");
-                    
                     ret = 0;
                     break;
                 }        
@@ -527,7 +531,7 @@ uint32_t parseKeyParams(const char *aArg)
             if (in == NULL)
             {
                 TRUSTM_ENGINE_ERRFN("No input key parameters present. (key_oid:<pubkeyfile>)");
-                //return EVP_FAIL;
+                
                 ret = 0;
                 break;
             }        
