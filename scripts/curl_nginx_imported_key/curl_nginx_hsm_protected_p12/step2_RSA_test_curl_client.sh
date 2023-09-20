@@ -3,7 +3,12 @@ source config.sh
 
 
 set -e
-## Using internal public key
+
+
+echo "Trust M protected P12 without private key(RSA)"
+
+sudo cp openssl_curl.cnf /etc/ssl/openssl_curl_rsa.cnf
+
 export OPENSSL_CONF=/etc/ssl/openssl_curl_rsa.cnf  
 
 echo "Client1:-----> test curl client RSA with 0xe0fc:^ "
