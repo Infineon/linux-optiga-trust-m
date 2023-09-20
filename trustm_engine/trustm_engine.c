@@ -456,6 +456,7 @@ uint32_t parseKeyParams(const char *aArg)
         }
         ext = strrchr(aArg, '.');
         
+     
         if (ext) 
         {           
             if ( !strcmp((ext+1), "p12") || !strcmp((ext+1), "P12"))
@@ -492,9 +493,23 @@ uint32_t parseKeyParams(const char *aArg)
             }
             else
             {
-                TRUSTM_ENGINE_ERRFN("Unsupport file type: %s",(ext+1));
-                ret = 0;
-                break;
+                ptr=strstr(aArg,needle);
+                if (ptr == NULL)
+                {   
+                    TRUSTM_ENGINE_ERRFN("No key identifier 0x found");
+                    ret = 0;
+                    break;
+                }
+                
+                strcpy(in,ptr);
+                TRUSTM_ENGINE_DBGFN("---> processed input string = %s",in);        
+                if (in == NULL)
+                {
+                    TRUSTM_ENGINE_ERRFN("No input key parameters present. (key_oid:<pubkeyfile>)");
+                    
+                    ret = 0;
+                    break;
+                }        
             }
             
         }else
@@ -519,7 +534,7 @@ uint32_t parseKeyParams(const char *aArg)
         
         }
 
-        
+       
 
           
         i = 0;
