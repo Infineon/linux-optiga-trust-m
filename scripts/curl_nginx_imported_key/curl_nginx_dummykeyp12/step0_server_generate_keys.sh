@@ -19,5 +19,6 @@ echo "Server1:-----> Configure NGINX"
 sudo cp default /etc/nginx/sites-enabled/default
 sudo cp $SERVER_CERT_NAME /etc/nginx/$SERVER_CERT_NAME
 sudo cp $SERVER_PRIVATE_KEY /etc/nginx/$SERVER_PRIVATE_KEY
+sudo cp $CA_CERT /etc/nginx/OPTIGA_Trust_M_Infineon_Test_CA.pem
 sudo service nginx restart
 

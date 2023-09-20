@@ -5,8 +5,9 @@ source config.sh
 set -e
 
 
-echo "Trust M protected P12 without private key"
+echo "Trust M protected P12 without private key(ECC)"
  
+sudo cp openssl_curl.cnf /etc/ssl/openssl_curl.cnf
 
 export OPENSSL_CONF=/etc/ssl/openssl_curl.cnf  
 
