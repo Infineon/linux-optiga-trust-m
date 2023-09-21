@@ -7,7 +7,7 @@ set -e
 
 echo "Trust M protected P12 without private key(RSA)"
 
-sudo cp openssl_curl.cnf /etc/ssl/openssl_curl_rsa.cnf
+sudo cp openssl_curl_rsa.cnf /etc/ssl/openssl_curl_rsa.cnf
 
 export OPENSSL_CONF=/etc/ssl/openssl_curl_rsa.cnf  
 
