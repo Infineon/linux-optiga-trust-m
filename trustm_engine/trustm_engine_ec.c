@@ -498,10 +498,10 @@ static ECDSA_SIG* trustm_ecdsa_sign(
             {
                 if (private_key_bn)
                 {
-                    TRUSTM_ENGINE_DBGFN("get private key length: %x", (unsigned int)private_key_bn);
+                    
                     
                     private_key_length = BN_num_bytes(private_key_bn);
-                    
+                    TRUSTM_ENGINE_DBGFN("get private key length: %x", (unsigned int)private_key_length);
                     
                     private_key_bytes = (unsigned char *)malloc(private_key_length);
                     BN_bn2bin(private_key_bn, private_key_bytes);
