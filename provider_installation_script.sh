@@ -1,14 +1,16 @@
 #!/bin/sh
 
-set -e
+FILE="0001-trust_m_lib.patch"
 
-FILE="../0001-trust_m_lib.patch"
+sudo apt update 
+#~ sudo apt -y install git gcc 
 
+echo "-----> Apply patch"
 git apply $FILE
 
 echo "-----> Build Trust M provider"
 
-set -x
+set -e
 
 sudo make uninstall
 make clean

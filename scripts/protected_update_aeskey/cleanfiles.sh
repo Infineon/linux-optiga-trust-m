@@ -1,2 +1,0 @@
-rm *.dat
-rm *.bin
