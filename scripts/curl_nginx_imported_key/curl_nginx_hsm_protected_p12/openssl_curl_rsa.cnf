@@ -11,7 +11,7 @@ trustm_engine = trustm_engine_section
 engine_id = trustm_engine
 dynamic_path = /usr/lib/arm-linux-gnueabihf/engines-1.1/trustm_engine.so
 default_algorithms = RSA
-SET_KEY_CTRL = e0fc
+#SET_KEY_CTRL = e0fc
 SET_P12_PASSWD_CTRL = 1234
 init = 1
 
