@@ -546,6 +546,10 @@ static ECDSA_SIG* trustm_ecdsa_sign(
                 
                 }
             }while(FALSE);
+            if(private_key_bytes)
+            {
+                free(private_key_bytes);
+            }
         }
 
     // TODO/HACK:
