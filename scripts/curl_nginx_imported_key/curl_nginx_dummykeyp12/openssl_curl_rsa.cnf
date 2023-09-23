@@ -3,13 +3,23 @@ openssl_conf = openssl_init
 
 [openssl_init]
 engines = engine_section
-
+ssl_conf = ssl_sect
 [engine_section]
 trustm_engine = trustm_engine_section
 
 [trustm_engine_section]
 engine_id = trustm_engine
 dynamic_path = /usr/lib/arm-linux-gnueabihf/engines-1.1/trustm_engine.so
-default_algorithms = ECC
-init = 0
+default_algorithms = RSA
+#SET_KEY_CTRL = e0fc
+init = 1
+
+
+[ssl_sect]
+
+system_default = ssl_default_sect
+
+[ssl_default_sect]
+
+ClientSignatureAlgorithms = RSA+SHA256
 
