@@ -146,7 +146,7 @@ Run the [step3_client_import_private_key.sh](./step3_client_import_private_key.s
 
 #### Protected Update of ECC Key
 
-Click on the "key_data" field and select the file "**client1_privkey.pem**" in the current directory.
+Click on the "privkey_data" field and select the file "**ecc256test_priv.pem**" in the current directory. Then click on "pubkey_data" field and select the corresponding public key file, "**ecc256test_pub.der**".
 
 Click **Step1**, **Step2** and **Step3** buttons. Click **Reset Access Condition** to restart the procedure.
 
@@ -155,32 +155,15 @@ Click **Step1**, **Step2** and **Step3** buttons. Click **Reset Access Condition
 
 #### Protected Update of RSA Key
 
-Click on the "key_data" field and select the file "client1_privkey.pem" in the current directory and ensure that "RSA_2048" is selected.
+Click on the "privkey_data" field and select the file "**rsa2048test_priv.pem**" in the current directory. Then click on "pubkey_data" field and select the corresponding public key file, "**rsa2048test_pub.der**". Ensure that "RSA_2048" is selected.
 
 Click **Step1**, **Step2** and **Step3** buttons. Click **Reset Access Condition** to restart the procedure.
 
 | ![](./pictures/rsa.png) |
 | ---------------------- |
 
-### Step 4: Update Public Key store
 
-Run the following to update the corresponding ECC/RSA key store in application data object of OPTIGA™ Trust M
-
-For ECC:[step4_ECC_client_update_pubkey.sh](./step4_ECC_client_update_pubkey.sh)
-
-```sh
-echo "Client1:-----> Update Public key into Optiga Trust M"
-$EXEPATH/trustm_data -w $TRUST_M_ECC_PUBKEY_OID -i client1_pubkey.der
-```
-
-For RSA:[step4_RSA_client_update_pubkey.sh](./step4_RSA_client_update_pubkey.sh)
-
-```sh
-echo "Client1:-----> Update Public key into Optiga Trust M"
-$EXEPATH/trustm_data -w $TRUST_M_RSA_PUBKEY_OID -i client1_pubkey.der
-```
-
-### Step 5: Testing CURL Client with OPTIGA™ Trust M Key 
+### Step 4: Testing CURL Client with OPTIGA™ Trust M Key 
 
 This will connect the Client to the web server with engine key interface using OPTIGA™ Trust M.  
 
