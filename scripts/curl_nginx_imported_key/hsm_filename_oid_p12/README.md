@@ -1,6 +1,6 @@
 
 
-## CURL and NGINX with HSM protected P12 with imported ECC and RSA keys
+## CURL and NGINX example with HSM protected Key OID P12 file
 
 ### Prerequisites
 
