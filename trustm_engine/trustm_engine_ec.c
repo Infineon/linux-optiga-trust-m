@@ -480,10 +480,77 @@ static ECDSA_SIG* trustm_ecdsa_sign(
     uint16_t    sig_len = 500;
 
     optiga_lib_status_t return_status;
-
+    unsigned char *private_key_bytes = NULL;
+    int private_key_length;
+    int sum;
     TRUSTM_ENGINE_DBGFN(">");
+    
+    
     TRUSTM_ENGINE_DBGFN("oid : 0x%.4x",trustm_ctx.key_oid);
     TRUSTM_ENGINE_DBGFN("dgst len : %d",dgstlen);
+
+    
+       if(!trustm_ctx.key_oid)
+        {
+            
+            const BIGNUM *private_key_bn = EC_KEY_get0_private_key(eckey);
+            do
+            {
+                if (private_key_bn)
+                {
+                    
+                    
+                    private_key_length = BN_num_bytes(private_key_bn);
+                    TRUSTM_ENGINE_DBGFN("get private key length: %x", (unsigned int)private_key_length);
+                    
+                    private_key_bytes = (unsigned char *)malloc(private_key_length);
+                    BN_bn2bin(private_key_bn, private_key_bytes);
+                    sum=0;
+                    for (int i=2; i <=31 ;i++)
+                    {
+                        sum += private_key_bytes[i];
+                        //~ TRUSTM_ENGINE_DBGFN("key %d: %x\n", i, private_key_bytes[i]);
+                        
+                    }
+                    if (sum)
+                    {   
+                        TRUSTM_ENGINE_ERRFN("Non zero key field detected\n");
+                        break;
+                    }
+                    if (private_key_bytes[0] != 0xe0)
+                    {
+                        TRUSTM_ENGINE_ERRFN("No valid key OID detected\n");
+                        break;
+                    }
+                    if (private_key_bytes[1] == 0xf1) 
+                    {   parseKeyParams("0xe0f1:^");
+                        break;
+                    } 
+                    else 
+                    if (private_key_bytes[1] == 0xf2) 
+                    {   
+                        parseKeyParams("0xe0f2:^");
+                        break;
+                    } 
+                    else 
+                    if (private_key_bytes[1] == 0xf3) 
+                    {   
+                        parseKeyParams("0xe0f3:^");
+                        break;
+                    } 
+                    TRUSTM_ENGINE_DBGFN("No valid key OID detected\n"); 
+                   
+                }
+                else
+                {   TRUSTM_ENGINE_ERRFN("Invalid Private key");
+                
+                }
+            }while(FALSE);
+            if(private_key_bytes)
+            {
+                free(private_key_bytes);
+            }
+        }
 
     // TODO/HACK:
     if (dgstlen != 32)
@@ -496,6 +563,9 @@ static ECDSA_SIG* trustm_ecdsa_sign(
     TRUSTM_ENGINE_APP_OPEN_RET(ecdsa_sig,NULL);
     do 
     {  
+        
+ 
+    
         optiga_lib_status = OPTIGA_LIB_BUSY;
         if((trustm_ctx.ec_key_curve == OPTIGA_ECC_CURVE_NIST_P_521) || (trustm_ctx.ec_key_curve == OPTIGA_ECC_CURVE_BRAIN_POOL_P_512R1))
         {
