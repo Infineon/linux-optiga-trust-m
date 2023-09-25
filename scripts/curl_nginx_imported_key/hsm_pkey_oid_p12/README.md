@@ -1,6 +1,6 @@
 
 
-## CURL and NGINX with key ID in P12 with imported ECC and RSA keys
+## CURL and NGINX example with HSM protected Key-Private Key OID Implementation
 
 ### Prerequisites
 
@@ -27,7 +27,7 @@ Note: For 64bit system, please run the installation scripts for aarch64.
 After installation completed, go to the directory as follow
 
 ```shell
-cd scripts/curl_nginx_imported_key/curl_nginx_dummykeyp12
+cd scripts/curl_nginx_imported_key/hsm_pkey_oid_p12
 ```
 
 The usage parameters in "config.sh" can be configured depends on application [config.sh](./config.sh)
@@ -85,7 +85,7 @@ CA_CERT=$CERT_PATH/OPTIGA_Trust_M_Infineon_Test_CA.pem
 Go to the corresponding folder:
 
 ```shell
-cd scripts/curl_nginx_imported_key/curl_nginx_dummykeyp12/generate_p12
+cd scripts/curl_nginx_imported_key/hsm_pkey_oid_p12/generate_p12
 ```
 
 Generate p12 file with dummy key(with Trust M key ID inside): 
