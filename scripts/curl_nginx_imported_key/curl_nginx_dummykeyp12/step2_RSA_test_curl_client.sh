@@ -5,7 +5,7 @@ source config.sh
 set -e
 
 
-echo "Trust M protected P12 without private key(RSA)"
+echo "Trust M protected P12 with Key OID(RSA2048)"
 
 sudo cp openssl_curl_rsa.cnf /etc/ssl/openssl_curl_rsa.cnf
 
