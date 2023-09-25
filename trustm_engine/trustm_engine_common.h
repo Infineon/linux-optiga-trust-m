@@ -119,6 +119,13 @@
 #define PUBKEY_SIZE 1024
 
 
+#define TRUSTM_SET_CERT_CTRL ENGINE_CMD_BASE
+#define TRUSTM_SET_KEY_CTRL (ENGINE_CMD_BASE+1)
+#define TRUSTM_SET_P12_PASSWD_CTRL (ENGINE_CMD_BASE + 2)
+#define TRUSTM_LOAD_CERT_CTRL (ENGINE_CMD_BASE + 3)
+
+
+
 //typedefine
 typedef enum trustmEngine_flag
 {
@@ -153,6 +160,7 @@ typedef struct trustm_ctx_str
   
 } trustm_ctx_t;
 
+
 //extern
 extern trustm_ctx_t trustm_ctx;
 
@@ -172,6 +180,7 @@ void trustmEngine_App_Release(void);
 uint16_t trustmEngine_init_rand(ENGINE *e);
 uint16_t trustmEngine_init_rsa(ENGINE *e);
 uint16_t trustmEngine_init_ec(ENGINE *e);
+uint32_t parseKeyParams(const char *aArg);
 
 EVP_PKEY *trustm_rsa_loadkey(void);
 EVP_PKEY *trustm_ec_loadkey(void);

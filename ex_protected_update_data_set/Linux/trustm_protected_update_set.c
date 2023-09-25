@@ -43,7 +43,7 @@
 #include "user_input_parser.h"
 #include "pal/pal_os_memory.h"
 
-int32_t main(int32_t argc, int8_t *argv[])
+int32_t main(int32_t argc, char *argv[])
 {
     int32_t exit_status = 1;
     manifest_t * p_manifest = NULL;
@@ -63,7 +63,7 @@ int32_t main(int32_t argc, int8_t *argv[])
         sprintf(buffer, "Tool Version : %s\n", PROTECTED_UPDATE_VERSION );
         pal_logger_print_message(buffer);
 
-        if (0 != tool_get_user_inputs(argc, argv))
+        if (0 != tool_get_user_inputs(argc, (int8_t**)argv))
         {
             break;
         }
