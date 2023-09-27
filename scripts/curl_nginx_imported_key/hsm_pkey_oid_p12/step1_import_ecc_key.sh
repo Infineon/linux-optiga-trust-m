@@ -4,7 +4,7 @@ source config.sh
 set -e
 
 echo "Client1:-----> Update Public key store into Optiga Trust M"
-$EXEPATH/trustm_data -w 0x$PUBKEY_OID -i $TEMP_PUBKEY_KEY_DER -e
+$EXEPATH/trustm_data -w 0x$PUBKEY_OID -i $TEMP_PUBKEY_KEY_DER_ECC -e
 
 
 
