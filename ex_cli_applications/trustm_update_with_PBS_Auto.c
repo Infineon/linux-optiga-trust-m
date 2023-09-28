@@ -60,7 +60,7 @@ typedef struct _OPTFLAG {
     uint16_t    authvalue   : 1;
     uint16_t    authfile    : 1;
     uint16_t    bypass      : 1;
-    uint16_t    dummy14     : 1;
+    uint16_t    cert        : 1;
     uint16_t    dummy15     : 1;
 }OPTFLAG;
 
@@ -162,6 +162,7 @@ static void _helpmenu(void)
     printf("-w <OID>      : Write to OID \n");
     printf("-i <filename> : Input file \n");
     printf("-I <value>    : Input byte value \n");
+    printf("-c <filename> : Input certificate to file\n");
     printf("-o <filename> : Output file \n");
     printf("-p <filename> : Input file with PBS\n");
     printf("-P <value>    : Input byte value with PBS\n");
@@ -191,7 +192,9 @@ int main (int argc, char **argv)
     uint8_t auth_buffer[64];
     uint8_t mode = OPTIGA_UTIL_WRITE_ONLY;
 
-    char    messagebuf[500];
+    X509 *x509Cert;
+
+    char  messagebuf[500];
 
     char *outFile = NULL;
     char *inFile = NULL;
@@ -228,7 +231,7 @@ int main (int argc, char **argv)
         opterr = 0; // Disable getopt error messages in case of unknown parameters
 
         // Loop through parameters with getopt.
-        while (-1 != (option = getopt(argc, argv, "w:r:i:I:p:P:a:A:e:Xh")))
+        while (-1 != (option = getopt(argc, argv, "w:r:i:I:p:P:a:A:c:eXh")))
         {
             switch (option)
             {
@@ -271,6 +274,10 @@ int main (int argc, char **argv)
                 case 'e': // erase
                     uOptFlag.flags.erase = 1;
                     mode = OPTIGA_UTIL_ERASE_AND_WRITE;
+                    break;
+                case 'c': // erase
+                    uOptFlag.flags.cert = 1;
+                    inFile = optarg;
                     break;
                 case 'X': // Bypass Shielded Communication
                     uOptFlag.flags.bypass = 1;
@@ -315,6 +322,7 @@ int main (int argc, char **argv)
     do
     {
 
+        gettimeofday(&start, NULL);
         if (uOptFlag.flags.pbs == 1)
         {   
             if (uOptFlag.flags.pbsfile == 1) 
@@ -335,9 +343,6 @@ int main (int argc, char **argv)
                     pbsInput += 2;
                 }
             }
-
-            printf("Input PBS : \n");
-            trustmHexDump(pbs_buffer,bytes_to_read);
 
             pal_return_status = pal_os_datastore_write(OPTIGA_PLATFORM_BINDING_SHARED_SECRET_ID,
                                 pbs_buffer, 
@@ -372,15 +377,13 @@ int main (int argc, char **argv)
                     authInput += 2;
                 }
             }
-            printf("Input Authorization Reference: \n");
-            trustmHexDump(auth_buffer, bytes_to_read);
 
-            if(uOptFlag.flags.bypass != 1)
-            {
-                // OPTIGA Comms Shielded connection settings to enable the protection
-                OPTIGA_CRYPT_SET_COMMS_PROTOCOL_VERSION(me_crypt, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
-                OPTIGA_CRYPT_SET_COMMS_PROTECTION_LEVEL(me_crypt, OPTIGA_COMMS_FULL_PROTECTION);
-            }
+            // if(uOptFlag.flags.bypass != 1)
+            // {
+            //     // OPTIGA Comms Shielded connection settings to enable the protection
+            //     OPTIGA_CRYPT_SET_COMMS_PROTOCOL_VERSION(me_crypt, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
+            //     OPTIGA_CRYPT_SET_COMMS_PROTECTION_LEVEL(me_crypt, OPTIGA_COMMS_FULL_PROTECTION);
+            // }
             optiga_lib_status = OPTIGA_LIB_BUSY;    
             return_status = optiga_crypt_generate_auth_code(me_crypt,
                                                             OPTIGA_RNG_TYPE_TRNG,
@@ -456,13 +459,17 @@ int main (int argc, char **argv)
                 printf("No OPTIGA HMAC Verification!\n");
                 break;
             }
-            else
-            {
-                printf("HMAC verified successfully \n");
-            }
+            // else
+            // {
+            //     printf("HMAC verified successfully \n");
+            // }
         } else {
             printf("No Authorization Reference given. Will not clear the Authorization State\n");
         }
+        gettimeofday(&end, NULL);
+        time_taken = (end.tv_sec - start.tv_sec) * 1e6;
+        time_taken = (time_taken + (end.tv_usec - start.tv_usec)) * 1e-6;
+        printf("OPTIGA execution time for establishing: %0.4f sec.\n", time_taken);
 
         if(uOptFlag.flags.read == 1)
         {
@@ -515,9 +522,15 @@ int main (int argc, char **argv)
 
         if(uOptFlag.flags.write == 1)
         {
-            if((uOptFlag.flags.infile != 1) && (uOptFlag.flags.invalue != 1))
+            if((uOptFlag.flags.infile != 1) && (uOptFlag.flags.invalue != 1) && (uOptFlag.flags.cert != 1))
             {
                 printf("Input filename or value missing!\n");
+                break;
+            }
+
+            if ((uOptFlag.flags.infile == 1) && (uOptFlag.flags.cert == 1)) 
+            {
+                printf("Cannot have both input filename and input cert name!\n");
                 break;
             }
 
@@ -528,6 +541,20 @@ int main (int argc, char **argv)
                 if (bytes_to_read <= 0)
                 {
                     printf("Read file: %s error!!!", inFile);
+                }
+            }
+            else if (uOptFlag.flags.cert == 1)
+            {
+                uint16_t ret = trustmReadX509PEM(&x509Cert, inFile);
+                if (ret == 0)
+                {
+                    uint8_t *pCert;
+                    bytes_to_read = i2d_X509(x509Cert, &pCert);
+                    pal_os_memcpy(read_data_buffer, pCert, bytes_to_read);
+                }
+                else
+                {
+                    printf("Read Cert %s Error!!!\n",inFile);
                 }
             }
             else

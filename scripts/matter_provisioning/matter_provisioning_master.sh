@@ -8,7 +8,7 @@ show_help() {
                 -b [file] Input Bundle File
                 -k [key] Transport-Key for Bundle File
                 -s [config] Configure the Security Monitor with the input config. If set to "0", the default config will be used. 
-                -i INTERNAL ONLY: Additionally print QR Code
+                -i INFINEON INTERNAL ONLY: Additionally print QR Code
                 -o Set the LcsO of objects to "operational" and Access Conditions.
                 -h Print this help. See the ReadMe for more Info.
                 Possible combinations:
@@ -20,7 +20,7 @@ show_help() {
 
 }
 
-set -e
+# set -e
 
 test=0
 bundle_file=0
@@ -30,10 +30,11 @@ sec_flag=0
 sec_config=$DEFAULT_SEC_CONFIG
 operational=0
 qr=0
+verify=0
 
 previous_chip_id="none"
 
-while getopts tb:k:s:ioh flag; do
+while getopts tb:k:s:vioh flag; do
     case "${flag}" in
     t) test=1 ;;
     b) bundle_file=${OPTARG} ;;
@@ -49,6 +50,7 @@ while getopts tb:k:s:ioh flag; do
         ;;
     i) qr=1 ;;
     o) operational=1 ;;
+    v) verify=1 ;;
     *)
         show_help
         exit
@@ -62,8 +64,8 @@ if [ $OPTIND -eq 1 ]; then
     exit
 fi
 
-if [ $sec_flag -ne $transport_key_flag ]; then
-    echo "Security Configuration supplied but no Transport Key or vice versa. Please check your arguments"
+if [ $bundle_file -ne $transport_key_flag ]; then
+    echo "Bundle File supplied but no Transport Key or vice versa. Please check your arguments"
     show_help
     exit
 fi
@@ -82,37 +84,44 @@ fi
 ## While loop. check if different/any chip is connected via Chip-Id
 while sleep 1s; do
     chip_id=$($EXEPATH/trustm_probe)
-    echo "Chip ID: " $chip_id
-    if [ -n "$chip_id" ] && [ "$chip_id" != "$previous_chip_id" ]; then
-        previous_chip_id=$chip_id
-        if [ $test -eq 1 ]; then
-            echo "----> Flashing Test Credentials"
-            ./matter_test_provisioning.sh
-            if [ $qr -eq 1 ]; then
-                echo "----> Internal Provisioning"
-                # python3 ./print_sticker.py
+    if [ $? -eq 0 ]
+    then
+        echo "Chip ID: " $chip_id
+        if [ -n "$chip_id" ] && [ "$chip_id" != "$previous_chip_id" ]; then
+            previous_chip_id=$chip_id
+            if [ $test -eq 1 ]; then
+                echo "----> Flashing Test Credentials"
+                ./matter_test_provisioning.sh
+                if [ $qr -eq 1 ]; then
+                    echo "----> Internal Provisioning"
+                    sudo python3 ./internal_provisioning/print_sticker.py
+                fi
+            elif [ -s $bundle_file ]; then
+                echo "----> Write Matter Credentials"
+                ./matter_bundle_provisioning.sh -p tmp/matter_cred -c $chip_id -k tmp/keys
+                if [ $sec_flag -eq 1 ]; then
+                    echo "----> Update Security Monitor"
+                    ./configure_security_monitor.sh -p tmp/keys -c $chip_id -s $sec_config
+                fi
+                if [ $operational -eq 1 ]; then
+                    echo "----> Set AC and LcsO."
+                    # $EXEPATH/trustm_metadata -w $MATTER_PAI_LOC -F test_files/meta_pbs_auto.bin -O -X
+                    # $EXEPATH/trustm_metadata -w $MATTER_CD_TAG -F test_files/meta_pbs_auto.bin -O -X
+                fi
+            else
+                echo "Please input a valid Configuration or make sure that the bundle file exists!"
+                show_help
+                break
             fi
-        elif [ -s $bundle_file ]; then
-            echo "----> Write Matter Credentials"
-            ./matter_bundle_provisioning.sh -p tmp/matter_cred -c $chip_id
-            if [ $sec_flag -eq 1 ]; then
-                echo "----> Update Security Monitor"
-                ./configure_security_monitor.sh -p tmp/keys -c $chip_id -s $sec_config
-            fi
-            if [ $operational -eq 1 ]; then
-                echo "----> Set AC and LcsO."
-                # $EXEPATH/trustm_metadata -w $MATTER_DAC_LOC -F meta_pbs_auto.bin -O -X
-                # $EXEPATH/trustm_metadata -w $MATTER_PAI_LOC -F meta_pbs_auto.bin -O -X
-                # $EXEPATH/trustm_metadata -w $MATTER_CD_TAG -F meta_pbs_auto.bin -O -X
-                # $EXEPATH/trustm_metadata -w 0xE0E0 -T -X
+            if [ $verify -eq 1 ]; then
+                echo "----> Testing DAC & Private Key"
+                ./verify_configuration.sh
             fi
         else
-            echo "Please input a valid Configuration or make sure that the bundle file exists!"
-            show_help
-            break
+            echo "Put a new Trust M or press Ctrl+C to exit"
         fi
-    else
-        echo "Put a new Trust M or press Ctrl+C to exit"
+    else 
+        echo "Could not open Trust M"
     fi
 done
 rm -rf ./tmp

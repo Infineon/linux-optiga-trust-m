@@ -11,9 +11,9 @@ echo "-----> Extract public key from cert"
 openssl x509 -pubkey -noout -in ifx_cert_e0e0.pem >pubkey_e0e0.pem
 cat pubkey_e0e0.pem
 echo "---->Generate DAC csr using public key"
-openssl req -new -key credentials/dummy.key -nodes -out request.csr -config openssl_matter.cnf
+openssl req -new -key credentials/dummy.key -nodes -out request.csr -config test_files/openssl_matter.cnf
 echo "---->Generate DAC certificate using public key, Signed by Matter test PAI"
-openssl x509 -req -in request.csr -extfile v3.ext -CA credentials/Matter-Development-PAI-noPID-Cert.pem -CAkey credentials/Matter-Development-PAI-noPID-Key.pem -CAcreateserial -out DAC_Cert.pem -days 500 -sha256 -force_pubkey pubkey_e0e0.pem
+openssl x509 -req -in request.csr -extfile test_files/v3.ext -CA credentials/Matter-Development-PAI-noPID-Cert.pem -CAkey credentials/Matter-Development-PAI-noPID-Key.pem -CAcreateserial -out DAC_Cert.pem -days 500 -sha256 -force_pubkey pubkey_e0e0.pem
 echo "-----> Write test DAC into 0xe0e3"
 $EXEPATH/trustm_cert -w $MATTER_DAC_LOC -i DAC_Cert.pem -X
 echo "-----> DAC display"
