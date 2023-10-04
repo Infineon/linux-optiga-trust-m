@@ -475,13 +475,75 @@ static int trustmEngine_rsa_sign(int type,
     optiga_lib_status_t return_status;
     uint16_t key_oid;
     uint16_t templen = 500;
-
+    int private_key_length;
+    unsigned char *private_key_bytes = NULL;
+    int sum;
+    
     TRUSTM_ENGINE_DBGFN(">");
 
     TRUSTM_ENGINE_DBGFN("type : %d",type);
     TRUSTM_ENGINE_DBGFN("m_length : %d", m_length);
     //trustmHexDump((uint8_t *)m,m_length);
+    TRUSTM_ENGINE_DBGFN("oid : 0x%.4x",trustm_ctx.key_oid);
+    
 
+    
+       if(!trustm_ctx.key_oid)
+        {
+            
+            const BIGNUM *private_key_bn = RSA_get0_d(rsa);
+            do
+            {
+                if (private_key_bn)
+                {
+                    
+                    
+                    private_key_length = BN_num_bytes(private_key_bn);
+                    TRUSTM_ENGINE_DBGFN("get private key length: %x", (unsigned int)private_key_length);
+                    
+                    private_key_bytes = (unsigned char *)malloc(private_key_length);
+                    BN_bn2bin(private_key_bn, private_key_bytes);
+                    sum=0;
+                    for (int i=2; i <=255 ;i++)
+                    {
+                        sum += private_key_bytes[i];
+                        //~ TRUSTM_ENGINE_DBGFN("key %d: %x\n", i, private_key_bytes[i]);
+                    }
+                    
+                    if (sum)
+                    {   
+                        TRUSTM_ENGINE_ERRFN("Non zero key field detected\n");
+                        break;
+                    }
+                    if (private_key_bytes[0] != 0xe0)
+                    {
+                        TRUSTM_ENGINE_ERRFN("No valid key OID detected\n");
+                        break;
+                    }
+                    if (private_key_bytes[1] == 0xfc) 
+                    {   parseKeyParams("0xe0fc:^");
+                        break;
+                    } 
+                    else 
+                    if (private_key_bytes[1] == 0xfd) 
+                    {   
+                        parseKeyParams("0xe0fd:^");
+                        break;
+                    } 
+                    TRUSTM_ENGINE_DBGFN("No valid key OID detected\n"); 
+                   
+                }
+                else
+                {   TRUSTM_ENGINE_ERRFN("Invalid Private key");
+                
+                }
+            }while(FALSE);
+            if(private_key_bytes)
+            {
+                free(private_key_bytes);
+                TRUSTM_ENGINE_ERRFN("Free Private key");
+            }
+        }
 
     TRUSTM_ENGINE_APP_OPEN_RET(ret,TRUSTM_ENGINE_FAIL);
     do

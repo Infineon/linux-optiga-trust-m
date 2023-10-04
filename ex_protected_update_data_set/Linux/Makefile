@@ -83,6 +83,7 @@ CFLAGS = -c
 #CFLAGS += $(DEBUG)
 CFLAGS += $(INCDIR)
 CFLAGS += -Wall
+CFLAGS += -Wno-pointer-sign
 ifdef AARCH64
 CFLAGS += -fPIC
 endif
