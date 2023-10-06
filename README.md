@@ -1006,11 +1006,11 @@ Success
 Simple demo to show the process to decrypt using OPTIGA™ Trust M library.
 
 ```console
-foo@bar:~$ ./bin/trustm_symmetric_dec
+foo@bar:~$ ./bin/trustm_symmetric_dec -h
 Help menu: trustm_symmetric_dec <option> ...<option>
 option:- 
--m <mode>     : Mode CBC:0x09 CBC_MAC:0X0A CMAC:0X0B 
-                     [default CBC]
+-m <mode>     : Mode CBC:0x09 
+                [only support CBC mode]
 -o <filename> : Output to file 
 -i <filename> : Input Data file
 -v <filename> : Input IV Value

@@ -63,8 +63,8 @@ void _helpmenu(void)
 {
     printf("\nHelp menu: trustm_symmetric_dec <option> ...<option>\n");
     printf("option:- \n");
-    printf("-m <mode>     : Mode CBC:0x09 CBC_MAC:0X0A CMAC:0X0B \n");
-    printf("                     [default CBC]\n");
+    printf("-m <mode>     : Mode CBC:0x09 \n");
+    printf("                [only support CBC mode]\n");
     printf("-o <filename> : Output to file \n");
     printf("-i <filename> : Input Data file\n");
     printf("-v <filename> : Input IV Value\n");
@@ -279,8 +279,7 @@ int main (int argc, char **argv)
 
                 // start fragment
                 optiga_lib_status = OPTIGA_LIB_BUSY;
-                if(encryption_mode == OPTIGA_SYMMETRIC_CBC){
-                    return_status = optiga_crypt_symmetric_decrypt_start(me_crypt,
+                return_status = optiga_crypt_symmetric_decrypt_start(me_crypt,
                                                              encryption_mode,
                                                              symmetric_key,
                                                              &encryptedFragment[0],
@@ -291,20 +290,8 @@ int main (int argc, char **argv)
                                                              0,
                                                              0,
                                                              message,
-                                                             &messagelen);}
-                else{
-                    return_status = optiga_crypt_symmetric_encrypt_start(me_crypt,
-                                                             encryption_mode,
-                                                             symmetric_key,
-                                                             &encryptedFragment[0],
-                                                             MESSAGE_FRAGMENT_LEN,
-                                                             NULL,
-                                                             0,
-                                                             NULL,
-                                                             0,
-                                                             0,
-                                                             message,
-                                                             &messagelen);}
+                                                             &messagelen);
+
                 if (OPTIGA_LIB_SUCCESS != return_status)
                 {
                     break;
@@ -422,8 +409,7 @@ int main (int argc, char **argv)
 
             else
             {
-                if(encryption_mode == OPTIGA_SYMMETRIC_CBC){
-                    return_status = optiga_crypt_symmetric_decrypt(me_crypt,
+                return_status = optiga_crypt_symmetric_decrypt(me_crypt,
                                                              encryption_mode,
                                                              symmetric_key,
                                                              encryptedFragment,
@@ -433,19 +419,7 @@ int main (int argc, char **argv)
                                                              NULL,
                                                              0,
                                                              messageFragment,
-                                                             &messagelen);}
-                else{
-                    return_status = optiga_crypt_symmetric_decrypt(me_crypt,
-                                                             encryption_mode,
-                                                             symmetric_key,
-                                                             encryptedFragment,
-                                                             MESSAGE_FRAGMENT_LEN,
-                                                             NULL,
-                                                             0,
-                                                             NULL,
-                                                             0,
-                                                             messageFragment,
-                                                             &messagelen); }                                                                                                    
+                                                             &messagelen);                                                                                                 
                 if (OPTIGA_LIB_SUCCESS != return_status)
                     break;
                 //Wait until the optiga_util_read_metadata operation is completed
