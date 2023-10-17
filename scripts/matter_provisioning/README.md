@@ -20,7 +20,7 @@ Subsequently, the OPTIGA™ Trust M MTR contains the following objects:
 |      0xE0F0 | ECC NIST P256 Private Key 1  | Bound to Cert in 0xE0E0 | Operational      | NEV  | PBS & Auto* | ALW     | IFX            |
 |      0xE0F1 | ECC NIST P256 Private Key 2  | Bound to Cert in 0xE0E1 | Operational      | NEV  | PBS & Auto* | PBS     | IFX            |
 |      0xE0FC | RSA 2048 Private Key 1       | Bound to Cert in 0xE0FC | Operational      | NEV  | PBS & Auto* | ALW     | IFX            |
-|      0xE0E0 | Matter DAC                   | Bound to Key in 0xE0F0  | Operational      | ALW  | PBS & Auto  | ALW     | IFX            |
+|      0xE0E0 | Matter DAC                   | Bound to Key in 0xE0F0  | Operational      | ALW  | PBS & Auto  | ALW     | OEM            |
 |      0xE0E1 | ECC Certificate 2            | Bound to Key in 0xE0F1  | Operational      | PBS  | PBS & Auto  | PBS     | IFX            |
 |      0xE0E2 | RSA Certificate 1            | Bound to Key in 0xE0FC  | Operational      | ALW  | PBS & Auto  | ALW     | IFX            |
 |      0xE0E8 | Matter PAI                   |                         | Operational      | ALW  | PBS & Auto  | ALW     | OEM            |
