@@ -8,15 +8,18 @@ show_help() {
                 -b [file] Input Bundle File
                 -k [key] Transport-Key for Bundle File
                 -s [config] Configure the Security Monitor with the input config. If set to "0", the default config will be used. 
+                -v Verify the late-stage provisioning. Will sign dummy data with the private key and verify with the DAC public key.
                 -i INFINEON INTERNAL ONLY: Additionally print QR Code
                 -o Set the LcsO of objects to "operational" and Access Conditions.
                 -h Print this help. See the ReadMe for more Info.
                 Possible combinations:
                     -t                      	            : Provision Matter Test Credentials
                     -t -i                                   : Provision Matter Test Credentials and print QR Code
-                    -b [FILE.7z]                            : Provision Matter Credentials from Bundle File
-                    -b [FILE.7z] -t [KEY] -s [CONFIG]       : Provision Matter Credentials from Bundle File and Update Security Monitor with Config (0 or custom)
-                    -b [FILE.7z] -t [KEY] -s [CONFIG] -o    : As above, additionally set the LcsO of provisioned objects to "operational" and Access Conditions"
+                    -b [FILE.7z] -k [KEY]                   : Provision Matter Credentials from Bundle File
+                    -b [FILE.7z] -k [KEY] -o                : As above, additionally set the LcsO of provisioned objects to "operational" and Access Conditions
+                    -b [FILE.7z] -k [KEY] -s [CONFIG]       : Provision Matter Credentials from Bundle File and Update Security Monitor with Config (0 or custom)
+                    * -v                                    : Any of the above combination of arguments, but additionally verify private & public key config"
+                    
 
 }
 
