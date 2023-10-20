@@ -17,16 +17,17 @@ git apply $FILE
 
 set -e
 echo "-----> Build Trust M Linux Tools for aarch64"
-make clean
 sudo make uninstall AARCH64=YES
+make clean
 make -j5 AARCH64=YES
 sudo make install AARCH64=YES
 
-#~ echo "-----> Build Protected Update Set tool"
-#~ cd ex_protected_update_data_set/Linux/
-#~ make clean
-#~ make -j5 AARCH64=YES
-#~ sudo make install AARCH64=YES
+echo "-----> Build Protected Update Set tool"
+cd ex_protected_update_data_set/Linux/
+sudo make uninstall AARCH64=YES
+make clean
+make -j5 AARCH64=YES
+sudo make install AARCH64=YES
  
 #~cd $CURRENT_DIR
 echo "-----> Installation completed. Back to ${PWD}"

@@ -126,7 +126,10 @@ install:
 	@echo "Create symbolic link to trustm_lib $(LIB_INSTALL_DIR)/$(LIB)"
 	@ln -s $(realpath $(BINDIR)/$(LIB)) $(LIB_INSTALL_DIR)/$(LIB)
 	
-
+uninstall: clean
+	@echo "Removing trustm_lib $(LIB_INSTALL_DIR)/$(LIB)"
+	@rm -rf $(LIB_INSTALL_DIR)/$(LIB)
+	
 clean :
 	@echo "Removing *.o from $(LIBDIR)" 
 	@rm -rf $(LIBOBJ)
