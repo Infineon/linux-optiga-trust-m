@@ -43,7 +43,7 @@ LIBDIR += trustm_helper
 #OTHDIR = $(TRUSTM)/examples/optiga
 ARCH := $(shell dpkg --print-architecture)
 BINDIR = bin
-#APPDIR = ex_cli_applications
+APPDIR = ex_cli_applications
 PROVDIR = trustm_provider
 #ifdef AARCH64
 ifeq ($(ARCH), arm64)
@@ -163,13 +163,13 @@ LDFLAGS_2 += -lcrypto
 
 .Phony : install uninstall all clean
 
-all : $(BINDIR)/$(LIB) $(BINDIR)/$(PROVIDER)
+all : $(BINDIR)/$(LIB) $(APPS) $(BINDIR)/$(PROVIDER)
 
 
 install:
 	@echo "Create symbolic link to the openssl provider $(PROVIDER_INSTALL_DIR)/$(PROVIDER)"
 	@ln -s $(realpath $(BINDIR)/$(PROVIDER)) $(PROVIDER_INSTALL_DIR)/$(PROVIDER)
-	@echo "Create symbolic link to trustx_lib $(LIB_INSTALL_DIR)/$(LIB)"
+	@echo "Create symbolic link to trustm_lib $(LIB_INSTALL_DIR)/$(LIB)"
 	@ln -s $(realpath $(BINDIR)/$(LIB)) $(LIB_INSTALL_DIR)/$(LIB)
 	
 uninstall: clean
@@ -198,6 +198,12 @@ $(BINDIR)/$(PROVIDER): %: $(PROVOBJ) $(INCSRC) $(BINDIR)/$(LIB)
 	@echo "******* Linking $@ "
 	@mkdir -p bin
 	@$(CC)   $(PROVOBJ) $(LDFLAGS) $(LDFLAGS_1) $(LDFLAGS_2)  -shared -o $@
+	
+$(APPS): %: $(OTHOBJ) $(INCSRC) $(BINDIR)/$(LIB) %.o
+			@echo "******* Linking $@ "
+			@mkdir -p bin
+			@$(CC) $@.o $(LDFLAGS_1) $(LDFLAGS) $(OTHOBJ) -o $@
+			@mv $@ bin/.	
 
 $(BINDIR)/$(LIB): %: $(LIBOBJ) $(INCSRC)
 	@echo "******* Linking $@ "
