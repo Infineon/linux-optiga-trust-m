@@ -44,6 +44,11 @@
 #include "trustm_helper.h"
 #include "trustm_helper_ipc_lock.h"
 
+
+#include <openssl/core_names.h>
+#include <openssl/decoder.h>
+
+
 #ifdef CLI_WORKAROUND
 	extern void pal_os_event_disarm(void);
 	extern void pal_os_event_arm(void);
@@ -712,8 +717,6 @@ optiga_lib_status_t trustmReadMetadata(uint16_t optiga_oid, trustm_metadata_t *o
         
     return return_status;
 }
-
-
 optiga_lib_status_t trustmProviderReadMetadata(optiga_util_t *me_util, uint16_t optiga_oid, trustm_metadata_t *oidMetadata)
 {
     optiga_lib_status_t return_status;
@@ -843,7 +846,7 @@ void trustmHexDump(uint8_t *pdata, uint32_t len)
     }
     printf("\n");
 }
-/*
+
 uint16_t trustmWritePEM(uint8_t *buf, uint32_t len, const char *filename, char *name)
 {
     FILE *fp;
@@ -892,10 +895,12 @@ uint16_t trustmReadPEM(uint8_t *buf, uint32_t *len, const char *filename, char *
     long int dataLen;
 
     EVP_PKEY *pkey;
-    RSA *rsa_key;
-    EC_KEY *ec_key;
+    //RSA *rsa_key;
+    //EC_KEY *ec_key;
     const EC_GROUP *ec_group;
     int i,j;
+    char name_out[256];
+    size_t len1;
 
     fp = fopen(filename,"r");
     if (!fp)
@@ -916,14 +921,22 @@ uint16_t trustmReadPEM(uint8_t *buf, uint32_t *len, const char *filename, char *
     
     if((i == EVP_PKEY_RSA) ||(i == EVP_PKEY_RSA2) )
     {
-        rsa_key = EVP_PKEY_get1_RSA(pkey);
-        i = RSA_size(rsa_key) * 8;
+    	
+    	i= EVP_PKEY_get_size(pkey) * 8;
+           
+ 
         TRUSTM_HELPER_DBGFN("rsa len id : %d [%X]\n",i,i);
+        
         
     } else if (i == EVP_PKEY_EC)
     {
-        ec_key = EVP_PKEY_get1_EC_KEY(pkey);
-        ec_group = EC_KEY_get0_group(ec_key);
+
+    	
+		EVP_PKEY_get_utf8_string_param(pkey, OSSL_PKEY_PARAM_GROUP_NAME, name_out, sizeof(name_out), &len1);
+		ec_group = EC_GROUP_new_by_curve_name(OBJ_sn2nid(name_out));
+           
+      
+        
         *nid = EC_GROUP_get_curve_name(ec_group);
         i = EC_GROUP_order_bits(ec_group);
         TRUSTM_HELPER_DBGFN("ec len id : %d [%X]\n",i,i);
@@ -1042,7 +1055,7 @@ uint16_t trustmReadX509PEM(X509 **x509, const char *filename)
     return 0;
 
 }
-*/
+
 
 /**********************************************************************
 * trustm_readUID()
