@@ -1,0 +1,2 @@
+rm *.dat
+rm *.bin
