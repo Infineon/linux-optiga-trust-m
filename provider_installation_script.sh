@@ -3,7 +3,7 @@
 FILE="0001-trust_m_lib.patch"
 
 sudo apt update 
-#~ sudo apt -y install git gcc 
+sudo apt -y install git gcc libssl-dev
 
 echo "-----> Apply patch"
 git apply $FILE

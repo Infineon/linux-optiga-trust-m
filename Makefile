@@ -23,8 +23,7 @@
 #
 #*/
 
-#~ Uncomment this for AARCH64 or pass it as argument in command line
-#~ AARCH64 = YES
+
 TRUSTM = trustm_lib
 
 BUILD_FOR_RPI = YES
@@ -41,16 +40,16 @@ LIBDIR += $(TRUSTM)/externals/mbedtls
 LIBDIR += trustm_helper
 
 #OTHDIR = $(TRUSTM)/examples/optiga
- 
+ARCH := $(shell dpkg --print-architecture)
 BINDIR = bin
-#APPDIR = ex_cli_applications
+APPDIR = ex_cli_applications
 PROVDIR = trustm_provider
-ifdef AARCH64
+ifeq ($(ARCH), arm64)
 LIB_INSTALL_DIR = /usr/lib/aarch64-linux-gnu
 else
 LIB_INSTALL_DIR = /usr/lib/arm-linux-gnueabihf
 endif
-PROVIDER_INSTALL_DIR = /usr/local/ssl/lib/ossl-modules
+PROVIDER_INSTALL_DIR = $(LIB_INSTALL_DIR)/ossl-modules
 
 INCDIR = $(TRUSTM)/optiga/include
 INCDIR += $(TRUSTM)/optiga/include/optiga
@@ -63,7 +62,6 @@ INCDIR += $(TRUSTM)/pal/linux
 INCDIR += trustm_helper/include
 INCDIR += trustm_provider
 INCDIR += $(TRUSTM)/externals/mbedtls/include
-INCDIR += /usr/local/ssl/include
 
 
 ifdef INCDIR
@@ -129,7 +127,7 @@ CC = gcc
 DEBUG = -g
 
 CFLAGS += -c
-ifdef AARCH64
+ifeq ($(ARCH), arm64)
 CFLAGS += -fPIC
 endif
 #CFLAGS += $(DEBUG)
@@ -143,11 +141,11 @@ endif
 #CFLAGS += -DMODULE_ENABLE_DTLS_MUTUAL_AUTH
 
 LDFLAGS += -lpthread
-#LDFLAGS += -lssl
+LDFLAGS += -lssl
 ifeq ($(USE_LIBGPIOD_RPI), YES)
   LDFLAGS += -lgpiod
 endif  
-#LDFLAGS += -lcrypto
+LDFLAGS += -lcrypto
 LDFLAGS += -lrt
 LDFLAGS += -Wl,--no-undefined
 
@@ -160,13 +158,13 @@ LDFLAGS_2 += -lcrypto
 
 .Phony : install uninstall all clean
 
-all : $(BINDIR)/$(LIB) $(BINDIR)/$(PROVIDER)
+all : $(BINDIR)/$(LIB) $(APPS) $(BINDIR)/$(PROVIDER)
 
 
 install:
 	@echo "Create symbolic link to the openssl provider $(PROVIDER_INSTALL_DIR)/$(PROVIDER)"
 	@ln -s $(realpath $(BINDIR)/$(PROVIDER)) $(PROVIDER_INSTALL_DIR)/$(PROVIDER)
-	@echo "Create symbolic link to trustx_lib $(LIB_INSTALL_DIR)/$(LIB)"
+	@echo "Create symbolic link to trustm_lib $(LIB_INSTALL_DIR)/$(LIB)"
 	@ln -s $(realpath $(BINDIR)/$(LIB)) $(LIB_INSTALL_DIR)/$(LIB)
 	
 uninstall: clean
@@ -195,6 +193,12 @@ $(BINDIR)/$(PROVIDER): %: $(PROVOBJ) $(INCSRC) $(BINDIR)/$(LIB)
 	@echo "******* Linking $@ "
 	@mkdir -p bin
 	@$(CC)   $(PROVOBJ) $(LDFLAGS) $(LDFLAGS_1) $(LDFLAGS_2)  -shared -o $@
+	
+$(APPS): %: $(OTHOBJ) $(INCSRC) $(BINDIR)/$(LIB) %.o
+			@echo "******* Linking $@ "
+			@mkdir -p bin
+			@$(CC) $@.o $(LDFLAGS_1) $(LDFLAGS) $(OTHOBJ) -o $@
+			@mv $@ bin/.	
 
 $(BINDIR)/$(LIB): %: $(LIBOBJ) $(INCSRC)
 	@echo "******* Linking $@ "
