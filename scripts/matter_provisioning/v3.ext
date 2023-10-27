@@ -1,0 +1,4 @@
+authorityKeyIdentifier=keyid,issuer
+basicConstraints=critical,CA:FALSE
+keyUsage =critical,digitalSignature
+subjectKeyIdentifier = hash
