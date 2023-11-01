@@ -1,0 +1,9 @@
+rm *.bin
+rm *.pem
+rm *.txt
+rm *.dec
+rm *.enc
+rm *.csr
+rm *.pem
+rm *.crt
+rm *.pub
