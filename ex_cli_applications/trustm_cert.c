@@ -240,7 +240,7 @@ int main (int argc, char **argv)
                     time_taken = (end.tv_sec - start.tv_sec) * 1e6;
                     time_taken = (time_taken + (end.tv_usec - start.tv_usec)) * 1e-6;
                     printf("OPTIGA execution time: %0.4f sec.\n", time_taken);
-
+                    printf("First byte: %x, last byte: %x, cer Length: %d\n", pCert[0], pCert[certLen-1], certLen);
                     x509Cert = d2i_X509(NULL, (const uint8_t **)&pCert, certLen);
                     if(!x509Cert)
                     {
@@ -376,5 +376,5 @@ int main (int argc, char **argv)
         
     trustm_Close();
     trustm_hibernate_flag = 0; // Disable hibernate Context Save
-    return 0;
+    return return_status;
 }

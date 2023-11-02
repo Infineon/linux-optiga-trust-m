@@ -209,7 +209,6 @@ int main (int argc, char **argv)
     int option = 0;                    // Command line option.
 
     uint16_t secret_oid = 0xF1D0;// default secret OID;
-    uint8_t user_secret[64];
     uint8_t hmac_type=0x20;// default HMAC_SHA256
 
 /***************************************************************
@@ -322,7 +321,6 @@ int main (int argc, char **argv)
     do
     {
 
-        gettimeofday(&start, NULL);
         if (uOptFlag.flags.pbs == 1)
         {   
             if (uOptFlag.flags.pbsfile == 1) 
@@ -466,10 +464,6 @@ int main (int argc, char **argv)
         } else {
             printf("No Authorization Reference given. Will not clear the Authorization State\n");
         }
-        gettimeofday(&end, NULL);
-        time_taken = (end.tv_sec - start.tv_sec) * 1e6;
-        time_taken = (time_taken + (end.tv_usec - start.tv_usec)) * 1e-6;
-        printf("OPTIGA execution time for establishing: %0.4f sec.\n", time_taken);
 
         if(uOptFlag.flags.read == 1)
         {
@@ -629,5 +623,5 @@ int main (int argc, char **argv)
 
     trustm_Close();
     trustm_hibernate_flag = 0; // Disable hibernate Context Save
-    return 0;
+    return return_status;
 }

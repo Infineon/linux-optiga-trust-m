@@ -79,12 +79,5 @@ int main (int argc, char **argv)
     // Capture OPTIGA Trust M error
     trustm_Close();
     trustm_hibernate_flag = 0; // Disable hibernate Context Save
-    if (return_status != OPTIGA_LIB_SUCCESS)
-    {
-        return -1;
-    }
-    else {
-        return 0;
-    }
-
+    return return_status;
 }
