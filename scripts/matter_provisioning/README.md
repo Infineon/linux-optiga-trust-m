@@ -2,11 +2,37 @@
 This folder contains scripts to make the provisioning of Matter credentials simple and easy.
 The contained scripts can be used "as-is" in combination with a Raspberry Pi 4B, or taken as base for a reference implementation. 
 
-This guide is only relevant for the [OPTIGA™ Trust M MTR](www.infineon.com/optiga-trust-m-mtr) variant.
+This guide is only relevant for the [OPTIGA™ Trust M MTR](https://www.infineon.com/optiga-trust-m-mtr) variant.
 
-Documentation on the OPTIGA Trust M and Getting Started Guides can be found in the [OPTIGA Trust M Repository](www.github.com/infineon/optiga-trust-m).
+Documentation on the OPTIGA Trust M and Getting Started Guides can be found in the [OPTIGA Trust M Repository](https://www.github.com/infineon/optiga-trust-m).
 
-Installing the OPTIGA Trust M Linux-tools (this reposistory) is required.
+Installing the OPTIGA Trust M Linux-tools (this reposistory, see [here](../../README.md#getting-started) for instructions) is required.
+
+- [OPTIGA™ Trust M MTR: Matter Provisioning](#optiga-trust-m-mtr-matter-provisioning)
+  - [OPTIGA™ Trust M MTR Object Map](#optiga-trust-m-mtr-object-map)
+    - [Table 1: OPTIGA Trust M MTR Object \& Metadata Configuration by Infineon](#table-1-optiga-trust-m-mtr-object--metadata-configuration-by-infineon)
+    - [Table 2: OPTIGA Trust M MTR Object \& Metadata Configuration after late-stage Provisioning](#table-2-optiga-trust-m-mtr-object--metadata-configuration-after-late-stage-provisioning)
+  - [Hardware Prerequisites](#hardware-prerequisites)
+- [Step-by-step Late-stage Provisioning](#step-by-step-late-stage-provisioning)
+  - [Step 1: Script Configuration](#step-1-script-configuration)
+  - [Step 2: Credential Selection](#step-2-credential-selection)
+    - [Option A: Matter Production Credentials](#option-a-matter-production-credentials)
+    - [The Infineon Bundle File](#the-infineon-bundle-file)
+    - [Matter Credentials Provisioning](#matter-credentials-provisioning)
+    - [Option B: Matter Test Credentials](#option-b-matter-test-credentials)
+  - [Step 3: Post-Processing](#step-3-post-processing)
+    - [Verify configuration](#verify-configuration)
+    - [Set Objects state to "Operational"](#set-objects-state-to-operational)
+    - [Optional: Matter Credential Provisioning \& Modify Security Monitor Configuration](#optional-matter-credential-provisioning--modify-security-monitor-configuration)
+- [Troubleshooting and FAQ](#troubleshooting-and-faq)
+    - [OPTIGA Trust M MTR Shields with Hardware Revision ≤ v1.2](#optiga-trust-m-mtr-shields-with-hardware-revision--v12)
+- [Scripts Documentation \& Usage](#scripts-documentation--usage)
+  - [matter\_provsioning\_master.sh](#matter_provsioning_mastersh)
+  - [matter\_bundle\_provisioning.sh](#matter_bundle_provisioningsh)
+  - [matter\_test\_provisioning.sh](#matter_test_provisioningsh)
+  - [verify\_configuration.sh](#verify_configurationsh)
+  - [configure\_security\_monitor.sh](#configure_security_monitorsh)
+
 
 ## OPTIGA™ Trust M MTR Object Map
 
@@ -60,16 +86,17 @@ The scripts in this folder will change some of the objects on the OPTIGA™ Trus
 ** These slots _may_ be used during operation of the device. Subject to implementation on the host. They are not provisioned by these scripts.
 
 ## Hardware Prerequisites
-A direct I2C connection to the OPTIGA™ Trust M is required for this provisioning mechanism to work. A connection to the RST Pin of the Trust M is not required, as this can be done as a Software Reset through the Linux Host library.
+A direct I2C connection to the OPTIGA™ Trust M is required for this provisioning mechanism to work. 
+A connection to the RST Pin of the Trust M is not required, as this can be done as a Software Reset through the Linux Host library.
 
 ![OPTIGA™ Trust M Schematic Reference](../../pictures/reference_schematic.png)
 
 For production usecases, it is also recommended to apply the RST of any other controllers or devices on the same I2C bus to guarantee uninterrupted communication of RPi and Trust M during the short provisioning phase.
 
-For evaluation purposes, it is recommended to use the [OPTIGA™ Trust M MTR Shield](www.infineon.com/optiga-trust-m-mtr-shield) in combination with the [MikroE Pi4 Click-Shield](https://www.mikroe.com/pi-4-click-shield). Here, all connections are already routed in a plug-and-play solution.
+For evaluation purposes, it is recommended to use the [OPTIGA™ Trust M MTR Shield](https://www.infineon.com/optiga-trust-m-mtr-shield) in combination with the [MikroE Pi4 Click-Shield](https://www.mikroe.com/pi-4-click-shield). Here, all connections are already routed in a plug-and-play solution.
 
 <!---
-## Certificate Claiming
+# Certificate Claiming
 --->
 
 # Step-by-step Late-stage Provisioning
@@ -84,7 +111,7 @@ To provision your OPTIGA Trust M MTR chips, three steps are required, most of wh
 
 **tl;dr:** To write your Matter Credentials to the OPTIGA Trust M MTR, use the following command inside this folder:
 ```bash
-./matter_provisioning_master.sh -b [path_to_bundle_file_3.0.7z] -c [path_to_certificate_declaration.bin] -v -o
+./matter_provisioning_master.sh -b [path_to_bundle_file_3.0.7z] -k [transport_key] -c [path_to_certificate_declaration.bin] -v -o
 ```
 
 
@@ -93,7 +120,7 @@ To provision your OPTIGA Trust M MTR chips, three steps are required, most of wh
 It is possible to reconfigure the Object-ID, in which the certificates will be stored. Edit the following lines in the file `config.sh`:
 
 ```bash
-MATTER_DAC_LOC=0xE0E3   # Object ID of DAC
+MATTER_DAC_LOC=0xE0E0   # Object ID of DAC
 MATTER_PAI_LOC=0xE0E8   # Object ID of PAI
 MATTER_CD_LOC=0xF1E0    # Object ID of CD 
 
@@ -114,11 +141,82 @@ You can choose to initially evaluate the OPTIGA Trust M MTR with Matter Developm
 
 Additionally, you will need a Certificate Declaration for your device. This CD can be optionally stored on the OPTIGA Trust M MTR.
 
-The [OPTIGA™ Trust M MTR Shield](www.infineon.com/optiga-trust-m-mtr-shield) comes already pre-configured with Matter Development Credentials (DAC, PAI, CD). Hence, you can directly start evaluating with these credentials in combination with the Matter SDK. Afterwards, come back to this guide and provision your individual, Kudelski rooted credentials to the OPTIGA Trust M MTR.
+The [OPTIGA™ Trust M MTR Shield](https://www.infineon.com/optiga-trust-m-mtr-shield) comes already pre-configured with Matter Development Credentials (DAC, PAI, CD). Hence, you can directly start evaluating with these credentials in combination with the Matter SDK. Afterwards, come back to this guide and provision your individual, Kudelski rooted credentials to the OPTIGA Trust M MTR.
 
 ### Option A: Matter Production Credentials
 
 This usecase assumes the usage and provisioning of productive Matter credentials which are claimed from the provided Cloud-Services for the individual OPTIGA™ Trust M MTR chips in the form of a so-called "Bundle File".
+
+<details>
+<summary>What is a "Bundle File"</summary>
+
+### The Infineon Bundle File
+
+The bundle file is an "archive of archives", i.e. a 7-Zip archive containing multiple sub-archives with the DACs, PAI and the other, Infineon Rooted, TLS Certificates.
+
+```shell
+    Bundle file 
+------- reelID_vx.y.7z -------
+|                                |
+|   reelID_E0E1_Certs.7z         |
+|                                |
+|   reelID_E0E2_Certs.7z         |
+|                                |
+|   reelID_keyOID=E0F0_DACs.7z   |   
+|                                |
+|   reelID_keyOID=E0F0_PAI.7z    |   
+|                                |
+|   reelID_keys.7z               |
+|                                |
+|   README.txt                   |
+|                                |
+--------------------------------
+```
+**reelID_E0E1_Certs.7z**
+
+This archive contains the certificates stored in data object E0E1, as device 
+individual .pem files. 
+The individual file names follow the convention: chipID_E0E1.pem to allow 
+matching certificate - device.
+Please note that the certificate from E0E1 data object is usable only under 
+shielded connection!
+
+**reelID_E0E2_Certs.7z**
+
+This archive contains the certificates stored in data object E0E2, as device 
+individual .pem files. 
+The individual file names follow the convention: chipID_E0E2.pem to allow 
+matching certificate - device.
+
+**reelID_keyOID=E0F0_DACs.7z**
+
+This archive contains the Device Attestation Certificates (DAC) corresponding 
+to the private key in slot E0F0, as device individual .pem files. 
+The individual file names follow the convention: chipID_keyOID=E0F0_DAC.pem 
+to allow matching certificate - device.
+
+**reelID_keyOID=E0F0_PAI.7z**
+
+This archive contains the Product Attestation Intermediate (PAI) Certificate, 
+which was used to generate and sign the DACs. 
+It contains exactly one file with name keyOID=E0F0_PAI.pem.
+
+**reelID_keys.7z**
+
+This file is an encrypted archive containing chip individual PBS and 
+authorization keys. The decryption key is available at keySTREAM.
+PBS and authorization keys are included as text files in this archive. 
+The files have 1 record/line, structured as: 
+
+chipID, PBS key 
+or
+chipID, authorization key 
+
+The records are represented as hexadecimal strings, i.e. 2 charcters/byte. 
+
+</details>
+
+<br>
 
 Download the bundle file from the Cloud Service's webpage and copy it to your Raspberry Pi. As a current working directory, we assume this directory.
 
@@ -210,18 +308,18 @@ The master script will:
     6.	Writes the updated Security Monitor Configuration to 0xE0C9
 5.	Once the flashing of a chip is complete, connect a new chip to flash the next one without exiting the script.
 
-## Troubleshooting and FAQ
+# Troubleshooting and FAQ
 
-### OPTIGA Trust M MTR Shields with Hardware Revision <= v1.2
+### OPTIGA Trust M MTR Shields with Hardware Revision ≤ v1.2
 These shields have a OPTIGA Trust M Object configuration which does not reflect the configuration as stated in [Table 1](#table-1-optiga-trust-m-mtr-object--metadata-configuration-by-infineon). Instead, the LcsO of Object 0xE0E0 is already set to "operational", which will require you to use the PBS and Authorization Reference Secrets for provisioning your DAC. 
 
 To do this, add to any command of the `matter_provisioning_master.sh` script the `-k` option and supply your personalized Transport Key. You can find this key online in the Kudelski Keystream interface. Hence, use the following command instead:
 
     ./matter_provisioning_master.sh -b [path_to_bundle_file_3.0.7z] -c [path_to_certificate_declaration.bin] -k [SAMPLE_TKEY] -v
 
-## Scripts Documentation & Usage
+# Scripts Documentation & Usage
 
-### matter_provsioning_master.sh
+## matter_provsioning_master.sh
 
 Master Script to sequentially provision OPTIGA™ Trust M MTR chips with test or productive Matter credentials.
 If "0" is given as argument for the `-s` option, the Security Monitor will be configured with '000050100000000', effectively disabling the Security Monitor.
@@ -243,7 +341,7 @@ Options:
 | -v          | Flag to verify configuration                                                                 |                                |                                                    |
 | -h          | Print help                                                                 |                                |                                                    |
 
-### matter_bundle_provisioning.sh
+## matter_bundle_provisioning.sh
 Script to provision a single OPTIGA™ Trust M MTR chip with DAC & PAI Information in the given folder structure.
 
 
@@ -271,21 +369,21 @@ Options:
 | -c [CID] | Chip-ID of the current Trust M sample                                         | -c 0A091B5C0015009A0087 | In combination with -p option |
 | -k [dir] | Path to Matter Keys Directory. This should contain the PBS and AuthRef Keys.  | -k ./tmp/keys           | In combination with -c option |
 
-### matter_test_provisioning.sh
+## matter_test_provisioning.sh
 Script to provision a single OPTIGA™ Trust M MTR chip with Matter test credentials.
 
 **Sample Usage:**
 
     ./matter_test_provisioning.sh
 
-### verify_configuration.sh
+## verify_configuration.sh
 Script to verify the configuration of a single OPTIGA™ Trust M MTR. Will generate a ECDSA Signature with key in OID 0xE0F0 and verify it with the Public Key of the DAC.
 
 **Sample Usage:**
 
     ./verify_configuration.sh
 
-### configure_security_monitor.sh
+## configure_security_monitor.sh
 Script to configure the Security Monitor of a single OPTIGA™ Trust M chip with a given configuration.
 
 
