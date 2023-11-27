@@ -10,22 +10,12 @@ Installing the OPTIGA Trust M Linux-tools (this reposistory, see [here](../../RE
 
 - [OPTIGA™ Trust M MTR: Matter Provisioning](#optiga-trust-m-mtr-matter-provisioning)
   - [OPTIGA™ Trust M MTR Object Map](#optiga-trust-m-mtr-object-map)
-    - [Table 1: OPTIGA Trust M MTR Object \& Metadata Configuration by Infineon](#table-1-optiga-trust-m-mtr-object--metadata-configuration-by-infineon)
-    - [Table 2: OPTIGA Trust M MTR Object \& Metadata Configuration after late-stage Provisioning](#table-2-optiga-trust-m-mtr-object--metadata-configuration-after-late-stage-provisioning)
   - [Hardware Prerequisites](#hardware-prerequisites)
 - [Step-by-step Late-stage Provisioning](#step-by-step-late-stage-provisioning)
   - [Step 1: Script Configuration](#step-1-script-configuration)
   - [Step 2: Credential Selection](#step-2-credential-selection)
-    - [Option A: Matter Production Credentials](#option-a-matter-production-credentials)
-    - [The Infineon Bundle File](#the-infineon-bundle-file)
-    - [Matter Credentials Provisioning](#matter-credentials-provisioning)
-    - [Option B: Matter Test Credentials](#option-b-matter-test-credentials)
   - [Step 3: Post-Processing](#step-3-post-processing)
-    - [Verify configuration](#verify-configuration)
-    - [Set Objects state to "Operational"](#set-objects-state-to-operational)
-    - [Optional: Matter Credential Provisioning \& Modify Security Monitor Configuration](#optional-matter-credential-provisioning--modify-security-monitor-configuration)
 - [Troubleshooting and FAQ](#troubleshooting-and-faq)
-    - [OPTIGA Trust M MTR Shields with Hardware Revision ≤ v1.2](#optiga-trust-m-mtr-shields-with-hardware-revision--v12)
 - [Scripts Documentation \& Usage](#scripts-documentation--usage)
   - [matter\_provsioning\_master.sh](#matter_provsioning_mastersh)
   - [matter\_bundle\_provisioning.sh](#matter_bundle_provisioningsh)
@@ -117,7 +107,7 @@ To provision your OPTIGA Trust M MTR chips, three steps are required, most of wh
 
 ## Step 1: Script Configuration
 
-It is possible to reconfigure the Object-ID, in which the certificates will be stored. Edit the following lines in the file `config.sh`:
+It is possible to reconfigure the Object-ID, in which the certificates will be stored. Note that you will have to edit this in the Matter SDK accordingly. Edit the following lines in the file `config.sh`:
 
 ```bash
 MATTER_DAC_LOC=0xE0E0   # Object ID of DAC
@@ -256,7 +246,7 @@ The OPTIGA™ Trust M MTR Shield comes pre-provisioned with these Test-Credentia
 to generate and write Matter Test Credentials (DAC, PAI and CD) to the respective OPTIGA™ Trust M object slots. The Test DAC uses the public key extracted from the Infineon pre-provisioned certificate stored in slot 0xE0E0.
 
 > [!NOTE]
-> OPTIGA Trust M MTR Shields of HW Revision 1.2 cannot be provisioned with Matter Test Credentials by this script. The LcsO of the slot 0xE0E0 is already set to "operational" and the certificate can only be exchanged by using the PBS and Authorization Reference. Download the Bundle File from Kudelski Keystream for your Evaluation Shield and use [Option A](#option-a-matter-production-credentials) instead. You need to additionally supply the Transport Key for this bundle file through the ```-k [key]``` option. 
+> OPTIGA Trust M MTR Shields of HW Revision ≤ v2.1 cannot be provisioned with Matter Test Credentials by this script. The LcsO of the slot 0xE0E0 is already set to "operational" and the certificate can only be exchanged by using the PBS and Authorization Reference. Download the Bundle File from Kudelski Keystream for your Evaluation Shield and use [Option A](#option-a-matter-production-credentials) instead. You need to additionally supply the Transport Key for this bundle file through the ```-k [key]``` option. 
 
 ## Step 3: Post-Processing
 ### Verify configuration
@@ -310,7 +300,7 @@ The master script will:
 
 # Troubleshooting and FAQ
 
-### OPTIGA Trust M MTR Shields with Hardware Revision ≤ v1.2
+### OPTIGA Trust M MTR Shields with Hardware Revision ≤ v2.1
 These shields have a OPTIGA Trust M Object configuration which does not reflect the configuration as stated in [Table 1](#table-1-optiga-trust-m-mtr-object--metadata-configuration-by-infineon). Instead, the LcsO of Object 0xE0E0 is already set to "operational", which will require you to use the PBS and Authorization Reference Secrets for provisioning your DAC. 
 
 To do this, add to any command of the `matter_provisioning_master.sh` script the `-k` option and supply your personalized Transport Key. You can find this key online in the Kudelski Keystream interface. Hence, use the following command instead:
