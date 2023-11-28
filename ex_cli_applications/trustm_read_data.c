@@ -187,5 +187,5 @@ int main (int argc, char **argv)
     printf("========================================================\n");
     trustm_Close();
     trustm_hibernate_flag = 0; // Disable hibernate Context Save
-    return 0;
+    return return_status;
 }
