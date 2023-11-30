@@ -22,13 +22,12 @@
 #* SOFTWARE
 #
 #*/
-# Uncomment the following makro if you are running a 64-Bit Linux System
-#~ AARCH64 = YES
 
+ARCH := $(shell dpkg --print-architecture)
 BINDIR = bin
 APPDIR = .
 MBEDTLS_LIB = ../../trustm_lib/externals/mbedtls
-ifdef AARCH64
+ifeq ($(ARCH), arm64)
 LIB_INSTALL_DIR = /usr/lib/aarch64-linux-gnu
 else
 LIB_INSTALL_DIR = /usr/lib/arm-linux-gnueabihf
@@ -84,7 +83,7 @@ CFLAGS = -c
 CFLAGS += $(INCDIR)
 CFLAGS += -Wall
 CFLAGS += -Wno-pointer-sign
-ifdef AARCH64
+ifeq ($(ARCH), arm64)
 CFLAGS += -fPIC
 endif
 
