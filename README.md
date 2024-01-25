@@ -143,19 +143,6 @@ Note:
 ```console
 #define OPTIGA_COMMS_DEFAULT_RESET_TYPE     (1U)
 ```
-To build for AARCH64, uncomment  this Marco in Makefile
-
-```console 
-#~ Uncomment this for AARCH64 or pass it as argument in command line
-#~ AARCH64 = YES
-```
-
-Or run the script below:
-
-    foo@bar:~$ ./trustm_installation_aarch64_script.sh
-
-Note: AARCH64 = YES is passed as argument in *trustm_installation_aarch64_script.sh*.
-
 ## <a name="cli_usage"></a>CLI Tools Usage
 
 ### Important Notes:  
