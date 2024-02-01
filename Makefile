@@ -40,9 +40,10 @@ LIBDIR += trustm_helper
 
 OPENSSL_VERSION := $(shell pkg-config --modversion openssl)
 OPENSSL_MAJOR = $(shell echo $(OPENSSL_VERSION) | awk -F. '{print $$1}')
+ARCH := $(shell dpkg --print-architecture)
 ifeq ($(OPENSSL_MAJOR), 1)
 #OTHDIR = $(TRUSTM)/examples/optiga
-ARCH := $(shell dpkg --print-architecture)
+
  
 		BINDIR = bin
 		APPDIR = ex_cli_applications
