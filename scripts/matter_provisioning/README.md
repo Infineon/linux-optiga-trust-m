@@ -11,6 +11,8 @@ Installing the OPTIGA Trust M Linux-tools (this reposistory, see [here](../../RE
 - [OPTIGA™ Trust M MTR: Matter Provisioning](#optiga-trust-m-mtr-matter-provisioning)
   - [OPTIGA™ Trust M MTR Object Map](#optiga-trust-m-mtr-object-map)
   - [Hardware Prerequisites](#hardware-prerequisites)
+  - [Software Prerequisites](#software-prerequisites)
+- [Certificate Claiming](#certificate-claiming)
 - [Step-by-step Late-stage Provisioning](#step-by-step-late-stage-provisioning)
   - [Step 1: Script Configuration](#step-1-script-configuration)
   - [Step 2: Credential Selection](#step-2-credential-selection)
@@ -85,9 +87,16 @@ For production usecases, it is also recommended to apply the RST of any other co
 
 For evaluation purposes, it is recommended to use the [OPTIGA™ Trust M MTR Shield](https://www.infineon.com/optiga-trust-m-mtr-shield) in combination with the [MikroE Pi4 Click-Shield](https://www.mikroe.com/pi-4-click-shield). Here, all connections are already routed in a plug-and-play solution.
 
-<!---
+## Software Prerequisites
+Except from the usual dependencies of this repository, the package `p7zip-full` is needed. Install it using:
+```
+sudo apt install p7zip-full
+```
+
 # Certificate Claiming
---->
+Generating & claiming your device certificates is done via our partner, Kudelski IoT.
+Go to https://osts.infineon.com/trustm/home to start the process.
+
 
 # Step-by-step Late-stage Provisioning
 
@@ -101,7 +110,7 @@ To provision your OPTIGA Trust M MTR chips, three steps are required, most of wh
 
 **tl;dr:** To write your Matter Credentials to the OPTIGA Trust M MTR, use the following command inside this folder:
 ```bash
-./matter_provisioning_master.sh -b [path_to_bundle_file_3.0.7z] -k [transport_key] -c [path_to_certificate_declaration.bin] -v -o
+./matter_provisioning_master.sh -b [path_to_bundle_file_3.0.7z] -k '[transport_key]' -c [path_to_certificate_declaration.bin] -v -o
 ```
 
 
@@ -158,6 +167,8 @@ The bundle file is an "archive of archives", i.e. a 7-Zip archive containing mul
 |                                |
 |   reelID_keys.7z               |
 |                                |
+|   reelID_keys.txt               |
+|                                |
 |   README.txt                   |
 |                                |
 --------------------------------
@@ -203,6 +214,11 @@ or
 chipID, authorization key 
 
 The records are represented as hexadecimal strings, i.e. 2 charcters/byte. 
+
+**reelID_keys.txt**
+
+This file contains information about the used transport key.
+For test certicates it contains the key value, for productive certificates a key label.
 
 </details>
 
