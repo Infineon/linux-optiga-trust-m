@@ -20,11 +20,11 @@ make clean
 sudo make uninstall 
 make -j5 
 sudo make install 
-#~ echo "-----> Build Protected Update Set tool"
-#~ cd ex_protected_update_data_set/Linux/
-#~ make clean
-#~ make -j5 
-#~ sudo make install 
+echo "-----> Build Protected Update Set tool"
+cd ex_protected_update_data_set/Linux/
+make clean
+make -j5 
+sudo make install 
  
 #~cd $CURRENT_DIR
 echo "-----> Installation completed. Back to ${PWD}"

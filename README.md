@@ -143,19 +143,6 @@ Note:
 ```console
 #define OPTIGA_COMMS_DEFAULT_RESET_TYPE     (1U)
 ```
-To build for AARCH64, uncomment  this Marco in Makefile
-
-```console 
-#~ Uncomment this for AARCH64 or pass it as argument in command line
-#~ AARCH64 = YES
-```
-
-Or run the script below:
-
-    foo@bar:~$ ./trustm_installation_aarch64_script.sh
-
-Note: AARCH64 = YES is passed as argument in *trustm_installation_aarch64_script.sh*.
-
 ## <a name="cli_usage"></a>CLI Tools Usage
 
 ### Important Notes:  
@@ -1028,11 +1015,11 @@ Success
 Simple demo to show the process to decrypt using OPTIGA™ Trust M library.
 
 ```console
-foo@bar:~$ ./bin/trustm_symmetric_dec
+foo@bar:~$ ./bin/trustm_symmetric_dec -h
 Help menu: trustm_symmetric_dec <option> ...<option>
 option:- 
--m <mode>     : Mode CBC:0x09 CBC_MAC:0X0A CMAC:0X0B 
-                     [default CBC]
+-m <mode>     : Mode CBC:0x09 
+                [only support CBC mode]
 -o <filename> : Output to file 
 -i <filename> : Input Data file
 -v <filename> : Input IV Value

@@ -22,13 +22,12 @@
 #* SOFTWARE
 #
 #*/
-# Uncomment the following makro if you are running a 64-Bit Linux System
-#~ AARCH64 = YES
 
+ARCH := $(shell dpkg --print-architecture)
 BINDIR = bin
 APPDIR = .
 MBEDTLS_LIB = ../../trustm_lib/externals/mbedtls
-ifdef AARCH64
+ifeq ($(ARCH), arm64)
 LIB_INSTALL_DIR = /usr/lib/aarch64-linux-gnu
 else
 LIB_INSTALL_DIR = /usr/lib/arm-linux-gnueabihf
@@ -83,7 +82,8 @@ CFLAGS = -c
 #CFLAGS += $(DEBUG)
 CFLAGS += $(INCDIR)
 CFLAGS += -Wall
-ifdef AARCH64
+CFLAGS += -Wno-pointer-sign
+ifeq ($(ARCH), arm64)
 CFLAGS += -fPIC
 endif
 
@@ -125,7 +125,10 @@ install:
 	@echo "Create symbolic link to trustm_lib $(LIB_INSTALL_DIR)/$(LIB)"
 	@ln -s $(realpath $(BINDIR)/$(LIB)) $(LIB_INSTALL_DIR)/$(LIB)
 	
-
+uninstall: clean
+	@echo "Removing trustm_lib $(LIB_INSTALL_DIR)/$(LIB)"
+	@rm -rf $(LIB_INSTALL_DIR)/$(LIB)
+	
 clean :
 	@echo "Removing *.o from $(LIBDIR)" 
 	@rm -rf $(LIBOBJ)

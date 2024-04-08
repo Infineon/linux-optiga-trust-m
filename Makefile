@@ -23,8 +23,6 @@
 #
 #*/
 
-#~ Uncomment this for AARCH64 or pass it as argument in command line
-#~ AARCH64 = YES
 TRUSTM = trustm_lib
 
 BUILD_FOR_RPI = YES
@@ -42,14 +40,16 @@ LIBDIR += trustm_helper
 
 OPENSSL_VERSION := $(shell pkg-config --modversion openssl)
 OPENSSL_MAJOR = $(shell echo $(OPENSSL_VERSION) | awk -F. '{print $$1}')
+ARCH := $(shell dpkg --print-architecture)
 ifeq ($(OPENSSL_MAJOR), 1)
 #OTHDIR = $(TRUSTM)/examples/optiga
+
  
 		BINDIR = bin
 		APPDIR = ex_cli_applications
 		ENGDIR = trustm_engine
 
-		ifdef AARCH64
+		ifeq ($(ARCH), arm64)
 		LIB_INSTALL_DIR = /usr/lib/aarch64-linux-gnu
 		else
 		LIB_INSTALL_DIR = /usr/lib/arm-linux-gnueabihf
@@ -132,7 +132,7 @@ ifeq ($(OPENSSL_MAJOR), 1)
 		DEBUG = -g
 
 		CFLAGS += -c
-		ifdef AARCH64
+		ifeq ($(ARCH), arm64)
 		CFLAGS += -fPIC
 		endif
 		#CFLAGS += $(DEBUG)
@@ -215,7 +215,7 @@ else
 		BINDIR = bin
 		APPDIR = ex_cli_applications
 
-		ifdef AARCH64
+		ifeq ($(ARCH), arm64)
 		LIB_INSTALL_DIR = /usr/lib/aarch64-linux-gnu
 		else
 		LIB_INSTALL_DIR = /usr/lib/arm-linux-gnueabihf
@@ -288,7 +288,7 @@ else
 		DEBUG = -g
 
 		CFLAGS += -c
-		ifdef AARCH64
+		ifeq ($(ARCH), arm64)
 		CFLAGS += -fPIC
 		endif
 		#CFLAGS += $(DEBUG)
