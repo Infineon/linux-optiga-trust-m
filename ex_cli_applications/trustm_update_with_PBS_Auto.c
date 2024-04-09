@@ -184,15 +184,15 @@ int main (int argc, char **argv)
     struct timeval end;
     double time_taken;
 
-    uint16_t offset =0;
-    uint32_t bytes_to_read;
+    uint16_t offset = 0;
+    uint32_t bytes_to_read = 0;
     uint16_t optiga_oid;
     uint8_t read_data_buffer[2048];
-    uint8_t pbs_buffer[64];
-    uint8_t auth_buffer[64];
+    uint8_t pbs_buffer[64] = {0};
+    uint8_t auth_buffer[64] = {0};
     uint8_t mode = OPTIGA_UTIL_WRITE_ONLY;
 
-    X509 *x509Cert;
+    X509 *x509Cert = NULL;
 
     char  messagebuf[500];
 
@@ -464,7 +464,6 @@ int main (int argc, char **argv)
         } else {
             printf("No Authorization Reference given. Will not clear the Authorization State\n");
         }
-
         if(uOptFlag.flags.read == 1)
         {
 
@@ -535,6 +534,7 @@ int main (int argc, char **argv)
                 if (bytes_to_read <= 0)
                 {
                     printf("Read file: %s error!!!", inFile);
+                    break;
                 }
             }
             else if (uOptFlag.flags.cert == 1)
@@ -542,13 +542,14 @@ int main (int argc, char **argv)
                 uint16_t ret = trustmReadX509PEM(&x509Cert, inFile);
                 if (ret == 0)
                 {
-                    uint8_t *pCert;
+                    uint8_t *pCert = NULL;
                     bytes_to_read = i2d_X509(x509Cert, &pCert);
                     pal_os_memcpy(read_data_buffer, pCert, bytes_to_read);
                 }
                 else
                 {
                     printf("Read Cert %s Error!!!\n",inFile);
+                    break;
                 }
             }
             else
