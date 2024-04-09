@@ -1,65 +1,68 @@
-# OPTIGA™ Trust M Provider for OpenSSL 3.x
+# Linux tools and examples</br> for OPTIGA™ Trust M1/M3 security solution
 
-1. [About](#about)
-   * [Prerequisites](#prerequisites)
-2. [Getting Started](#getting_started)
-   * [Getting the Code from Github](#getting_code)
-   * [First time building the library](#build_lib)
-3. [CLI Tools Usage](#cli_usage)
-    * [trustm_cert](#trustm_cert)
-    * [trustm_chipinfo](#trustm_chipinfo)
-    * [trustm_data](#trustm_data)
-    * [trustm_ecc_keygen](#trustm_ecc_keygen)
-    * [trustm_ecc_sign](#trustm_ecc_sign)
-    * [trustm_ecc_verify](#trustm_ecc_verify)
-    * [trustm_errorcode](#trustm_errorcode)
-    * [trustm_metadata](#trustm_metadata)
-    * [trustm_monotonic_counter](#trustm_monotonic_counter)
-    * [trustm_readmetadata_data](#trustm_readmetadata_data)
-    * [trustm_readmetadata_private](#trustm_readmetadata_private)
-    * [trustm_readmetadata_status](#trustm_readmetadata_status)
-    * [trustm_read_status](#trustm_read_status)
-    * [trustm_rsa_dec](#trustm_rsa_dec)
-    * [trustm_rsa_enc](#trustm_rsa_enc)
-    * [trustm_rsa_keygen](#trustm_rsa_keygen)
-    * [trustm_rsa_sign](#trustm_rsa_sign)
-    * [trustm_rsa_verify](#trustm_rsa_verify)
-    * [trustm_symmetric_keygen](#trustm_symmetric_keygen)
-    * [trustm_symmetric_enc](#trustm_symmetric_enc)
-    * [trustm_symmetric_dec](#trustm_symmetric_dec)
-    * [trustm_hkdf](#trustm_hkdf)
-    * [trustm_hmac](#trustm_hmac)
-    * [trustm_hmac_verify_Auth](#trustm_hmac_verify_Auth)
-    * [trustm_protected_update](#trustm_protected_update)
-      * [Integrity and Confidentiality Protected Update example for Metadata](./scripts/protected_update_metadata/)
-    * [trustm_protected_update_aeskey](#trustm_protected_update_aeskey)
-      * [Integrity and Confidentiality Protected Update example for aeskey](./scripts/protected_update_aeskey/)
-    * [trustm_protected_update_ecckey](#trustm_protected_update_ecckey)
-      * [Integrity and Confidentiality Protected Update example for ecckey](./scripts/protected_update_ecckey/)
-    * [trustm_protected_update_rsakey](#trustm_protected_update_rsakey)
-      * [Integrity and Confidentiality Protected Update example for rsakey](./scripts/protected_update_rsakey/)
-    * [trustm_protected_update_data](#trustm_protected_update_data)
-      * [Integrity and Confidentiality Protected Update example for data](./scripts/protected_update_data/)
-4. [OPTIGA™ Trust M OpenSSL Provider usage](#provider_usage)
-   * [rand](#rand)
-   * [req](#req)
-   * [pkey](#pkey)
-   * [pkeyutl](#pkeyutl)
-   * [Testing TLS connection with RSA key](#test_tls_rsa)
-   * [Generating a Test Server Certificate](#test_server_cert)
+- [Linux tools and examples for OPTIGA™ Trust M1/M3 security solution](#linux-tools-and-examples-for-optiga-trust-m1m3-security-solution)
+  - [About](#about)
+    - [Prerequisites](#prerequisites)
+  - [Getting Started](#getting-started)
+    - [Getting the Code from Github](#getting-the-code-from-github)
+    - [First time building the library](#first-time-building-the-library)
+  - [CLI Tools Usage](#cli-tools-usage)
+    - [Important Notes:](#important-notes)
+    - [trustm\_cert](#trustm_cert)
+    - [trustm\_chipinfo](#trustm_chipinfo)
+    - [trustm\_data](#trustm_data)
+    - [trustm\_ecc\_keygen](#trustm_ecc_keygen)
+    - [trustm\_ecc\_sign](#trustm_ecc_sign)
+    - [trustm\_ecc\_verify](#trustm_ecc_verify)
+    - [trustm\_errorcode](#trustm_errorcode)
+    - [trustm\_metadata](#trustm_metadata)
+    - [trustm\_monotonic\_counter](#trustm_monotonic_counter)
+    - [trustm\_read\_data](#trustm_read_data)
+    - [trustm\_readmetadata\_data](#trustm_readmetadata_data)
+    - [trustm\_readmetadata\_private](#trustm_readmetadata_private)
+    - [trustm\_readmetadata\_status](#trustm_readmetadata_status)
+    - [trustm\_read\_status](#trustm_read_status)
+    - [trustm\_rsa\_dec](#trustm_rsa_dec)
+    - [trustm\_rsa\_enc](#trustm_rsa_enc)
+    - [trustm\_rsa\_keygen](#trustm_rsa_keygen)
+    - [trustm\_rsa\_sign](#trustm_rsa_sign)
+    - [trustm\_rsa\_verify](#trustm_rsa_verify)
+    - [trustm\_symmetric\_keygen](#trustm_symmetric_keygen)
+    - [trustm\_symmetric\_enc](#trustm_symmetric_enc)
+    - [trustm\_symmetric\_dec](#trustm_symmetric_dec)
+    - [trustm\_hkdf](#trustm_hkdf)
+    - [trustm\_hmac](#trustm_hmac)
+    - [trustm\_hmac\_verify\_Auth](#trustm_hmac_verify_auth)
+    - [trustm\_protected\_update](#trustm_protected_update)
+    - [trustm\_protected\_update\_aeskey](#trustm_protected_update_aeskey)
+    - [trustm\_protected\_update\_ecckey](#trustm_protected_update_ecckey)
+    - [trustm\_protected\_update\_rsakey](#trustm_protected_update_rsakey)
+    - [trustm\_protected\_update\_data](#trustm_protected_update_data)
+    - [trustm\_update\_with\_PBS\_Auto](#trustm_update_with_pbs_auto)
+    - [trustm\_probe](#trustm_probe)
+  - [OPTIGA™ Trust M OpenSSL Provider usage](#provider_usage)
+    - [rand](#rand)
+    - [req](#req)
+    - [pkey](#pkey)
+    - [pkeyutl](#pkeyutl)
+    - [Testing TLS connection with RSA key](#test_tls_rsa)
+    - [Generating a Test Server Certificate](#test_server_cert)
+  - [Known observations](#known-observations)
+    - [Secure communication bypass](#secure-communication-bypass)
+    - [OPTIGA™ Trust M Sporadic hang](#optiga-trust-m-sporadic-hang)
 
 ## <a name="about"></a>About
 
-This is a Linux Tools for OPTIGA Trust M V3/Express/ MTR on Linux platform that consist of:
+This is a Linux Tools for OPTIGA Trust M1/M3 on Linux platform that consist of:
 
 - [Command Line Interface examples](#cli_usage)
 - [OpenSSL Provider](#provider_usage)
+- [AWS IoT C SDK example](./ex_aws-iot-device-sdk-embedded-C-1.1.2/)
 
 
 ### <a name="prerequisites"></a>Prerequisites
 
 Following is the software component to build the tools :
-
 * GCC
 * OpenSSL 3.x
 * OPTIGA Trust M3 library (source code)
@@ -68,46 +71,39 @@ Following is the software component to build the tools :
 
 
 Hardware platforms and boards:
-
-* Raspberry PI 3/4 
+* Raspberry PI 3/4  on Linux kernel >= 4.19
 
 * [OPTIGA™ Trust M](https://www.infineon.com/cms/en/product/evaluation-boards/s2go-security-optiga-m/)
 
 * [Shield2Go Adapter for Raspberry Pi](https://www.infineon.com/cms/en/product/evaluation-boards/s2go-adapter-rasp-pi-iot/)
 
+  
+  
   Note: OPTIGA™ Trust M Provider is tested on Linux Raspberry PI 6.1.21-v8+ aarch64
-
-![](/pictures/connection_diagram1.png)
+  
+  ![](/pictures/coonection_diagram1.png)
 
 ## <a name="getting_started"></a>Getting Started
-
 ### <a name="getting_code"></a>Getting the Code from Github
 
 Getting the initial code from Github with submodules
 
 ```console
-git clone --recurse-submodules 
-https://github.com/Infineon/linux-optiga-trust-m.git
+foo@bar:~$ git clone --recurse-submodules https://github.com/Infineon/linux-optiga-trust-m.git
 ```
 
 Note:  The following commands are optional and it is required only when switching between different branches.
 
 ```
-cd linux-optiga-trust-m/
-git checkout provider_dev
-```
-
-```
-git submodule update -f
+foo@bar:~$ git checkout provider_dev
+foo@bar:~$ git submodule update -f
 ```
 
 ### <a name="build_lib"></a>First time building the library
-
 Run the commands below in sequence to install the required dependencies and the OPTIGA™ Trust M provider. 
 
-```
-./provider_installation_script.sh
-```
+    foo@bar:~$ cd linux-optiga-trust-m
+    foo@bar:~$ ./provider_installation_script.sh
 
 Note: 
 
@@ -121,7 +117,6 @@ Note:
 ```console
 #define OPTIGA_COMMS_DEFAULT_RESET_TYPE     (1U)
 ```
-
 ## <a name="cli_usage"></a>CLI Tools Usage
 
 ### Important Notes:  
@@ -226,7 +221,7 @@ option:-
 -I <value>    : Input byte value 
 -o <filename> : Output file 
 -p <offset>   : Offset position 
--e            : Erase and wirte 
+-e            : Erase and write 
 -X            : Bypass Shielded Communication 
 -h            : Print this help  
 ```
@@ -1251,6 +1246,71 @@ For detailed example for Integrity and Confidentiality Protected Update for data
 *Note :*  
 *To generate the manifest and fragment for Integrity and Confidentiality Protected Update, please refer to the [README.md](./ex_protected_update_data_set) for more instruction*
 
+### <a name="trustm_update_with_PBS_Auto"></a>trustm_update_with_PBS_Auto
+
+Read/Write/Erase OID data object in raw format. Establish a shielded connection and/or unlock the Authorization Reference state.
+This is relevant for OPTIGA Trust M Express and OPTIGA Trust M Matter-ready Configurations, where some slots are write-protected with PBS and AutoRef Secrets. 
+
+```console
+foo@bar:~$ ./bin/trustm_update_with_PBS_Auto 
+Help menu: trustm_update_with_PBS_Auto <option> ...<option>
+option:- 
+-r <OID>      : Read from OID 0xNNNN 
+-w <OID>      : Write to OID
+-i <filename> : Input file 
+-I <value>    : Input byte value 
+-o <filename> : Output file 
+-p <filename> : Offset position 
+-P <value>    : Input byte value with PBS
+-a <filename> : Input file with Authorization Reference
+-A <value>    : Input byte value with Authorization Reference
+-e            : Erase and write 
+-X            : Bypass Shielded Communication 
+-h            : Print this help  
+```
+
+Example : Writing a new Security Monitor Configuration into protected OID 0xE0C9 and reading after writing. PBS and Authorization Reference are supplied on the CLI but must match the Trust M's dataslots in 0xE140 and 0xF1D0. For readability, PBS and AUTOREF are declared as variables.
+
+```console
+foo@bar:~$ PBS=4AC4E0C890EF3ADE16A95025ADA2F6564DD74BC2374EEF2FE70393F300AA2C37ADAAD66F2615BE82E731B0D3948C84CCEA1E51BF4EF7CFFAB21695E82454EB19
+foo@bar:~$ AUTOREF=D3DEBC1125CBE59E3D5D177B171DA8AF1121976EA5E7155819443FBC20910735E174EF6988E85EB08FB50A267448D3B742B18292AB501FD390BB3B68DC936FDE
+
+foo@bar:~$ ./bin/trustm_update_with_PBS_Auto -w 0xe0c9 -P $PBS -A $AUTOREF -I 3200050100000000
+
+========================================================
+Security Monitor configurations        [0xE0C9] 
+Input data : 
+        4A C4 E0 C8 90 EF 3A DE 16 A9 50 25 AD A2 F6 56 
+        4D D7 4B C2 37 4E EF 2F E7 03 93 F3 00 AA 2C 37 
+        AD AA D6 6F 26 15 BE 82 E7 31 B0 D3 94 8C 84 CC 
+        EA 1E 51 BF 4E F7 CF FA B2 16 95 E8 24 54 EB 19 
+
+Input Authorization Reference: 
+        D3 DE BC 11 25 CB E5 9E 3D 5D 17 7B 17 1D A8 AF 
+        11 21 97 6E A5 E7 15 58 19 44 3F BC 20 91 07 35 
+        E1 74 EF 69 88 E8 5E B0 8F B5 0A 26 74 48 D3 B7 
+        42 B1 82 92 AB 50 1F D3 90 BB 3B 68 DC 93 6F DE 
+
+HMAC verified successfully 
+Offset: 0
+Input data : 
+        32 00 05 01 00 00 00 00 
+OPTIGA execution time: 0.0940 sec.
+Write Success.
+========================================================
+```
+
+### <a name="trustm_probe"></a>trustm_probe
+
+A simple script to probe for a connected Trust M chip on the I2C bus. 
+
+If it finds a connection, the Chip-UID is returned. If no chip is found, returns an error.
+
+```console
+foo@bar:~$ ./bin/trustm_probe
+0A091B5C001500930025
+```
+
 
 ## <a name="provider_usage"></a>OPTIGA™ Trust M3 OpenSSL Provider usage
 
@@ -1258,20 +1318,18 @@ The Provider is tested base on OpenSSL version 3.1.0
 
 ### <a name="rand"></a>rand
 
-Usage : Random number generation
+Usuage : Random number generation
 Example
 
 ```console 
-openssl rand -provider trustm_provider -base64 32
+foo@bar:~$ openssl rand -provider trustm_provider -base64 32
 ```
-
 *Note :* 
 *If OPTIGA™ Trust M random number generation fails, there will still be random number output.* 
 *This is control by OpenSSL provider do not have control over it.*
 
 ### <a name="req"></a>req
-
-Usage : Certificate request / self signed cert / key generation
+Usuage : Certificate request / self signed cert / key generation
 
 OPTIGA™ Trust M provider uses the -key parameter to pass input to the key generation/usage function.
 
@@ -1284,7 +1342,6 @@ where :
 - **OID** for OPTIGA™ Trust M key
 
   - if OID 0xE0F0 is used no other input is needed
-
 - **public key input**
 
   - public key file name in PEM format
@@ -1308,11 +1365,10 @@ where :
     - 0xE0F1 store in 0xF1E0,
 
     - 0xE0F2 store in 0xF1E1
-
+  
 - **NEW**
 
   - Generate new key pair in OPTIGA™ Trust M
-
 - **key size**
 
   - ECC
@@ -1325,7 +1381,6 @@ where :
   - RSA
     - 0x41 = 1024 key length
     - 0x42 = 2048 key length
-
 - **Key usage** 
 
   - Auth : 0x01 
@@ -1340,16 +1395,14 @@ where :
 Example : Generating a certificate request using OID 0xE0F3 with new key generated, ECC 384 key length and Auth/Enc/Sign usage. Verify that public key match the private key in the OID.
 
 ```console 
-openssl req -provider trustm_provider -key 0xe0f3:*:NEW:0x04:0x13 -new -out test_e0f3.csr -verify
+foo@bar:~$ openssl req -provider trustm_provider -key 0xe0f3:*:NEW:0x04:0x13 -new -out test_e0f3.csr -verify
 ```
-
 *Note:*
 *If wrong public is used or no pubkey is submitted the certificate generation will still* 
 *go through but verification will fail. Pubic key input only in PEM*
 
 ### <a name="pkey"></a>pkey
-
-Usage : Key tools / Key generation
+Usuage : Key tools / Key generation
 
 OPTIGA™ Trust M provider uses the -in parameter to pass input to the key generation/usage function.
 
@@ -1366,20 +1419,18 @@ openssl pkey -provider trustm_provider -in 0xe0fd:*:NEW:0x42:0x13 -pubout -out e
 ```
 
 ### <a name="pkeyutl"></a>pkeyutl
-
 Usage : Sign and verify
 Example:
 
 Signing the message in the test_sign.txt file using the TrustM EC key and saving the generated signature in the test_sign.sig file.
 
 ```console 
-openssl pkeyutl -provider trustm_provider -inkey 0xe0fd:^  -sign -rawin -in test_sign.txt -out test_sign.sig
+foo@bar:~$ openssl pkeyutl -provider trustm_provider -inkey 0xe0fd:^  -sign -rawin -in test_sign.txt -out test_sign.sig
 ```
-
 Verifying the signature of the raw input data in test_sign.txt using the provided public key in eofd_pub.pem and the signature in test_sign.sig
 
-```console
-openssl pkeyutl -verify -pubin -inkey e0fd_pub.pem -rawin -in test_sign.txt -sigfile test_sign.sig
+```console 
+foo@bar:~$ openssl pkeyutl -verify -pubin -inkey e0fd_pub.pem -rawin -in test_sign.txt -sigfile test_sign.sig
 ```
 
 ### <a name="test_tls_rsa"></a>Testing TLS connection with RSA key
@@ -1391,7 +1442,7 @@ openssl pkeyutl -verify -pubin -inkey e0fd_pub.pem -rawin -in test_sign.txt -sig
 Creates new RSA 2048 key length and Auth/Enc/Sign usage and generate a certificate  request for OPTIGA™ Trust M key 0xE0FC
 
 ```console
-openssl req -provider trustm_provider \
+foo@bar:~$ openssl req -provider trustm_provider \
 -key 0xe0fd:*:NEW:0x42:0x13 \
 -new \
 -subj "/C=SG/CN=TrustM/O=Infineon" \
@@ -1400,10 +1451,10 @@ openssl req -provider trustm_provider \
 
 Issue the certificate with keyUsage=digitalSignature,keyEncipherment on the client side with OPTIGA_Trust_M_Infineon_Test_CA.
 
-*Note : Refer to [Generating a Test Server Certificate](#test_server_cert)  for openssl.cnf*
+**Note : Refer to [Generating a Test Server Certificate](#test_server_cert)  for openssl.cnf**
 
 ```console
-openssl x509 -req -in test_e0fd.csr \
+foo@bar:~$ openssl x509 -req -in test_e0fd.csr \
 -CA scripts/certificates/OPTIGA_Trust_M_Infineon_Test_CA.pem \
 -CAkey scripts/certificates/OPTIGA_Trust_M_Infineon_Test_CA_Key.pem \
 -CAcreateserial \
@@ -1417,7 +1468,7 @@ openssl x509 -req -in test_e0fd.csr \
 Running the test server : 
 
 ```console
-openssl s_server \
+foo@bar:~$ openssl s_server \
 -cert test_opensslserver.crt \
 -key privkey.pem -accept 5000 \
 -verify_return_error \
@@ -1429,7 +1480,7 @@ openssl s_server \
 Running the test client : *(open a new console)* 
 
 ```console
-openssl s_client -provider trustm_provider -provider default \
+foo@bar:~$ openssl s_client -provider trustm_provider -provider default \
 -client_sigalgs RSA+SHA256 \
 -cert test_e0fd.crt \
 -key 0xe0fd:^ \
@@ -1463,7 +1514,7 @@ openssl x509 -req -in test_e0fc.csr -CA  scripts/certificates/OPTIGA_Trust_M_Inf
 Running the test server : 
 
 ```console
-openssl s_server -provider trustm_provider -provider default \
+foo@bar:~$ openssl s_server -provider trustm_provider -provider default \
 -cert test_e0fc.crt \
 -key 0xe0fc:^ \
 -accept 5000 \
@@ -1475,23 +1526,24 @@ openssl s_server -provider trustm_provider -provider default \
 Running the test client : *(open a new console)* 
 
 ```console
-openssl s_client \
+foo@bar:~$ openssl s_client \
 -CAfile scripts/certificates/OPTIGA_Trust_M_Infineon_Test_CA.pem \
 -connect localhost:5000 -tls1_2
 -client_sigalgs RSA+SHA256
 ```
 
 ### <a name="test_server_cert"></a>Generating a Test Server Certificate
- Generate a new key pair and certificate request. Private key is output to private.pem
+
+Generate a new key pair and certificate request. Private key is output to private.pem
 
 ```console
-openssl req -new -nodes -subj "/C=SG/O=Infineon" -out test_opensslserver.csr
+foo@bar:~$ openssl req -new -nodes -subj "/C=SG/O=Infineon" -out test_opensslserver.csr
 ```
 
- Run the command:
+Creates the openssl.cnf with the below contain:
 
 ```console
-cat openssl.cnf 
+foo@bar:~$ cat openssl.cnf 
 ```
 
 Creates and displays the openssl.cnf as shown below:
@@ -1515,7 +1567,7 @@ keyUsage=keyCertSign, cRLSign, digitalSignature
 Issue the certificate with keyUsage=keyCertSign, cRLSign, digitalSignature on the server side with OPTIGA_Trust_M_Infineon_Test_CA.
 
 ```console
-openssl x509 -req -in test_opensslserver.csr \
+foo@bar:~$ openssl x509 -req -in test_opensslserver.csr \
 -CA scripts/certificates/OPTIGA_Trust_M_Infineon_Test_CA.pem \
 -CAkey scripts/certificates/OPTIGA_Trust_M_Infineon_Test_CA_Key.pem \
 -CAcreateserial \
@@ -1525,3 +1577,16 @@ openssl x509 -req -in test_opensslserver.csr \
 -extfile openssl.cnf \
 -extensions cert_ext2
 ```
+
+
+
+## <a name="known_observations"></a>Known observations
+
+### Secure communication bypass
+
+The I2C secure communication bypass option for CLI only works if the default reset protection level for OPTIGA CRYPT and UTIL APIs is set to OPTIGA_COMMS_NO_PROTECTION.
+
+### OPTIGA™ Trust M Sporadic hang
+
+Check the hardware reset pin if it is connected with an active reset GPIO as assigned n the OPTIGA™ Trust M library. Alternatively, you could configure the library to use software reset.
+
