@@ -31,6 +31,7 @@
     - [trustm\_symmetric\_enc](#trustm_symmetric_enc)
     - [trustm\_symmetric\_dec](#trustm_symmetric_dec)
     - [trustm\_hkdf](#trustm_hkdf)
+    - [trustm\_rng](#trustm_rng)
     - [trustm\_hmac](#trustm_hmac)
     - [trustm\_hmac\_verify\_Auth](#trustm_hmac_verify_auth)
     - [trustm\_protected\_update](#trustm_protected_update)
@@ -1069,6 +1070,44 @@ Success
 Decryption Key :
 	D6 8B 57 18 C3 E8 F7 82 5F 1C A5 19 A7 59 26 8B 
 	
+========================================================
+```
+
+###  <a name="trustm_rng"></a>trustm_rng
+
+Random number generator using OPTIGA™ Trust M.
+
+```console
+foo@bar:~$ ./bin/trustm_rng -h
+
+Help menu: trustm_rng <option> ...<option>
+option:- 
+-t <rng type>   : TRNG:0x00 DRNG:0x01
+                  [default TRNG]
+-l <rng length> : rng length 
+                  [default 64]
+-o <filename>   : Output RNG to file
+-X              : Bypass Shielded Communication 
+-h              : Print this help 
+
+```
+
+Example : To Generate 64 bytes RNG using TRNG type.
+
+```console
+foo@bar:~$ ./bin/trustm_rng -t 0x00 -l 64 -o rng.txt 
+
+========================================================
+Output File Name : rng.txt 
+Generating RNG Number ........
+OPTIGA execution time: 0.1205 sec.
+RNG Number :
+	27 7D B5 AD 55 53 CF 5C F5 D2 95 44 80 0D 36 39 
+	7A 3E 2F F4 49 2F 0A 32 92 C3 2B 2C 92 7F F4 72 
+	AF 50 7D D3 6E E9 B5 B2 F1 40 6B FF 4F DA 17 9D 
+	C7 B9 C6 F6 0A FD 99 61 D9 57 5F F1 CD 23 3D 46 
+	
+Success
 ========================================================
 ```
 
