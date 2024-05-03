@@ -2,7 +2,7 @@
 set -exo pipefail
 
 # generate RSA 2048 key in 0xE0FD (key usage auth/enc/sign) and extract public key file
-# 0xe0fd is the trustM device id
+# 0xe0fd is TrustM RSA Key id
 # The generated public key is stored in the e0fd_pub.pem file
 openssl pkey -provider trustm_provider -in 0xe0fd:*:NEW:0x42:0x13 -pubout -out e0fd_pub.pem
 

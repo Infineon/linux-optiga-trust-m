@@ -449,7 +449,27 @@ static int trustm_rsa_signature_digest_sign_update(void *ctx, const unsigned cha
         // add an error raise here
         return 0;
     }
+    optiga_lib_status = OPTIGA_LIB_BUSY;
+    return_status = optiga_crypt_hash_finalize(trustm_signature_ctx->me_crypt,
+                                               &(trustm_signature_ctx->digest_data->hash_context),
+                                               trustm_signature_ctx->digest_data->digest);
+    
+    if (OPTIGA_LIB_SUCCESS != return_status) 
+    {
+        // add an error raise here
+        return 0;
+    }
 
+    //Wait until the optiga_util_read_metadata operation is completed
+    trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
+    
+    return_status = optiga_lib_status;
+    if (return_status != OPTIGA_LIB_SUCCESS)
+    {
+        // add an error raise here
+        return 0;
+    }
+    
     TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
 
     return 1;
@@ -488,24 +508,7 @@ static int trustm_ecdsa_signature_digest_sign_update(void *ctx, const unsigned c
         // add an error raise here
         return 0;
     }
-
-    TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
-
-    return 1;
-}
-
-static int trustm_rsa_signature_digest_sign_final(void *ctx, unsigned char *sig, size_t *siglen, size_t sigsize)
-{
-    trustm_signature_ctx_t *trustm_signature_ctx = ctx;
-    optiga_lib_status_t return_status;
-    uint8_t digest_size;
-
-    uint8_t temp_sig[500];
-    uint16_t temp_siglen = sizeof(temp_sig);
-
-    TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE
-    trustm_signature_ctx->me_crypt = me_crypt;
-
+    
     optiga_lib_status = OPTIGA_LIB_BUSY;
     return_status = optiga_crypt_hash_finalize(trustm_signature_ctx->me_crypt,
                                                &(trustm_signature_ctx->digest_data->hash_context),
@@ -525,7 +528,24 @@ static int trustm_rsa_signature_digest_sign_final(void *ctx, unsigned char *sig,
     {
         // add an error raise here
         return 0;
-    }
+    } 
+    
+    TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
+
+    return 1;
+}
+
+static int trustm_rsa_signature_digest_sign_final(void *ctx, unsigned char *sig, size_t *siglen, size_t sigsize)
+{
+    trustm_signature_ctx_t *trustm_signature_ctx = ctx;
+    optiga_lib_status_t return_status;
+    uint8_t digest_size;
+
+    uint8_t temp_sig[500];
+    uint16_t temp_siglen = sizeof(temp_sig);
+
+    TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE
+    trustm_signature_ctx->me_crypt = me_crypt;
 
     digest_size = DIGEST_SIZE;
 
@@ -558,12 +578,6 @@ static int trustm_rsa_signature_digest_sign_final(void *ctx, unsigned char *sig,
 
     if (sig != NULL)
     {
-        if (*siglen > sigsize)
-        {
-            printf("Error output siglen : %d larger than sigsize : %d\n", *siglen, sigsize);
-            return 0;
-        }
-
         memcpy(sig, temp_sig, *siglen);
     }
 
@@ -583,27 +597,6 @@ static int trustm_ecdsa_signature_digest_sign_final(void *ctx, unsigned char *si
 
     TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE
     trustm_signature_ctx->me_crypt = me_crypt;
-
-    optiga_lib_status = OPTIGA_LIB_BUSY;
-    return_status = optiga_crypt_hash_finalize(trustm_signature_ctx->me_crypt,
-                                               &(trustm_signature_ctx->digest_data->hash_context),
-                                               trustm_signature_ctx->digest_data->digest);
-    
-    if (OPTIGA_LIB_SUCCESS != return_status) 
-    {
-        // add an error raise here
-        return 0;
-    }
-
-    //Wait until the optiga_util_read_metadata operation is completed
-    trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
-    
-    return_status = optiga_lib_status;
-    if (return_status != OPTIGA_LIB_SUCCESS)
-    {
-        // add an error raise here
-        return 0;
-    }
 
     digest_size = DIGEST_SIZE;
     int byte_string_offset = (trustm_signature_ctx->trustm_ec_key->key_curve == OPTIGA_ECC_CURVE_BRAIN_POOL_P_512R1
@@ -650,12 +643,6 @@ static int trustm_ecdsa_signature_digest_sign_final(void *ctx, unsigned char *si
     *siglen = temp_siglen + byte_string_offset;
     if (sig != NULL)
     {
-        if (*siglen > sigsize)
-        {
-            printf("Error output siglen : %d larger than sigsize : %d\n", *siglen, sigsize);
-            return 0;
-        }
-
         memcpy(sig, temp_sig, *siglen);
     }
 
@@ -915,27 +902,6 @@ static int trustm_rsa_signature_digest_verify_final(void *ctx, const unsigned ch
     TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE
     trustm_signature_ctx->me_crypt = me_crypt;
 
-    optiga_lib_status = OPTIGA_LIB_BUSY;
-    return_status = optiga_crypt_hash_finalize(trustm_signature_ctx->me_crypt,
-                                               &(trustm_signature_ctx->digest_data->hash_context),
-                                               trustm_signature_ctx->digest_data->digest);
-    
-    if (OPTIGA_LIB_SUCCESS != return_status) 
-    {
-        // add an error raise here
-        return 0;
-    }
-
-    //Wait until the optiga_util_read_metadata operation is completed
-    trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
-    
-    return_status = optiga_lib_status;
-    if (return_status != OPTIGA_LIB_SUCCESS)
-    {
-        // add an error raise here
-        return 0;
-    }
-
     // convert public key to trustm's public key format
     public_key_buffer[0] = 0x03;
     if (trustm_signature_ctx->trustm_rsa_key->key_size == OPTIGA_RSA_KEY_2048_BIT_EXPONENTIAL)
@@ -1105,27 +1071,6 @@ static int trustm_ecdsa_signature_digest_verify_final(void *ctx, const unsigned 
 
     TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE
     trustm_signature_ctx->me_crypt = me_crypt;
-
-    optiga_lib_status = OPTIGA_LIB_BUSY;
-    return_status = optiga_crypt_hash_finalize(trustm_signature_ctx->me_crypt,
-                                               &(trustm_signature_ctx->digest_data->hash_context),
-                                               trustm_signature_ctx->digest_data->digest);
-    
-    if (OPTIGA_LIB_SUCCESS != return_status) 
-    {
-        // add an error raise here
-        return 0;
-    }
-
-    //Wait until the optiga_util_read_metadata operation is completed
-    trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
-    
-    return_status = optiga_lib_status;
-    if (return_status != OPTIGA_LIB_SUCCESS)
-    {
-        // add an error raise here
-        return 0;
-    }
 
     // getting public key from import 
     uncompressed_pubkey_buffer_length = trustm_ec_point_to_uncompressed_buffer(trustm_signature_ctx->trustm_ec_key, &uncompressed_pubkey_buffer);

@@ -1,7 +1,7 @@
 #!/bin/bash
 set -exo pipefail
 
-echo test signing Trust M EC key > test_sign.txt
+echo test signing Trust M ECC key > test_sign.txt
 
 hd test_sign.txt
 

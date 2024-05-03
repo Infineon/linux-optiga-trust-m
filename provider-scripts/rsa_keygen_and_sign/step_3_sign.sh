@@ -2,7 +2,7 @@
 set -exo pipefail
 
 #create the message file and store it in the test_sign.txt
-echo test signing Trust M EC key > test_sign.txt
+echo test signing Trust M RSA key > test_sign.txt
 
 #view the hexadecimal representation of the file
 hd test_sign.txt
