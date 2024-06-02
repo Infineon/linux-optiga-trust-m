@@ -1,4 +1,4 @@
 #!/bin/bash
 set -exo pipefail
 
-rm -r -f *.pem *.txt *.sig
+rm -r -f *.pem *.txt *.sig *.bin
