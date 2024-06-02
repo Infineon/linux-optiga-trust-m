@@ -89,9 +89,14 @@
 */                                           
 //#define TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE   trustmProvider_SSLMutex_Acquire();
 //#define TRUSTM_PROVIDER_SSL_MUTEX_RELEASE   trustmProvider_SSLMutex_Release();
-
+#ifdef TRUSTM_ENGINE_DEBUG
+#define TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE   TRUSTM_ENGINE_DBGFN(">");trustmProvider_App_Open_Recovery();
+#define TRUSTM_PROVIDER_SSL_MUTEX_RELEASE   TRUSTM_ENGINE_DBGFN("<");trustmProvider_App_Release();
+#else
 #define TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE   trustmProvider_App_Open_Recovery();
 #define TRUSTM_PROVIDER_SSL_MUTEX_RELEASE   trustmProvider_App_Release();
+
+#endif
 
 #ifdef TRUST_ENG_CLOSE_APP_ENABLE
 #define TRUSTM_ENGINE_APP_CLOSE           trustmProvider_App_Close(); 
