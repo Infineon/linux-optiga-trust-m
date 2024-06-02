@@ -317,7 +317,7 @@ static int trustm_ecdsa_signature_sign(void *ctx, unsigned char *sig, size_t *si
     }
 
     else 
-    {
+    {   trustm_ecc_r_s_padding_check(temp_sig+byte_string_offset,&temp_siglen);
         temp_sig[0] = 0x30;
         temp_sig[1] = 0x81;
         temp_sig[2] = temp_siglen;
@@ -633,7 +633,7 @@ static int trustm_ecdsa_signature_digest_sign_final(void *ctx, unsigned char *si
     }
 
     else 
-    {
+    {   trustm_ecc_r_s_padding_check(temp_sig+byte_string_offset,&temp_siglen);
         temp_sig[0] = 0x30;
         temp_sig[1] = 0x81;
         temp_sig[2] = temp_siglen;
@@ -865,7 +865,7 @@ static int trustm_ecdsa_signature_digest_sign(void *ctx, unsigned char *sig, siz
     }
 
     else 
-    {
+    {   trustm_ecc_r_s_padding_check(temp_sig+byte_string_offset,&temp_siglen); 
         temp_sig[0] = 0x30;
         temp_sig[1] = 0x81;
         temp_sig[2] = temp_siglen;
