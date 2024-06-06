@@ -21,16 +21,16 @@ openssl ec -pubin -in test_pub_$KEY_OID.pem -pubout -out test_pub_$KEY_OID.der -
 echo "Printout ECC384 public key"
 hd test_pub_$KEY_OID.der
 echo "sign by trustM"
-#~ openssl dgst -sign 0x$KEY_OID -engine trustm_engine -keyform engine -out testsignature_$KEY_OID.sig mydata.txt
-$EXEPATH/trustm_ecc_sign -k 0x$KEY_OID -o testsignature_384.bin -i mydata.txt -H 
+$EXEPATH/trustm_ecc_sign -k 0x$KEY_OID -o testsignature_384.bin -i mydata.txt -H sha384
+
 echo "Print out ECC384 signature"
 xxd testsignature_384.bin
-echo "verify with Trust M"
-$EXEPATH/trustm_ecc_verify -i mydata.txt -s testsignature_384.bin -p test_pub_$KEY_OID.pem -H
 
 echo "verify with openssl"
-#~ openssl dgst -verify test_pub_$KEY_OID.pem -keyform pem -sha256 -signature testsignature_$KEY_OID.sig mydata.txt
-openssl dgst -verify test_pub_$KEY_OID.pem -keyform pem -sha256 -signature testsignature_384.bin mydata.txt
+openssl dgst -verify test_pub_$KEY_OID.pem -keyform pem -sha384 -signature testsignature_384.bin mydata.txt
+
+echo "verify with Trust M"
+$EXEPATH/trustm_ecc_verify -i mydata.txt -s testsignature_384.bin -p test_pub_$KEY_OID.pem -H sha384
 
 
 done
