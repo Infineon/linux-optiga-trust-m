@@ -22,6 +22,7 @@
 * SOFTWARE
 
 */
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -75,7 +76,7 @@ void _helpmenu(void)
     printf("-o <filename> : Output to file with header\n");
     printf("-O <filename> : Output to file without header\n");    
     printf("-i <filename> : Input Data file\n");
-    printf("-H            : Hash before sign\n");
+    printf("-H <HashAlgo> : SHA256:sha256 SHA384:sha384 SHA512:sha512\n");
     printf("-X            : Bypass Shielded Communication \n");
     printf("-h            : Print this help \n");
 }
@@ -85,13 +86,13 @@ int main (int argc, char **argv)
     optiga_lib_status_t return_status;
 
     optiga_key_id_t optiga_key_id;
-
+    char hash_algo[20] ="sha256";
     struct timeval start;
     struct timeval end;
     double time_taken;
     uint8_t signature [150];     //To store the signture generated
     uint16_t signature_length = sizeof(signature);
-    uint8_t digest[32];
+    uint8_t digest[64];
     unsigned int digestLen=0;
     char *outFile = NULL;
     char *inFile = NULL;
@@ -117,7 +118,7 @@ int main (int argc, char **argv)
         opterr = 0; // Disable getopt error messages in case of unknown parameters
 
         // Loop through parameters with getopt.
-        while (-1 != (option = getopt(argc, argv, "k:o:O:i:HXh")))
+        while (-1 != (option = getopt(argc, argv, "k:o:O:i:H::Xh")))
         {
             switch (option)
             {
@@ -139,6 +140,15 @@ int main (int argc, char **argv)
                     break;
                 case 'H': // Input
                     uOptFlag.flags.hash = 1;
+                    if (optarg != NULL && optarg[0] != '-') {
+                        strcpy(hash_algo, optarg);
+                    } else if (optind < argc && argv[optind] != NULL && argv[optind][0] != '-') {
+                        strcpy(hash_algo, argv[optind]);
+                        optind++; // Move to the next argument
+                    } else {
+                        strcpy(hash_algo, "sha256");
+                    }
+                    printf("Hash Algorithm: %s\n", hash_algo);
                     break;
                 case 'X': // Bypass Shielded Communication
                     uOptFlag.flags.bypass = 1;
@@ -201,23 +211,10 @@ int main (int argc, char **argv)
                     printf("error opening file : %s\n",inFile);
                     exit(1);
                 }
-
-                EVP_MD_CTX *sha256 = EVP_MD_CTX_new();
-                EVP_DigestInit_ex(sha256, EVP_sha256(), NULL);
-                const int bufSize = 32768;
-                char* buffer = malloc(bufSize);
-                int bytesRead = 0;
-                if(!buffer) return -1;
-                while((bytesRead = fread(buffer, 1, bufSize, fp)))
-                {
-                  EVP_DigestUpdate(sha256, buffer, bytesRead);
-                }
-                EVP_DigestFinal_ex(sha256, digest, &digestLen); 
-                                    
-                printf("Hash Success : SHA256\n");
-                trustmHexDump(digest,digestLen);
-		
-
+                compute_hash(hash_algo, fp, digest, &digestLen);
+                fclose(fp);
+                printf("Hash Success: %s\n", hash_algo);  
+                trustmHexDump(digest,digestLen);		
             } else
             {
                 digestLen = trustmreadFrom(digest, (uint8_t *) inFile);

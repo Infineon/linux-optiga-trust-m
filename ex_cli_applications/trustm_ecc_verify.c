@@ -22,6 +22,7 @@
 * SOFTWARE
 
 */
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -37,6 +38,7 @@
 #include <openssl/x509v3.h>
 #include <openssl/bio.h>
 #include <openssl/pem.h>
+#include <openssl/evp.h>
 
 typedef struct _OPTFLAG {
     uint16_t    verify      : 1;
@@ -70,7 +72,7 @@ void _helpmenu(void)
     printf("-p <pubkey>    : Use Pubkey file\n");
     printf("-i <filename>  : Input Data file\n");
     printf("-s <signature> : Signature file\n");
-    printf("-H             : Hash input before verify\n");
+    printf("-H <HashAlgo>  : SHA256:sha256 SHA384:sha384 SHA512:sha512\n");
     printf("-X             : Bypass Shielded Communication \n");
     printf("-h             : Print this help \n");
 }
@@ -83,31 +85,24 @@ int main (int argc, char **argv)
     struct timeval end;
     double time_taken;
 
-    optiga_hash_context_t hash_context;
-    hash_data_from_host_t hash_data_host;
     public_key_from_host_t public_key_details;
-
-    uint8_t hash_context_buffer[2048];
-
+    char hash_algo[20] ="sha256";
     uint16_t optiga_oid;
-    uint8_t signature [300];     //To store the signture generated
+
+    uint8_t signature [150];     //To store the signture generated
     uint16_t signatureLen = sizeof(signature);
-    uint8_t digest[32];
-    uint16_t digestLen = 0;
+    uint8_t digest[64];
+    unsigned int digestLen=0;
     uint8_t pubkey[2048];
     uint32_t pubkeyLen;
     uint16_t pubkeySize;
     uint16_t pubkeyType;
-
-    uint8_t data[2048];
-    uint16_t dataLen = 0;
 
     char *inFile = NULL;
     char *signatureFile = NULL;
     char *pubkeyFile = NULL;
     char name[100];
     FILE *fp = NULL;
-    uint16_t filesize;
     uint16_t i;
     uint16_t nid = 0;
 
@@ -133,7 +128,7 @@ int main (int argc, char **argv)
         opterr = 0; // Disable getopt error messages in case of unknown parameters
 
         // Loop through parameters with getopt.
-        while (-1 != (option = getopt(argc, argv, "k:i:s:p:HXh")))
+        while (-1 != (option = getopt(argc, argv, "k:i:s:p:H::Xh")))
         {
             switch (option)
             {
@@ -155,6 +150,15 @@ int main (int argc, char **argv)
                     break;
                 case 'H': // Input
                     uOptFlag.flags.hash = 1;
+                    if (optarg != NULL && optarg[0] != '-') {
+                        strcpy(hash_algo, optarg);
+                    } else if (optind < argc && argv[optind] != NULL && argv[optind][0] != '-') {
+                        strcpy(hash_algo, argv[optind]);
+                        optind++; // Move to the next argument
+                    } else {
+                        strcpy(hash_algo, "sha256");
+                    }
+                    printf("Hash Algorithm: %s\n", hash_algo);
                     break;
                 case 'X': // Bypass Shielded Communication
                     uOptFlag.flags.bypass = 1;
@@ -235,98 +239,19 @@ int main (int argc, char **argv)
             {
                 printf("error opening file : %s\n",inFile);
                 exit(1);
-            }
-
-            hash_context.context_buffer = hash_context_buffer;
-            hash_context.context_buffer_length = sizeof(hash_context_buffer);
-            hash_context.hash_algo = (uint8_t)OPTIGA_HASH_TYPE_SHA_256;
-            filesize = 0;
-
-            // Start performance timer
-            gettimeofday(&start, NULL);
-
-            if(uOptFlag.flags.bypass != 1)
-            {
-                // OPTIGA Comms Shielded connection settings to enable the protection
-                OPTIGA_CRYPT_SET_COMMS_PROTOCOL_VERSION(me_crypt, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
-                OPTIGA_CRYPT_SET_COMMS_PROTECTION_LEVEL(me_crypt, OPTIGA_COMMS_FULL_PROTECTION);
-            }
-
-            optiga_lib_status = OPTIGA_LIB_BUSY;
-            return_status = optiga_crypt_hash_start(me_crypt, &hash_context);
-            if (OPTIGA_LIB_SUCCESS != return_status)
-                break;
-            //Wait until the optiga_util_read_metadata operation is completed
-            trustm_WaitForCompletion(BUSY_WAIT_TIME_OUT);
-            return_status = optiga_lib_status;
-            if (return_status != OPTIGA_LIB_SUCCESS)
-                break;
-
-            while((dataLen = fread(data,1,sizeof(data),fp)) > 0)
-            {
-                hash_data_host.buffer = data;
-                hash_data_host.length = dataLen;
-
-                if(uOptFlag.flags.bypass != 1)
-                {
-                    // OPTIGA Comms Shielded connection settings to enable the protection
-                    OPTIGA_CRYPT_SET_COMMS_PROTOCOL_VERSION(me_crypt, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
-                    OPTIGA_CRYPT_SET_COMMS_PROTECTION_LEVEL(me_crypt, OPTIGA_COMMS_FULL_PROTECTION);
-                }
-
-                optiga_lib_status = OPTIGA_LIB_BUSY;
-                return_status = optiga_crypt_hash_update(me_crypt,
-                                                         &hash_context,
-                                                         OPTIGA_CRYPT_HOST_DATA,
-                                                         &hash_data_host);
-                if (OPTIGA_LIB_SUCCESS != return_status)
-                    break;
-                //Wait until the optiga_util_read_metadata operation is completed
-                trustm_WaitForCompletion(BUSY_WAIT_TIME_OUT);
-                return_status = optiga_lib_status;
-                if (return_status != OPTIGA_LIB_SUCCESS)
-                    break;
-
-                filesize += dataLen;
-            }
-
-            // Capture OPTIGA Trust M error
-            if (return_status != OPTIGA_LIB_SUCCESS)
-            {
-                trustmPrintErrorCode(return_status);
-                break;
-            }
-
-            if(uOptFlag.flags.bypass != 1)
-            {
-                // OPTIGA Comms Shielded connection settings to enable the protection
-                OPTIGA_CRYPT_SET_COMMS_PROTOCOL_VERSION(me_crypt, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
-                OPTIGA_CRYPT_SET_COMMS_PROTECTION_LEVEL(me_crypt, OPTIGA_COMMS_FULL_PROTECTION);
-            }
-
-            optiga_lib_status = OPTIGA_LIB_BUSY;
-            return_status = optiga_crypt_hash_finalize(me_crypt,
-                                                       &hash_context,
-                                                       digest);
-            if (OPTIGA_LIB_SUCCESS != return_status)
-                break;
-            //Wait until the optiga_util_read_metadata operation is completed
-            trustm_WaitForCompletion(BUSY_WAIT_TIME_OUT);
-            return_status = optiga_lib_status;
-            if (return_status != OPTIGA_LIB_SUCCESS)
-                break;
-            else
-                digestLen = sizeof(digest);
-        } else
-        {
+            }         
+            compute_hash(hash_algo, fp, digest, &digestLen);
+            fclose(fp);
+            trustmHexDump(digest,digestLen);	
+         } else
+         {
             digestLen = trustmreadFrom(digest, (uint8_t *) inFile);
             if (digestLen == 0)
             {
                 printf("Error reading input file!!!\n");
                 break;
             }
-        }
-
+         }
         if(uOptFlag.flags.verify == 1)
         {
             printf("OID Cert            : 0x%.4X\n",optiga_oid);
