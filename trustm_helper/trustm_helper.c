@@ -1701,7 +1701,7 @@ void trustm_ecc_r_s_padding_check(uint8_t * sig, uint16_t* sig_len )
         }
 
 }
-void compute_hash(const char *hash_algo, FILE *fp, unsigned char *digest, unsigned int *digestLen) 
+void compute_hash(const char *hash_algo, FILE *fp, unsigned char *digest, uint16_t *digestLen) 
 {
     const EVP_MD *md = NULL;
 
@@ -1733,13 +1733,14 @@ void compute_hash(const char *hash_algo, FILE *fp, unsigned char *digest, unsign
             exit(EXIT_FAILURE);
         }
     }
-    if (EVP_DigestFinal_ex(mdctx, digest, digestLen) != 1) {
+    unsigned int len = 0;
+    if (EVP_DigestFinal_ex(mdctx, digest, &len) != 1) {
         TRUSTM_HELPER_DBGFN("Error: EVP_DigestFinal_ex failed\n");
         free(buffer);
         EVP_MD_CTX_free(mdctx);
         exit(EXIT_FAILURE);
     }
-
+    *digestLen = (uint16_t)len;
     free(buffer);
     EVP_MD_CTX_free(mdctx);
 }

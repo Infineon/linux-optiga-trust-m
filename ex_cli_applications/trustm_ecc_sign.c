@@ -93,7 +93,7 @@ int main (int argc, char **argv)
     uint8_t signature [150];     //To store the signture generated
     uint16_t signature_length = sizeof(signature);
     uint8_t digest[64];
-    unsigned int digestLen=0;
+    uint16_t digestLen = 0;
     char *outFile = NULL;
     char *inFile = NULL;
     FILE *fp = NULL;
