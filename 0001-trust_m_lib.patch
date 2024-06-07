@@ -12,10 +12,19 @@ index 72039eb..b1fdeac 100644
      /** @brief NULL parameter check.
       *         To disable the check, undefine the macro
 diff --git a/trustm_lib/pal/linux/target/rpi3/pal_ifx_i2c_config.c b/trustm_lib/pal/linux/target/rpi3/pal_ifx_i2c_config.c
-index fc5220a..f2c43d5 100644
+index fc5220a..7c1e78a 100644
 --- a/trustm_lib/pal/linux/target/rpi3/pal_ifx_i2c_config.c
 +++ b/trustm_lib/pal/linux/target/rpi3/pal_ifx_i2c_config.c
-@@ -70,7 +70,7 @@ static struct pal_linux_gpio pin_vdd = {GPIO_PIN_VDD, -1};
+@@ -61,8 +61,6 @@ pal_i2c_t optiga_pal_i2c_context_0 =
+     0x30
+ };
+ 
+-static struct pal_linux_gpio pin_reset = {GPIO_PIN_RESET, -1};
+-static struct pal_linux_gpio pin_vdd = {GPIO_PIN_VDD, -1};
+ 
+ /**
+ * \brief PAL vdd pin configuration for OPTIGA. 
+@@ -70,7 +68,7 @@ static struct pal_linux_gpio pin_vdd = {GPIO_PIN_VDD, -1};
  pal_gpio_t optiga_vdd_0 =
  {
      // Platform specific GPIO context for the pin used to toggle Vdd.
@@ -24,7 +33,7 @@ index fc5220a..f2c43d5 100644
  };
  
  /**
-@@ -79,7 +79,7 @@ pal_gpio_t optiga_vdd_0 =
+@@ -79,7 +77,7 @@ pal_gpio_t optiga_vdd_0 =
  pal_gpio_t optiga_reset_0 =
  {
      // Platform specific GPIO context for the pin used to toggle Reset.
