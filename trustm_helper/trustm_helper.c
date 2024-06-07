@@ -22,7 +22,7 @@
 * SOFTWARE
 
 */
-
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -44,6 +44,9 @@
 #include "trustm_helper.h"
 #include "trustm_helper_ipc_lock.h"
 
+
+// Define the buffer size
+#define BUFSIZE 32768
 #ifdef CLI_WORKAROUND
 	extern void pal_os_event_disarm(void);
 	extern void pal_os_event_arm(void);
@@ -1536,4 +1539,91 @@ void trustmGetOIDName(uint16_t optiga_oid, char *name)
             *name = 0x00;
             break;
     }    
+}
+void trustm_ecc_r_s_padding_check(uint8_t * sig, uint16_t* sig_len )
+{
+        int i,j;
+        // check R for pre padding zero
+        #ifdef DEBUG_TRUSTM_HELPER                            
+        trustmHexDump(sig,*sig_len);
+        #endif
+
+        TRUSTM_HELPER_DBGFN("----> Tag1 %02X, L:%02X, V1:%02X, V2:%02X  \n", *sig,*(sig+1),*(sig+2),*(sig+3));
+        if (*sig==0x02 && *(sig+2) == 0x00 && *(sig+3) <=0x7F)
+        {   TRUSTM_HELPER_DBGFN("Fixing R \n");
+            j=*sig_len;
+            for(i=2; i < j; i++)
+            {   
+                sig[i]=sig[i+1];
+            }
+            *(sig+1) -= 1; // update length field
+            *sig_len -=1;
+            #ifdef DEBUG_TRUSTM_HELPER                            
+            trustmHexDump(sig,*sig_len);
+            #endif
+        }
+        
+        // check S for pre padding zero
+        i= *(sig+1) +2;
+        TRUSTM_HELPER_DBGFN("----> Tag2 %X, L:%02X, V1:%02X, V2:%02X \n", sig[i],sig[i+1],sig[i+2],sig[i+3]);
+        if (sig[i]==0x02 && sig[i+2] == 0x00 && sig[i+3] <=0x7F)
+        {   
+            TRUSTM_HELPER_DBGFN("Fixing S \n");
+            sig[i+1] -= 1; // update length field
+            i +=2;
+            j=*sig_len;
+            for(; i < j; i++)
+            {   
+                sig[i]=sig[i+1];
+            }
+             
+            *sig_len -=1;
+            #ifdef DEBUG_TRUSTM_HELPER                            
+            trustmHexDump(sig,*sig_len);
+            #endif
+        }
+
+}
+void compute_hash(const char *hash_algo, FILE *fp, unsigned char *digest, uint16_t *digestLen) 
+{
+    const EVP_MD *md = NULL;
+
+    if (strcmp(hash_algo, "sha384") == 0) {
+        md = EVP_sha384();
+    } else if (strcmp(hash_algo, "sha512") == 0) {
+        md = EVP_sha512();
+    } else {
+        md = EVP_sha256();  // Default to sha256 if no valid algorithm is specified
+    }
+
+    EVP_MD_CTX *mdctx = EVP_MD_CTX_new();
+    if (mdctx == NULL) {
+        TRUSTM_HELPER_DBGFN("Error: Failed to create EVP_MD_CTX\n");
+        exit(EXIT_FAILURE);
+    }
+    if (EVP_DigestInit_ex(mdctx, md, NULL) != 1) {
+        TRUSTM_HELPER_DBGFN("Error: EVP_DigestInit_ex failed\n");
+        EVP_MD_CTX_free(mdctx);
+        exit(EXIT_FAILURE);
+    }
+    char *buffer = malloc(BUFSIZE);
+    int bytesRead = 0;
+    while ((bytesRead = fread(buffer, 1, BUFSIZE, fp)) > 0) {
+        if (EVP_DigestUpdate(mdctx, buffer, bytesRead) != 1) {
+            TRUSTM_HELPER_DBGFN("Error: EVP_DigestUpdate failed\n");
+            free(buffer);
+            EVP_MD_CTX_free(mdctx);
+            exit(EXIT_FAILURE);
+        }
+    }
+    unsigned int len = 0;
+    if (EVP_DigestFinal_ex(mdctx, digest, &len) != 1) {
+        TRUSTM_HELPER_DBGFN("Error: EVP_DigestFinal_ex failed\n");
+        free(buffer);
+        EVP_MD_CTX_free(mdctx);
+        exit(EXIT_FAILURE);
+    }
+    *digestLen = (uint16_t)len;
+    free(buffer);
+    EVP_MD_CTX_free(mdctx);
 }

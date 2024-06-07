@@ -370,12 +370,14 @@ option:-
 -o <filename> : Output to file with header
 -O <filename> : Output to file without header
 -i <filename> : Input Data file
--H            : Hash before sign
+-H <HashAlgo> : SHA256:sha256 SHA384:sha384 SHA512:sha512
 -X            : Bypass Shielded Communication 
 -h            : Print this help 
 ```
 
 Example : Hash and sign the file helloworld.txt with key OID 0xE0F3 and output to testsignature.bin
+
+Note: If no argument is set for *-H* option, sha256 will be used as default
 
 ```console
 foo@bar:~$ ./bin/trustm_ecc_sign -k 0xe0f3 -o testsignature.bin -i helloworld.txt -H
@@ -412,12 +414,14 @@ option:-
 -p <pubkey>    : Use Pubkey file
 -i <filename>  : Input Data file
 -s <signature> : Signature file
--H             : Hash input before verify
+-H <HashAlgo>  : SHA256:sha256 SHA384:sha384 SHA512:sha512
 -X             : Bypass Shielded Communication 
 -h             : Print this help
 ```
 
 Example : verifying a signature using external public key.
+
+Note: If no argument is set for *-H* option, sha256 will be used as default 
 
 ```console
 foo@bar:~$ ./bin/trustm_ecc_verify -i helloworld.txt -s testsignature.bin -p test_e0f3_pub.pem -H
