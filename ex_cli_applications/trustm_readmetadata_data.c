@@ -135,48 +135,45 @@ int main (int argc, char **argv)
             optiga_oid = arrayOID[i];
             trustmGetOIDName(optiga_oid, messagebuf);
 
-            if(messagebuf != NULL)
+            printf("===========================================\n");
+            puts(messagebuf);
+
+            // Start performance timer
+            gettimeofday(&start, NULL);
+
+            if(uOptFlag.flags.bypass != 1)
             {
-                printf("===========================================\n");
-                puts(messagebuf);
+                // OPTIGA Comms Shielded connection settings to enable the protection
+                OPTIGA_UTIL_SET_COMMS_PROTOCOL_VERSION(me_util, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
+                OPTIGA_UTIL_SET_COMMS_PROTECTION_LEVEL(me_util, OPTIGA_COMMS_FULL_PROTECTION);
+            }
 
-                // Start performance timer
-                gettimeofday(&start, NULL);
-
-                if(uOptFlag.flags.bypass != 1)
-                {
-                    // OPTIGA Comms Shielded connection settings to enable the protection
-                    OPTIGA_UTIL_SET_COMMS_PROTOCOL_VERSION(me_util, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
-                    OPTIGA_UTIL_SET_COMMS_PROTECTION_LEVEL(me_util, OPTIGA_COMMS_FULL_PROTECTION);
-                }
-
-                bytes_to_read = sizeof(read_data_buffer);
-                optiga_lib_status = OPTIGA_LIB_BUSY;
-                return_status = optiga_util_read_metadata(me_util,
-                                                            optiga_oid,
-                                                            read_data_buffer,
-                                                            &bytes_to_read);
-                if (OPTIGA_LIB_SUCCESS != return_status)
-                    break;
-                //Wait until the optiga_util_read_metadata operation is completed
-                trustm_WaitForCompletion(BUSY_WAIT_TIME_OUT);
-                return_status = optiga_lib_status;
-                if (return_status != OPTIGA_LIB_SUCCESS)
-                    break;
-                else
-                {
-                    // stop performance timer.      
-                    gettimeofday(&end, NULL);
-                    // Calculating total time taken by the program.
-                    time_taken = (end.tv_sec - start.tv_sec) * 1e6;
-                    time_taken = (time_taken + (end.tv_usec - start.tv_usec)) * 1e-6;
-                    printf("OPTIGA execution time: %0.4f sec.\n", time_taken);
-                    printf("[Size %.4d] : \n", bytes_to_read);
-                    trustmHexDump(read_data_buffer,bytes_to_read);
-                    printf("\t");
-                    trustmdecodeMetaData(read_data_buffer);
-                    printf("\n");
-                }
+            bytes_to_read = sizeof(read_data_buffer);
+            optiga_lib_status = OPTIGA_LIB_BUSY;
+            return_status = optiga_util_read_metadata(me_util,
+                                                        optiga_oid,
+                                                        read_data_buffer,
+                                                        &bytes_to_read);
+            if (OPTIGA_LIB_SUCCESS != return_status)
+                break;
+            //Wait until the optiga_util_read_metadata operation is completed
+            trustm_WaitForCompletion(BUSY_WAIT_TIME_OUT);
+            return_status = optiga_lib_status;
+            if (return_status != OPTIGA_LIB_SUCCESS)
+                break;
+            else
+            {
+                // stop performance timer.      
+                gettimeofday(&end, NULL);
+                // Calculating total time taken by the program.
+                time_taken = (end.tv_sec - start.tv_sec) * 1e6;
+                time_taken = (time_taken + (end.tv_usec - start.tv_usec)) * 1e-6;
+                printf("OPTIGA execution time: %0.4f sec.\n", time_taken);
+                printf("[Size %.4d] : \n", bytes_to_read);
+                trustmHexDump(read_data_buffer,bytes_to_read);
+                printf("\t");
+                trustmdecodeMetaData(read_data_buffer);
+                printf("\n");
             }
         }while(FALSE);
 

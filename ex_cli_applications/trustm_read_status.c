@@ -132,47 +132,44 @@ int main (int argc, char **argv)
             optiga_oid = arrayOID[i];
             trustmGetOIDName(optiga_oid, messagebuf);
 
-            if(messagebuf != NULL)
+            puts(messagebuf);
+
+            // Start performance timer
+            gettimeofday(&start, NULL);
+
+            if(uOptFlag.flags.bypass != 1)
             {
-                puts(messagebuf);
+                // OPTIGA Comms Shielded connection settings to enable the protection
+                OPTIGA_UTIL_SET_COMMS_PROTOCOL_VERSION(me_util, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
+                OPTIGA_UTIL_SET_COMMS_PROTECTION_LEVEL(me_util, OPTIGA_COMMS_FULL_PROTECTION);
+            }
 
-                // Start performance timer
-                gettimeofday(&start, NULL);
-
-                if(uOptFlag.flags.bypass != 1)
-                {
-                    // OPTIGA Comms Shielded connection settings to enable the protection
-                    OPTIGA_UTIL_SET_COMMS_PROTOCOL_VERSION(me_util, OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
-                    OPTIGA_UTIL_SET_COMMS_PROTECTION_LEVEL(me_util, OPTIGA_COMMS_FULL_PROTECTION);
-                }
-
-                bytes_to_read = sizeof(read_data_buffer);
-                optiga_lib_status = OPTIGA_LIB_BUSY;
-                return_status = optiga_util_read_data(me_util,
-                                                    optiga_oid,
-                                                    offset,
-                                                    read_data_buffer,
-                                                    (uint16_t *)&bytes_to_read);
-                if (OPTIGA_LIB_SUCCESS != return_status)
-                    break;
-                //Wait until the optiga_util_read_metadata operation is completed
-                trustm_WaitForCompletion(BUSY_WAIT_TIME_OUT);
-                return_status = optiga_lib_status;
-                if (return_status != OPTIGA_LIB_SUCCESS)
-                    break;
-                else
-                {
-                    // stop performance timer.
-                    gettimeofday(&end, NULL);
-                    // Calculating total time taken by the program.
-                    time_taken = (end.tv_sec - start.tv_sec) * 1e6;
-                    time_taken = (time_taken + (end.tv_usec - start.tv_usec)) * 1e-6;
-                    printf("OPTIGA execution time: %0.4f sec.\n", time_taken);
-                    printf("[Size %.4d] : ", bytes_to_read);
-                    if(optiga_oid == 0xE0C2)
-                        printf("\n");
-                    trustmHexDump(read_data_buffer, bytes_to_read);
-                } // End of if
+            bytes_to_read = sizeof(read_data_buffer);
+            optiga_lib_status = OPTIGA_LIB_BUSY;
+            return_status = optiga_util_read_data(me_util,
+                                                optiga_oid,
+                                                offset,
+                                                read_data_buffer,
+                                                (uint16_t *)&bytes_to_read);
+            if (OPTIGA_LIB_SUCCESS != return_status)
+                break;
+            //Wait until the optiga_util_read_metadata operation is completed
+            trustm_WaitForCompletion(BUSY_WAIT_TIME_OUT);
+            return_status = optiga_lib_status;
+            if (return_status != OPTIGA_LIB_SUCCESS)
+                break;
+            else
+            {
+                // stop performance timer.
+                gettimeofday(&end, NULL);
+                // Calculating total time taken by the program.
+                time_taken = (end.tv_sec - start.tv_sec) * 1e6;
+                time_taken = (time_taken + (end.tv_usec - start.tv_usec)) * 1e-6;
+                printf("OPTIGA execution time: %0.4f sec.\n", time_taken);
+                printf("[Size %.4d] : ", bytes_to_read);
+                if(optiga_oid == 0xE0C2)
+                    printf("\n");
+                trustmHexDump(read_data_buffer, bytes_to_read);
             } // End of if
         }while(FALSE);
 
