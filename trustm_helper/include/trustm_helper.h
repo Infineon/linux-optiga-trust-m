@@ -162,4 +162,5 @@ uint32_t trustmHexorDec(const char *aArg);
 uint16_t trustmwriteTo(uint8_t *buf, uint32_t len, const char *filename);
 uint16_t trustmreadFrom(uint8_t *data, uint8_t *filename);
 void trustm_ecc_r_s_padding_check(uint8_t * sig, uint16_t* sig_len );
+void compute_hash(const char *hash_algo, FILE *fp, unsigned char *digest, unsigned int *digestLen);
 #endif  // _TRUSTM_HELPER_H_

@@ -22,7 +22,7 @@
 * SOFTWARE
 
 */
-
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -44,6 +44,9 @@
 #include "trustm_helper.h"
 #include "trustm_helper_ipc_lock.h"
 
+
+// Define the buffer size
+#define BUFSIZE 32768
 #ifdef CLI_WORKAROUND
 	extern void pal_os_event_disarm(void);
 	extern void pal_os_event_arm(void);
@@ -1580,4 +1583,46 @@ void trustm_ecc_r_s_padding_check(uint8_t * sig, uint16_t* sig_len )
             #endif
         }
 
+}
+void compute_hash(const char *hash_algo, FILE *fp, unsigned char *digest, unsigned int *digestLen) 
+{
+    const EVP_MD *md = NULL;
+
+    if (strcmp(hash_algo, "sha384") == 0) {
+        md = EVP_sha384();
+    } else if (strcmp(hash_algo, "sha512") == 0) {
+        md = EVP_sha512();
+    } else {
+        md = EVP_sha256();  // Default to sha256 if no valid algorithm is specified
+    }
+
+    EVP_MD_CTX *mdctx = EVP_MD_CTX_new();
+    if (mdctx == NULL) {
+        TRUSTM_HELPER_DBGFN("Error: Failed to create EVP_MD_CTX\n");
+        exit(EXIT_FAILURE);
+    }
+    if (EVP_DigestInit_ex(mdctx, md, NULL) != 1) {
+        TRUSTM_HELPER_DBGFN("Error: EVP_DigestInit_ex failed\n");
+        EVP_MD_CTX_free(mdctx);
+        exit(EXIT_FAILURE);
+    }
+    char *buffer = malloc(BUFSIZE);
+    int bytesRead = 0;
+    while ((bytesRead = fread(buffer, 1, BUFSIZE, fp)) > 0) {
+        if (EVP_DigestUpdate(mdctx, buffer, bytesRead) != 1) {
+            TRUSTM_HELPER_DBGFN("Error: EVP_DigestUpdate failed\n");
+            free(buffer);
+            EVP_MD_CTX_free(mdctx);
+            exit(EXIT_FAILURE);
+        }
+    }
+    if (EVP_DigestFinal_ex(mdctx, digest, digestLen) != 1) {
+        TRUSTM_HELPER_DBGFN("Error: EVP_DigestFinal_ex failed\n");
+        free(buffer);
+        EVP_MD_CTX_free(mdctx);
+        exit(EXIT_FAILURE);
+    }
+
+    free(buffer);
+    EVP_MD_CTX_free(mdctx);
 }
