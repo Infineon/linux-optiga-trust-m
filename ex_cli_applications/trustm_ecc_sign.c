@@ -88,12 +88,7 @@ int main (int argc, char **argv)
     struct timeval start;
     struct timeval end;
     double time_taken;
-
-    //optiga_hash_context_t hash_context;
-    //hash_data_from_host_t hash_data_host;
-    //uint8_t hash_context_buffer[2048];
-
-    uint8_t signature [300];     //To store the signture generated
+    uint8_t signature [150];     //To store the signture generated
     uint16_t signature_length = sizeof(signature);
     uint8_t digest[32];
     uint16_t digestLen = 0;
@@ -103,15 +98,8 @@ int main (int argc, char **argv)
     char *outFile = NULL;
     char *inFile = NULL;
     FILE *fp = NULL;
-    
-    int i;
-
     int option = 0;                    // Command line option.
-    ECDSA_SIG  *ecdsa_sig = NULL;
-    const unsigned char *sig_p1 = NULL;
-    unsigned char *sig_p2 = NULL;
-    
-    int sig_len=0;
+ 
 /***************************************************************
  * Getting Input from CLI
  **************************************************************/
@@ -269,7 +257,7 @@ int main (int argc, char **argv)
                                                     digest,
                                                     digestLen,
                                                     optiga_key_id,
-                                                    signature,
+                                                    signature+3,
                                                     &signature_length);
             if (OPTIGA_LIB_SUCCESS != return_status)
                 break;
@@ -282,34 +270,23 @@ int main (int argc, char **argv)
             {
                 if(uOptFlag.flags.outputssl == 1)
                 {
-                if(signature_length<0x7F){
-                    for(i=signature_length-1; i >= 0; i--)
-                    {
-                        signature[i+2] = signature[i]; 
+                    if(signature_length<0x7F){
+                        signature[1] = 0x30; // Insert SEQUENCE
+                        signature[2] = signature_length; // insert length
+                        signature_length += 2;
+                        trustmwriteTo(signature+1, signature_length, outFile);
                     }
-                    signature[0] = 0x30; // Insert SEQUENCE
-                    signature[1] = signature_length; // insert length
-                    signature_length += 2;
-                    trustmwriteTo(signature, signature_length, outFile);
-                }
-                else{
-                    for(i=signature_length-1; i >= 0; i--)
-                    {
-                        signature[i+3] = signature[i]; 
+                    else{
+                        
+                        trustm_ecc_r_s_padding_check(signature+3, &signature_length );
+                        signature[0] = 0x30; // Insert SEQUENCE
+                        signature[1] = 0x81; // insert length
+                        signature[2] = signature_length;
+                        signature_length += 3;
+                        trustmwriteTo(signature, signature_length, outFile);
+
                     }
-                    signature[0] = 0x30; // Insert SEQUENCE
-                    signature[1] = 0x81; // insert length
-                    signature[2] = signature_length; // insert length
-                    signature_length += 3;
-
-                    sig_p1=signature;
-                    ecdsa_sig = d2i_ECDSA_SIG(NULL, &sig_p1, signature_length+3);
-                    sig_p2=signature;
-                    sig_len=i2d_ECDSA_SIG(ecdsa_sig, &sig_p2);
-                    trustmwriteTo(signature, sig_len, outFile);
-
                 }
-            }
                 // stop performance timer.
                 gettimeofday(&end, NULL);
                 // Calculating total time taken by the program.
