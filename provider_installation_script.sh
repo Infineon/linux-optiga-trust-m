@@ -6,6 +6,9 @@ sudo apt update
 sudo apt -y install git gcc libssl-dev
 
 echo "-----> Apply patch"
+cd trustm_lib
+git reset --hard
+cd ..
 git apply $FILE
 
 set -e
