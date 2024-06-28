@@ -46,7 +46,7 @@ As an OEM, you will receive your OPTIGA™ Trust M MTR in the following configur
 | --------: | --------------------------- | ----------------------- | -------------- | ---- | ---------------------------------- | ------- | --------------------------------------------------------------------------------------- |
 |    0xE0F0 | ECC NIST P256 Private Key 1 | Bound to Cert in 0xE0E0 | Operational    | NEV  | PBS & Auto*                        | ALW     |                                                                                         |
 |    0xE0F1 | ECC NIST P256 Private Key 2 | Bound to Cert in 0xE0E1 | Operational    | NEV  | PBS & Auto*                        | ALW     |                                                                                         |
-|    0xE0FC | RSA 2048 Private Key 1      | Bound to Cert in 0xE0FC | Operational    | NEV  | PBS & Auto*                        | ALW     |                                                                                         |
+|    0xE0FC | RSA 2048 Private Key 1      | Bound to Cert in 0xE0E2 | Operational    | NEV  | PBS & Auto*                        | ALW     |                                                                                         |
 |    0xE0E0 | ECC Certificate 1           | Bound to Key in 0xE0F0  | Initialization | ALW  | (ALW if LcsO < OP) or (PBS & Auto) | ALW     | [IFX Int. CA 306](https://pki.infineon.com/OptigaTrustEccCA306/OptigaTrustEccCA306.crt) |
 |    0xE0E1 | ECC Certificate 2           | Bound to Key in 0xE0F1  | Operational    | ALW  | PBS & Auto                         | ALW     | [IFX Int. CA 306](https://pki.infineon.com/OptigaTrustEccCA306/OptigaTrustEccCA306.crt) |
 |    0xE0E2 | RSA Certificate 1           | Bound to Key in 0xE0FC  | Operational    | ALW  | PBS & Auto                         | ALW     | [IFX Int. CA 309](https://pki.infineon.com/OptigaTrustRsaCA309/OptigaTrustRsaCA309.crt) |
@@ -62,7 +62,7 @@ The scripts in this folder will change some of the objects on the OPTIGA™ Trus
 | ----------: | ---------------------------- | ----------------------- | ---------------- | ---- | ---------------------------------- | ------- | -------------- |
 |      0xE0F0 | ECC NIST P256 Private Key 1  | Bound to Cert in 0xE0E0 | Operational      | NEV  | PBS & Auto*                        | ALW     | IFX            |
 |      0xE0F1 | ECC NIST P256 Private Key 2  | Bound to Cert in 0xE0E1 | Operational      | NEV  | PBS & Auto*                        | ALW     | IFX            |
-|      0xE0FC | RSA 2048 Private Key 1       | Bound to Cert in 0xE0FC | Operational      | NEV  | PBS & Auto*                        | ALW     | IFX            |
+|      0xE0FC | RSA 2048 Private Key 1       | Bound to Cert in 0xE0E2 | Operational      | NEV  | PBS & Auto*                        | ALW     | IFX            |
 |      0xE0E0 | Matter DAC                   | Bound to Key in 0xE0F0  | Operational      | ALW  | (ALW if LcsO < OP) or (PBS & Auto) | ALW     | OEM            |
 |      0xE0E1 | ECC Certificate 2            | Bound to Key in 0xE0F1  | Operational      | ALW  | PBS & Auto                         | ALW     | IFX            |
 |      0xE0E2 | RSA Certificate 1            | Bound to Key in 0xE0FC  | Operational      | ALW  | PBS & Auto                         | ALW     | IFX            |
