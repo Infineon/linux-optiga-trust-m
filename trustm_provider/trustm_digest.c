@@ -5,7 +5,7 @@
 #include <openssl/params.h>
 #include <openssl/crypto.h>
 
-#include "optiga/pal/pal_ifx_i2c_config.h"
+#include "pal_ifx_i2c_config.h"
 #include "trustm_helper.h"
 #include "trustm_helper_ipc_lock.h"
 #include "optiga_lib_common.h"

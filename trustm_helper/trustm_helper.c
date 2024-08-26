@@ -36,10 +36,10 @@
 #include <openssl/pem.h>
 #include <openssl/asn1.h>
 
-#include "optiga/optiga_util.h"
-#include "optiga/pal/pal_os_timer.h"
-#include "optiga/pal/pal_gpio.h"
-#include "optiga/pal/pal_ifx_i2c_config.h"
+#include "optiga_util.h"
+#include "pal_os_timer.h"
+#include "pal_gpio.h"
+#include "pal_ifx_i2c_config.h"
 
 #include "trustm_helper.h"
 #include "trustm_helper_ipc_lock.h"

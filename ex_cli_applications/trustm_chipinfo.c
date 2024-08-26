@@ -25,8 +25,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "optiga/ifx_i2c/ifx_i2c_config.h"
-#include "optiga/optiga_util.h"
+#include "ifx_i2c_config.h"
+#include "optiga_util.h"
 
 #include "trustm_helper.h"
 
