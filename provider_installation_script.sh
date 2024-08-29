@@ -12,8 +12,8 @@ make clean
 make -j5
 sudo make install
 
-#~ echo "-----> Build Protected Update Set tool"
-#~ cd ex_protected_update_data_set/Linux/
-#~ make clean
-#~ make -j5 
-#~ sudo make install 
+echo "-----> Build Protected Update Set tool"
+cd ex_protected_update_data_set/Linux/
+make clean
+make -j5 
+sudo make install 

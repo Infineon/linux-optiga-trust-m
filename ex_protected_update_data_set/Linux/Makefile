@@ -23,23 +23,16 @@
 #
 #*/
 # Uncomment the following makro if you are running a 64-Bit Linux System
-#~ AARCH64 = YES
 
 ARCH := $(shell dpkg --print-architecture)
 BINDIR = bin
 APPDIR = .
-MBEDTLS_LIB = ../../trustm_lib/externals/mbedtls
-#ifdef AARCH64
+MBEDTLS_LIB = ../../trustm_lib/external/mbedtls
 ifeq ($(ARCH), arm64)
 LIB_INSTALL_DIR = /usr/lib/aarch64-linux-gnu
 else
 LIB_INSTALL_DIR = /usr/lib/arm-linux-gnueabihf
 endif
-
-#~ OTHDIR = ../src
-#~ OTHDIR += ../pal 
-#~ OTHDIR += $(MBEDTLS_LIB)/library
-
 
 INCDIR = ../include
 INCDIR += ../include/pal
@@ -86,37 +79,9 @@ CFLAGS = -c
 CFLAGS += $(INCDIR)
 CFLAGS += -Wall
 CFLAGS += -Wno-pointer-sign
-#ifdef AARCH64
 ifeq ($(ARCH), arm64)
 CFLAGS += -fPIC
 endif
-
-#~ CFLAGS += -DMBEDTLS_PK_PARSE_C
-CFLAGS += -DMBEDTLS_FS_IO
-CFLAGS += -DMBEDTLS_PEM_PARSE_C
-CFLAGS += -DMBEDTLS_BASE64_C
-CFLAGS += -DMBEDTLS_ECDSA_DETERMINISTIC
-CFLAGS += -DMBEDTLS_HMAC_DRBG_C
-CFLAGS += -DMBEDTLS_ECDSA_DETERMINISTIC_DEBUG
-CFLAGS += -DMBEDTLS_RSA_C
-CFLAGS += -DMBEDTLS_PKCS1_V15
-CFLAGS += -DMBEDTLS_PK_RSA_ALT_SUPPORT
-CFLAGS += -DMBEDTLS_TIMING_C
-CFLAGS += -DMBEDTLS_ENTROPY_C
-CFLAGS += -DMBEDTLS_CTR_DRBG_C
-CFLAGS += -DMBEDTLS_ECDSA_C
-CFLAGS += -DMBEDTLS_ASN1_WRITE_C
-CFLAGS += -DMBEDTLS_ECP_DP_SECP384R1_ENABLED
-CFLAGS += -DMBEDTLS_ECP_DP_SECP521R1_ENABLED
-CFLAGS += -DMBEDTLS_ECP_DP_BP256R1_ENABLED
-CFLAGS += -DMBEDTLS_ECP_DP_BP384R1_ENABLED
-CFLAGS += -DMBEDTLS_ECP_DP_BP512R1_ENABLED
-
-#~ LDFLAGS += -lpthread
-#~ LDFLAGS += -lssl
-#~ LDFLAGS += -lcrypto
-#~ LDFLAGS += -lrt
-
 
 LDFLAGS_1 = -L$(BINDIR) -Wl,-R$(BINDIR)
 LDFLAGS_1 += -ltrustm_update
