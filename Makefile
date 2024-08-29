@@ -26,7 +26,6 @@
 
 TRUSTM = trustm_lib
 
-BUILD_FOR_RPI = NO
 BUILD_FOR_ULTRA96 = NO
 USE_LIBGPIOD_RPI = YES
 
@@ -39,7 +38,6 @@ LIBDIR += $(TRUSTM)/src/cmd
 LIBDIR += $(TRUSTM)/external/mbedtls/library
 LIBDIR += trustm_helper
 
-#OTHDIR = $(TRUSTM)/examples/optiga
 ARCH := $(shell dpkg --print-architecture)
 BINDIR = bin
 APPDIR = ex_cli_applications
@@ -73,9 +71,6 @@ endif
 ifdef LIBDIR
 	ifdef PALDIR
 	        LIBSRC =  $(PALDIR)/pal.c	       
-	        ifeq ($(BUILD_FOR_RPI), YES)
-	                 LIBSRC += $(PALDIR)/pal_gpio.c
-        	endif
 	        ifeq ($(BUILD_FOR_ULTRA96), YES)
 	                 LIBSRC += $(PALDIR)/pal_gpio.c
         	endif
@@ -89,11 +84,7 @@ ifdef LIBDIR
         	LIBSRC += $(PALDIR)/pal_os_lock.c
 	        LIBSRC += $(PALDIR)/pal_os_timer.c
 	        LIBSRC += $(PALDIR)/pal_os_memory.c
-			LIBSRC += $(TRUSTM)/extras/pal/pal_crypt_mbedtls.c
-	        ifeq ($(BUILD_FOR_RPI), YES)
-	                LIBSRC += $(PALDIR)/target/rpi3/pal_ifx_i2c_config.c
-        	endif
-        	
+			LIBSRC += $(TRUSTM)/extras/pal/pal_crypt_mbedtls.c       	
         	ifeq ($(USE_LIBGPIOD_RPI), YES)
 	                LIBSRC += $(PALDIR)/target/gpiod/pal_ifx_i2c_config.c
         	endif
