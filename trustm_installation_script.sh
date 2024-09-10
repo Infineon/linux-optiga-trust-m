@@ -13,6 +13,9 @@ echo $PATCH
 echo $TRUSTM_LIB_PATH
 
 echo "-----> Apply patch"
+cd trustm_lib
+git reset --hard	
+cd ..
 git apply $FILE
 set -e
 echo "-----> Build Trust M Linux Tools"
