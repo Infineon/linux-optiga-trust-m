@@ -46,11 +46,16 @@
     - [req](#req)
     - [pkey](#pkey)
     - [pkeyutl](#pkeyutl)
+    - [Testing TLS connection with ECC key](#testing-tls-connection-with-ecc-key)
+      - [Scenario where Trust M is on the client ](#scenario-where-trust-m-is-on-the-client-)
+      - [Scenario where Trust M is on the server ](#scenario-where-trust-m-is-on-the-server-)
     - [Testing TLS connection with RSA key](#test_tls_rsa)
+      - [Scenario where Trust M is on the client ](#scenario-where-trust-m-is-on-the-client--1)
+      - [Scenario where Trust M is on the server ](#scenario-where-trust-m-is-on-the-server--1)
     - [Generating a Test Server Certificate](#test_server_cert)
+    - [Using OPTIGA™ Trust M OpenSSL provider to sign and issue certificate](#using-optiga-trust-m-openssl-provider-to-sign-and-issue-certificate)
   - [Known observations](#known-observations)
     - [Secure communication bypass](#secure-communication-bypass)
-    - [OPTIGA™ Trust M Sporadic hang](#optiga-trust-m-sporadic-hang)
 
 ## <a name="about"></a>About
 
@@ -58,7 +63,6 @@ This is a Linux Tools for OPTIGA Trust M1/M3 on Linux platform that consist of:
 
 - [Command Line Interface examples](#cli_usage)
 - [OpenSSL Provider](#provider_usage)
-- [AWS IoT C SDK example](./ex_aws-iot-device-sdk-embedded-C-1.1.2/)
 
 
 ### <a name="prerequisites"></a>Prerequisites
@@ -72,52 +76,50 @@ Following is the software component to build the tools :
 
 
 Hardware platforms and boards:
-* Raspberry PI 3/4  on Linux kernel >= 4.19
+* Raspberry PI 4  on Linux kernel >= 5.15
 
-* [OPTIGA™ Trust M](https://www.infineon.com/cms/en/product/evaluation-boards/s2go-security-optiga-m/)
+* Micro SD card (≥16GB)
 
-* [Shield2Go Adapter for Raspberry Pi](https://www.infineon.com/cms/en/product/evaluation-boards/s2go-adapter-rasp-pi-iot/)
+* [S2GO SECURITY OPTIGA™ Trust M](https://www.infineon.com/cms/en/product/evaluation-boards/s2go-security-optiga-m/)  paired with [OPTIGA™ Trust M MTR SHIELD](https://www.infineon.com/cms/en/product/evaluation-boards/trust-m-mtr-shield/)
+
+* [Shield2Go Adapter for Raspberry Pi](https://www.infineon.com/cms/en/product/evaluation-boards/s2go-adapter-rasp-pi-iot/) paired with [Pi Click Shield](https://www.mikroe.com/pi-4-click-shield) 
 
   
   
-  Note: OPTIGA™ Trust M Provider is tested on Linux Raspberry PI 6.1.21-v8+ aarch64
+  Note: OPTIGA™ Trust M Provider is tested on Linux Raspberry PI 6.6.31+rpt-rpi--v8 aarch64 with OpenSSL 3.0.14 pre-installed
   
-  ![](/pictures/coonection_diagram1.png)
+  ![](/pictures/connection_diagram1.png)
+  
+  Figure 1 Connection for S2GO SECURITY OPTIGA™ Trust M using Shield2Go Adapter
+  
+  ![](pictures/HardwareSetup.png)
+  
+  Figure 2 Hardware Setup for S2GO SECURITY OPTIGA™ Trust M using Shield2Go Adapter
+  
+  ![](/pictures/rpi_mikro_connection.png)
+
+​       Figure 3 Hardware Setup for OPTIGA™ Trust M MTR SHIELD using Pi Click Shield
 
 ## <a name="getting_started"></a>Getting Started
-### <a name="getting_code"></a>Getting the Code from Github
 
-Getting the initial code from Github with submodules
+### <a name="getting_code"></a>Getting the Code from GitHub
 
-```console
-foo@bar:~$ git clone --recurse-submodules https://github.com/Infineon/linux-optiga-trust-m.git
-```
-
-Note:  The following commands are optional and it is required only when switching between different branches.
+Getting the initial code from GitHub with submodules
 
 ```
-foo@bar:~$ git checkout provider_dev
-foo@bar:~$ git submodule update -f
+git clone --recurse-submodules https://github.com/Infineon/optiga-trust-m-explorer.git
 ```
 
 ### <a name="build_lib"></a>First time building the library
 Run the commands below in sequence to install the required dependencies and the OPTIGA™ Trust M provider. 
 
-    foo@bar:~$ cd linux-optiga-trust-m
-    foo@bar:~$ ./provider_installation_script.sh
+    cd linux-optiga-trust-m
+    ./provider_installation_script.sh
 
 Note: 
 
-1)Enable I2C interface for Raspberry Pi to communicate with optiga trustm m
+Enable I2C interface for Raspberry Pi to communicate with OPTIGA™ Trust M
 
-2)The patch applied inside trustm_installation_script.sh will change the reset type to use soft reset as follow in the header file at "linux-optiga-trust-m/trustm_lib/optiga/include/optiga/"
-
-- optiga_lib_config_m_v3.h for OPTIGA™ Trust M3 
-
-
-```console
-#define OPTIGA_COMMS_DEFAULT_RESET_TYPE     (1U)
-```
 ## <a name="cli_usage"></a>CLI Tools Usage
 
 ### Important Notes:  
@@ -129,7 +131,7 @@ Note:
 Read/Write/Clear certificate from/to certificate data object. Output and input certificate in PEM format.
 
 ```console
-foo@bar:~$ ./bin/trustm_cert
+./bin/trustm_cert
 Help menu: trustm_cert <option> ...<option>
 option:- 
 -r <Cert OID>  	: Read Certificate from OID 0xNNNN 
@@ -144,14 +146,14 @@ option:-
 Example : read OID 0xE0E0 and output the certification to teste0e0.crt
 
 ```console
-foo@bar:~$ ./bin/trustm_cert -r 0xe0e0 -o teste0e0.crt
+./bin/trustm_cert -r 0xe0e0 -o teste0e0.crt
 ========================================================
 OID              : 0xE0E0 
 Output File Name : teste0e0.crt 
 Success!!!
 ========================================================
 
-foo@bar:~$ cat teste0e0.crt 
+cat teste0e0.crt 
 -----BEGIN CERTIFICATE-----
 MIIB2DCCAX6gAwIBAgIEERCFGjAKBggqhkjOPQQDAjByMQswCQYDVQQGEwJERTEh
 MB8GA1UECgwYSW5maW5lb24gVGVjaG5vbG9naWVzIEFHMRMwEQYDVQQLDApPUFRJ
@@ -169,7 +171,7 @@ B1ItWszBjNzc0AIgEiPyApU78Oif0drcgQhH0qfxaKPJAFySCb2wpHYy6Uc=
 Example : write certificate teste0e0.crt into OID 0xE0E1
 
 ```console
-foo@bar:~$ ./bin/trustm_cert -w 0xe0e1 -i teste0e0.crt 
+./bin/trustm_cert -w 0xe0e1 -i teste0e0.crt 
 ========================================================
 Success!!!
 ========================================================
@@ -178,7 +180,7 @@ Success!!!
 Example : clear certificate store in OID 0xE0E1
 
 ```console
-foo@bar:~$ ./bin/trustm_cert -c 0xe0e1
+./bin/trustm_cert -c 0xe0e1
 ========================================================
 Cleared.
 ========================================================
@@ -189,7 +191,7 @@ Cleared.
 Display the OPTIGA™ Trust M chip information
 
 ```console
-foo@bar:~$ ./bin/trustm_chipinfo 
+./bin/trustm_chipinfo 
 Read Chip Info [0xE0C2]: Success.
 ========================================================
 CIM Identifier             [bCimIdentifer]: 0xcd
@@ -213,7 +215,7 @@ OPTIGA(TM) Trust M rev.1; Firmware Version: 1.30.809
 Read/Write/Erase OID data object in raw format.
 
 ```console
-foo@bar:~$ ./bin/trustm_data 
+./bin/trustm_data 
 Help menu: trustm_data <option> ...<option>
 option:- 
 -r <OID>      : Read from OID 0xNNNN 
@@ -230,10 +232,10 @@ option:-
 Example : writing text file 1234.txt into OID 0xE0E1 and reading after writing
 
 ```console
-foo@bar:~$ cat 1234.txt 
+cat 1234.txt 
 1234
 
-foo@bar:~$ ./bin/trustm_data -w 0xe0e1 -i 1234.txt
+./bin/trustm_data -w 0xe0e1 -i 1234.txt
 ========================================================
 Device Public Key           [0xE0E1] Offset: 0
 Input data : 
@@ -241,7 +243,7 @@ Input data :
 Write Success.
 ========================================================
 
-foo@bar:~$ ./bin/trustm_data -r 0xe0e1
+./bin/trustm_data -r 0xe0e1
 ========================================================
 Device Public Key           [0xE0E1] [Size 0005] : 
 	31 32 33 34 0a 
@@ -251,7 +253,7 @@ Device Public Key           [0xE0E1] [Size 0005] :
 Example : erase with offset OID 0xE0E1
 
 ```console
-foo@bar:~$ ./bin/trustm_data -w 0xe0e1 -e -p 10 -i 1234.txt
+./bin/trustm_data -w 0xe0e1 -e -p 10 -i 1234.txt
 ========================================================
 Device Public Key           [0xE0E1] Offset: 10
 Input data : 
@@ -259,7 +261,7 @@ Input data :
 Write Success.
 ========================================================
 
-foo@bar:~$ ./bin/trustm_data -r 0xe0e1
+./bin/trustm_data -r 0xe0e1
 ========================================================
 Device Public Key           [0xE0E1] [Size 0015] : 
 	00 00 00 00 00 00 00 00 00 00 31 32 33 34 0a 
@@ -271,7 +273,7 @@ Device Public Key           [0xE0E1] [Size 0015] :
 Generate OPTIGA™ Trust M ECC key pair. Key type can be or together to form multiple type.
 
 ```console
-foo@bar:~$ ./bin/trustm_ecc_keygen 
+./bin/trustm_ecc_keygen 
 Help menu: trustm_ecc_keygen <option> ...<option>
 option:- 
 -g <Key OID>    : Generate ECC Key in OID 0xNNNN 
@@ -298,7 +300,7 @@ For private key slot 0xE0F2, the public key will be stored in 0xF1E1.
 Example : generate an ECC256 key with type Auth/Enc/Sign in OID 0xE0F3 and save pubkey in OID 0xF1D3.
 
 ```console
-foo@bar:~$ ./bin/trustm_ecc_keygen -g 0xe0f3 -t 0x13 -k 0x03 -o test_e0f3_pub.pem -s
+./bin/trustm_ecc_keygen -g 0xe0f3 -t 0x13 -k 0x03 -o test_e0f3_pub.pem -s
 ========================================================
 Generating Key to 0xE0F3
 Output File Name : test_e0f3_pub.pem 
@@ -312,13 +314,13 @@ Pubkey :
 Write Success to OID: 0xF1D3.
 ========================================================
 
-foo@bar:~$ cat test_e0f3_pub.pem 
+cat test_e0f3_pub.pem 
 -----BEGIN PUBLIC KEY-----
 MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE8VVly0L7Pljbxp9n6PzTSPaqXxMt
 9junkCK0ttNOW7uYq0aXvSoDpielTfuVwrua06+pTqfWoWOfk7ZxVwfmAA==
 -----END PUBLIC KEY-----
 
-foo@bar:~$ ./bin/trustm_data -r 0xf1d3
+./bin/trustm_data -r 0xf1d3
 ========================================================
 App DataStrucObj type 3     [0xF1D3] [Size 0091] : 
 	30 59 30 13 06 07 2A 86 48 CE 3D 02 01 06 08 2A 
@@ -337,7 +339,7 @@ Simple demo to show the process to sign using OPTIGA™ Trust M ECC key.
 *Note : to output OpenSSL signature format used -o*
 
 ```console
-foo@bar:~$ ./bin/trustm_ecc_sign 
+./bin/trustm_ecc_sign 
 Help menu: trustm_ecc_sign <option> ...<option>
 option:- 
 -k <OID Key>  : Select ECC key for signing OID (0xE0F0-0xE0F3) 
@@ -352,7 +354,7 @@ option:-
 Example : Hash and sign the file helloworld.txt with key OID 0xE0F3 and output to testsignature.bin
 
 ```console
-foo@bar:~$ ./bin/trustm_ecc_sign -k 0xe0f3 -o testsignature.bin -i helloworld.txt -H
+./bin/trustm_ecc_sign -k 0xe0f3 -o testsignature.bin -i helloworld.txt -H
 ========================================================
 OID Key          : 0xE0F3
 Output File Name : testsignature.bin 
@@ -365,7 +367,7 @@ filesize: 11
 Success
 ========================================================
 
-foo@bar:~$ hd testsignature.bin 
+hd testsignature.bin 
 00000000  30 44 02 20 14 ea 77 98  ed 26 89 40 22 bb a0 60  |0D. ..w..&.@"..`|
 00000010  c5 1f 01 8f 65 21 7a 98  0d 63 73 03 4e ea 13 39  |....e!z..cs.N..9|
 00000020  0c ed 58 8a 02 20 2a 7b  fc 7a dd 2e 75 86 41 f5  |..X.. *{.z..u.A.|
@@ -379,7 +381,7 @@ foo@bar:~$ hd testsignature.bin
 Simple demo to show the process to verify using OPTIGA™ Trust M library.
 
 ```console
-foo@bar:~$ ./bin/trustm_ecc_verify 
+./bin/trustm_ecc_verify 
 Help menu: trustm_ecc_verify <option> ...<option>
 option:- 
 -k <OID Key>   : Use Certificate from OID [0xE0E1-E0E3]
@@ -394,7 +396,7 @@ option:-
 Example : verifying a signature using external public key.
 
 ```console
-foo@bar:~$ ./bin/trustm_ecc_verify -i helloworld.txt -s testsignature.bin -p test_e0f3_pub.pem -H
+./bin/trustm_ecc_verify -i helloworld.txt -s testsignature.bin -p test_e0f3_pub.pem -H
 ========================================================
 Pubkey file         : test_e0f3_pub.pem
 Input File Name     : helloworld.txt 
@@ -424,7 +426,7 @@ Example : verifying using certificate store in OID 0xE0E3.
 *Note :  This example assume you have a valid x.509 certificate with key usage for signature store in OID 0xE0E3 and data is signed by the private key of the x.509 certificate.*  
 
 ```console
-foo@bar:~$ ./bin/trustm_ecc_verify -i helloworld.txt -s testsignature.bin -k 0xe0e3 -H
+./bin/trustm_ecc_verify -i helloworld.txt -s testsignature.bin -k 0xe0e3 -H
 ========================================================
 OID Cert            : 0xE0E3
 Input File Name     : helloworld.txt 
@@ -457,7 +459,7 @@ Modify OPTIGA™ Trust M OID metadata.
 The Lcs is implemented in a way that the four primary states only progress in one direction from a lower value to a higher value(e.g. initialization(in)=>operational(op) state). Once Lcs0 is set to higher value, it is not reversible and can not be set to lower value any more.
 
 ```console
-foo@bar:~$ ./bin/trustm_metadata 
+./bin/trustm_metadata 
 Help menu: trustm_metadata <option> ...<option>
 option:- 
 -r <OID>  : Read metadata of OID 0xNNNN 
@@ -492,7 +494,7 @@ option:-
 Example : changing OID 0xE0E1 metadata to read only and reading the metadata after changing
 
 ```console
-foo@bar:~$ ./bin/trustm_metadata -w 0xe0e1 -Cn -Ra
+./bin/trustm_metadata -w 0xe0e1 -Cn -Ra
 ========================================================
 Device Public Key           [0xE0E1] 
 	20 06 D0 01 FF D1 01 00 
@@ -500,7 +502,7 @@ Device Public Key           [0xE0E1]
 Write Success.
 ========================================================
 
-foo@bar:~$ ./bin/trustm_metadata -r 0xe0e1
+./bin/trustm_metadata -r 0xe0e1
 ========================================================
 Device Public Key           [0xE0E1] [Size 0025] : 
 	20 17 c0 01 01 c4 02 06 c0 c5 02 01 dc d0 01 ff 
@@ -513,13 +515,13 @@ Device Public Key           [0xE0E1] [Size 0025] :
 Example : charging OID 0xE0E1 metadata using complex setting (LcsO>3||LcsG<4) for Change mode
 
 ```console
-foo@bar:~$ echo -e -n \\x07\\xe1\\xfb\\x03\\xfe\\x70\\xfc\\x04 > complexsetting.bin
+echo -e -n \\x07\\xe1\\xfb\\x03\\xfe\\x70\\xfc\\x04 > complexsetting.bin
 
-foo@bar:~$ hd complexsetting.bin 
+hd complexsetting.bin 
 00000000  07 e1 fb 03 fe 70 fc 04                           |.....p..|
 00000008
 
-foo@bar:~$ ./bin/trustm_metadata -w 0xe0e1 -Cf:complexsetting.bin 
+./bin/trustm_metadata -w 0xe0e1 -Cf:complexsetting.bin 
 ========================================================
 Device Public Key           [0xE0E1] 
 	20 09 D0 07 E1 FB 03 FE 70 FC 04 
@@ -527,7 +529,7 @@ Device Public Key           [0xE0E1]
 Write Success.
 ========================================================
 
-foo@bar:~$ ./bin/trustm_metadata -r 0xe0e1
+./bin/trustm_metadata -r 0xe0e1
 ========================================================
 Device Public Key           [0xE0E1] [Size 0031] : 
 	20 1d c0 01 01 c4 02 06 c0 c5 02 01 dc d0 07 e1 
@@ -542,7 +544,7 @@ Device Public Key           [0xE0E1] [Size 0031] :
 Simple demo to show the OPTIGA™ Trust M monotonic counter.
 
 ```console
-foo@bar:~$ ./bin/trustm_monotonic_counter 
+./bin/trustm_monotonic_counter 
 Help menu: trustm_monotonic_counter <option> ...<option>
 option:- 
 -r <OID>      : Read from OID [0xE120-0xE123] 
@@ -557,7 +559,7 @@ option:-
 Example : Setting the threshold value to 10 and resetting the counter to zero
 
 ```console
-foo@bar:~$ ./bin/trustm_monotonic_counter -w 0xe120 -i 10
+./bin/trustm_monotonic_counter -w 0xe120 -i 10
 ========================================================
 Input Value : 10 [0x0000000A]
 	00 00 00 00 00 00 00 0a 
@@ -568,13 +570,13 @@ Write Success.
 Example : Count up the monotonic counter in steps of 2
 
 ```console
-foo@bar:~$ ./bin/trustm_monotonic_counter -u 0xe120 -s 2
+./bin/trustm_monotonic_counter -u 0xe120 -s 2
 ========================================================
 Steps Value : 2 [0x00000002]
 Update Counter Success.
 ========================================================
 
-foo@bar:~$ ./bin/trustm_monotonic_counter -r 0xe120
+./bin/trustm_monotonic_counter -r 0xe120
 ========================================================
 Monotonic Counter x : [0xE120]
 Threshold           : 0x0000000A [10]
@@ -633,7 +635,7 @@ Simple demo to show the process to decrypt using OPTIGA™ Trust M RSA key.
 *Note : This example assume RSA key with usage Encryption has already been generated and data is encrypted by the pubkey*
 
 ```console
-foo@bar:~$ ./bin/trustm_rsa_dec
+./bin/trustm_rsa_dec
 Help menu: trustm_rsa_dec <option> ...<option>
 option:- 
 -k <OID Key>  : Select key to decrypt OID 0xNNNN 
@@ -646,7 +648,7 @@ option:-
  Example : Decrypt using OID Key 0xE0FC, an encrypted file test_e0fc.enc and output to test_e0fc.dec
 
 ```console
-foo@bar:~$ ./bin/trustm_rsa_dec -k 0xe0fc -o test_e0fc.dec -i test_e0fc.enc 
+./bin/trustm_rsa_dec -k 0xe0fc -o test_e0fc.dec -i test_e0fc.enc 
 ========================================================
 OID Key          : 0xE0FC 
 Output File Name : test_e0fc.dec 
@@ -664,7 +666,7 @@ Input data :
 Success
 ========================================================
 
-foo@bar:~$ cat test_e0fc.dec 
+cat test_e0fc.dec 
 helloworld!!!
 ```
 
@@ -673,7 +675,7 @@ helloworld!!!
 Simple demo to show the process to encrypt using OPTIGA™ Trust M RSA key.
 
 ```console
-foo@bar:~$ ./bin/trustm_rsa_enc 
+./bin/trustm_rsa_enc 
 Help menu: trustm_rsa_enc <option> ...<option>
 option:- 
 -k <OID Key>  : Select key for encrypt OID 0xNNNN 
@@ -687,7 +689,7 @@ option:-
 Example : Encrypt using external pubkey
 
 ```console
-foo@bar:~$ ./bin/trustm_rsa_enc -p test_e0fc_pub.pem -o test_e0fc.enc -i helloworld.txt 
+./bin/trustm_rsa_enc -p test_e0fc_pub.pem -o test_e0fc.enc -i helloworld.txt 
 ========================================================
 Pubkey file      : test_e0fc_pub.pem 
 Output File Name : test_e0fc.enc 
@@ -703,7 +705,7 @@ Example : Encrypt using Certificate store in OID 0xE0E2
 *Note :  This example assume you have a valid x.509 certificate with key usage for Key Encipherment store in OID 0xE0E2.*  
 
 ```console
-foo@bar:~$ ./bin/trustm_rsa_enc -k 0xe0e2 -o test_e0fc1.enc -i helloworld.txt 
+./bin/trustm_rsa_enc -k 0xe0e2 -o test_e0fc1.enc -i helloworld.txt 
 ========================================================
 OID Key          : 0xE0E2 
 Output File Name : test_e0fc1.enc 
@@ -719,7 +721,7 @@ Success
 Generate OPTIGA™ Trust M RSA key pair. Key type can be or together to form multiple type.
 
 ```console
-foo@bar:~$ ./bin/trustm_rsa_keygen 
+./bin/trustm_rsa_keygen 
 Help menu: trustm_rsa_keygen <option> ...<option>
 option:- 
 -g <Key OID>    : Generate RSA Key in OID [0xE0FC-0xE0FD] 
@@ -736,7 +738,7 @@ option:-
 Example : generate an RSA1024 key with type Auth/Enc/Sign in OID 0xe0fc and save pubkey in OID 0xF1E0.
 
 ```console
-foo@bar:~$ ./bin/trustm_rsa_keygen -g 0xe0fc -t 0x13 -k 0x41 -o test_e0fc_pub.pem -s
+./bin/trustm_rsa_keygen -g 0xe0fc -t 0x13 -k 0x41 -o test_e0fc_pub.pem -s
 ========================================================
 Generating Key to 0xE0FC
 Output File Name : test_e0fc_pub.pem 
@@ -755,7 +757,7 @@ Pubkey :
 Write Success to OID: 0xF1E0.
 ========================================================
 
-foo@bar:~$ cat test_e0fc_pub.pem 
+cat test_e0fc_pub.pem 
 -----BEGIN PUBLIC KEY-----
 MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCcLWsZnI7ZbFkLvFNKH1EMhxRx
 CSFV1gwcNnFC2d3bovXY3t+A0g+qrjFuCARgLTKsPLfh0NlHFnfX7dnT6EHtaueI
@@ -763,7 +765,7 @@ EKYuUdLL0n2aO8gJyQUnDYU5wrZPdghZbudRB552YJaNY84Z/NCifCjCNTByln0/
 PEiVvAqlWjfGZOOOMQIDAQAB
 -----END PUBLIC KEY-----
 
-foo@bar:~$ ./bin/trustm_data -r 0xf1e0
+./bin/trustm_data -r 0xf1e0
 ========================================================
 App DataStrucObj type 2     [0xF1E0] [Size 1500] : 
 	03 81 8d 00 30 81 89 02 81 81 00 9c 2d 6b 19 9c 
@@ -795,7 +797,7 @@ App DataStrucObj type 2     [0xF1E0] [Size 1500] :
 Simple demo to show the process to sign using OPTIGA™ Trust M RSA key.
 
 ```console
-foo@bar:~$ ./bin/trustm_rsa_sign 
+./bin/trustm_rsa_sign 
 Help menu: trustm_rsa_sign <option> ...<option>
 option:- 
 -k <OID Key>  : Select RSA key for signing OID (0xE0FC-0xE0FD) 
@@ -809,7 +811,7 @@ option:-
 Example : Hash and sign the file helloworld.txt with key OID 0xE0FC and output to testsignature.bin
 
 ```console
-foo@bar:~$ ./bin/trustm_rsa_sign -k 0xe0fc -o testsignature.bin -i helloworld.txt -H
+./bin/trustm_rsa_sign -k 0xe0fc -o testsignature.bin -i helloworld.txt -H
 ========================================================
 OID Key          : 0xE0FC
 Output File Name : testsignature.bin 
@@ -822,7 +824,7 @@ filesize: 14
 Success
 ========================================================
 
-foo@bar:~$ hd testsignature.bin
+hd testsignature.bin
 00000000  0f 20 5a d3 0f 8c ec 41  24 74 d9 e3 20 bf ba 75  |. Z....A$t.. ..u|
 00000010  56 df a4 5b be 25 0e 0e  e5 32 1a f5 bf 24 45 e0  |V..[.%...2...$E.|
 00000020  1d 4c f5 b7 99 0c 17 c2  49 88 52 e1 b8 b4 9e 7d  |.L......I.R....}|
@@ -839,7 +841,7 @@ foo@bar:~$ hd testsignature.bin
 Simple demo to show the process to verify using OPTIGA™ Trust M library.
 
 ```console
-foo@bar:~$ ./bin/trustm_rsa_verify 
+./bin/trustm_rsa_verify 
 Help menu: trustm_rsa_verify <option> ...<option>
 option:- 
 -k <OID Key>   : Use Certificate from Data OID 
@@ -854,7 +856,7 @@ option:-
 Example : verifying a signature using external public key.
 
 ```console
-foo@bar:~$ ./bin/trustm_rsa_verify -i helloworld.txt -s testsignature.bin -p test_e0fc_pub.pem -H
+./bin/trustm_rsa_verify -i helloworld.txt -s testsignature.bin -p test_e0fc_pub.pem -H
 ========================================================
 Pubkey file         : test_e0fc_pub.pem
 Input File Name     : helloworld.txt 
@@ -893,7 +895,7 @@ Example : verifying using certificate store in OID 0xE0E2.
 *Note :  This example assume you have a valid x.509 certificate with key usage for signature store in OID 0xE0E2 and data is signed by the private key of the x.509 certificate.*  
 
 ```console
-foo@bar:~$ ./bin/trustm_rsa_verify -i helloworld.txt -s testsignature.bin -k 0xe0e2 -H
+./bin/trustm_rsa_verify -i helloworld.txt -s testsignature.bin -k 0xe0e2 -H
 ========================================================
 OID Cert            : 0xE0E2
 Input File Name     : helloworld.txt 
@@ -924,7 +926,7 @@ Simple demo to show the process to generate symmetric key using OPTIGA™ Trust 
 Note: The Access Condition CHA for OID 0xe200 must be set to "ALW"(Only executable when LcsO<op). Fore details, please refer to the test script AES_CBC.sh inside  "**linux-optiga-trust-m/scripts/misc/**"
 
 ```console
-foo@bar:~$ ./bin/trustm_symmetric_keygen 
+./bin/trustm_symmetric_keygen 
 Help menu: trustm_symmetric_keygen <option> ...<option>
 option:- 
 -t <key type>   : Key type Auth:0x01 Enc :0x02 HFWU:0x04
@@ -939,7 +941,7 @@ option:-
 Example : generate an AES256 key with type Enc in OID 0xe200.
 
 ```console
-foo@bar:~$ ./bin/trustm_symmetric_keygen -t 0x02 -k 0x83 
+./bin/trustm_symmetric_keygen -t 0x02 -k 0x83 
 ========================================================
 Successfully Generated Symmetric Key in 0xE200 
 ========================================================
@@ -950,7 +952,7 @@ Successfully Generated Symmetric Key in 0xE200
 Simple demo to show the process to encrypt using OPTIGA™ Trust M library.
 
 ```console
-foo@bar:~$ ./bin/trustm_symmetric_enc 
+./bin/trustm_symmetric_enc 
 Help menu: trustm_symmetric_enc <option> ...<option>
 option:- 
 -m <mode>     : Mode CBC:0x09 CBC_MAC:0X0A CMAC:0X0B 
@@ -969,7 +971,7 @@ Example : Encrypt mydata.txt using AES256 CBC mode.
 Note: Initialized value is only applicable for AES CBC mode.
 
 ```console
-foo@bar:~$ ./bin/trustm_symmetric_enc -m 0x09 -v iv_aes256.bin -i mydata.txt -o aes256.enc 
+./bin/trustm_symmetric_enc -m 0x09 -v iv_aes256.bin -i mydata.txt -o aes256.enc 
 ========================================================
 mode             : 0x0009 
 Output File Name : aes256.enc 
@@ -990,7 +992,7 @@ Success
 Simple demo to show the process to decrypt using OPTIGA™ Trust M library.
 
 ```console
-foo@bar:~$ ./bin/trustm_symmetric_dec -h
+./bin/trustm_symmetric_dec -h
 Help menu: trustm_symmetric_dec <option> ...<option>
 option:- 
 -m <mode>     : Mode CBC:0x09 
@@ -1007,7 +1009,7 @@ Example : decrypt aes256.enc using AES256 CBC mode.
 Note: Initialized value is only applicable for AES CBC mode.
 
 ```console
-foo@bar:~$ ./bin/trustm_symmetric_dec -m 0x09 -v iv_aes256.bin -i aes256.enc -o mydata.txt.dec
+./bin/trustm_symmetric_dec -m 0x09 -v iv_aes256.bin -i aes256.enc -o mydata.txt.dec
 ========================================================
 mode             : 0x0009 
 Output File Name : mydata.txt.dec 
@@ -1030,7 +1032,7 @@ Simple demo to show the process to derive key using OPTIGA™ Trust M library.
 Note: For detailed use case, please refer to the test script hkdf.sh inside  "**linux-optiga-trust-m/scripts/misc/**"
 
 ```console
-foo@bar:~$ ./bin/trustm_hkdf
+./bin/trustm_hkdf
 Help menu: trustm_hkdf <option> ...<option>
 option:- 
 -i <OID>      : Input secret OID 0xNNNN 
@@ -1049,7 +1051,7 @@ Example : derive key using HKDF SHA256 with shared secret in 0xF1D0.
 Precondition: Write shared secret into the data object and change the metadata of this data object to PRESSEC.
 
 ```console
-foo@bar:~$ ./bin/trustm_hkdf -i 0xF1D0 -H 0X08 -f info.bin -s salt.bin -o hkdf_f1d0_256.txt
+./bin/trustm_hkdf -i 0xF1D0 -H 0X08 -f info.bin -s salt.bin -o hkdf_f1d0_256.txt
 ========================================================
 Run HKDF SHA256 command to derive the key
 
@@ -1078,7 +1080,7 @@ Decryption Key :
 Random number generator using OPTIGA™ Trust M.
 
 ```console
-foo@bar:~$ ./bin/trustm_rng -h
+./bin/trustm_rng -h
 
 Help menu: trustm_rng <option> ...<option>
 option:- 
@@ -1089,13 +1091,12 @@ option:-
 -o <filename>   : Output RNG to file
 -X              : Bypass Shielded Communication 
 -h              : Print this help 
-
 ```
 
 Example : To Generate 64 bytes RNG using TRNG type.
 
 ```console
-foo@bar:~$ ./bin/trustm_rng -t 0x00 -l 64 -o rng.txt 
+./bin/trustm_rng -t 0x00 -l 64 -o rng.txt 
 
 ========================================================
 Output File Name : rng.txt 
@@ -1111,6 +1112,8 @@ Success
 ========================================================
 ```
 
+
+
 ###  <a name="trustm_hmac"></a>trustm_hmac
 
 Simple demo to show the process to generate the MAC for the given input data using the secret installed in OPTIGA™ Trust M.
@@ -1118,7 +1121,7 @@ Simple demo to show the process to generate the MAC for the given input data usi
 Note: For detailed use case, please refer to the test script hmac.sh inside  "**linux-optiga-trust-m/scripts/misc/**"
 
 ```console
-foo@bar:~$ ./bin/trustm_hmac
+./bin/trustm_hmac
 Help menu: trustm_hmac <option> ...<option>
 option:- 
 -I <OID>      : Input secret OID 0xNNNN 
@@ -1136,7 +1139,7 @@ Example : generate MAC value using HMAC SHA256 with shared secret in 0xF1D0.
 Precondition: Write shared secret into the data object and change the metadata of this data object to PRESSEC.
 
 ```console
-foo@bar:~$ ./bin/trustm_hmac -I 0xF1D0 -H 0X20 -i hmac.txt -o hmac_data.txt
+./bin/trustm_hmac -I 0xF1D0 -H 0X20 -i hmac.txt -o hmac_data.txt
 ========================================================
 Input Secret OID: 0xF1D0
 SHA Type 0x0020
@@ -1161,7 +1164,7 @@ MAC data :
 Simple demo to show the process to do hmac verification with authorization reference(the secret installed in OPTIGA™ Trust M).
 
 ```console
-foo@bar:~$ ./bin/trustm_hmac_verify_Auth -h
+./bin/trustm_hmac_verify_Auth -h
 Help menu: trustm_hmac_verify_Auth <option> ...<option>
 option:- 
 -I <OID>      : Input secret OID 0xNNNN 
@@ -1187,7 +1190,7 @@ Run hmac_authenticated_read_write_step2.sh to write in or readout the data in ta
 Simple demo to show the process to do protected update for metadata of target OID by using the trust Anchor installed in OPTIGA™ Trust M and/or the secret installed in OPTIGA™ Trust M .
 
 ```console
-foo@bar:~$ ./bin/trustm_protected_update -h
+./bin/trustm_protected_update -h
 Help menu: trustm_protected_update <option> ...<option>
 option:- 
 -k <OID>       : Target OID 
@@ -1207,7 +1210,7 @@ For detailed example for Integrity and Confidentiality Protected Update, Go to t
 Simple demo to show the process to do protected update for AES key of target OID(0xE200) by using the trust Anchor installed in OPTIGA™ Trust M and/or the secret installed in OPTIGA™ Trust M .
 
 ```console
-foo@bar:~$ ./bin/trustm_protected_update_aeskey -h
+./bin/trustm_protected_update_aeskey -h
 Help menu: trustm_protected_update_aeskey <option> ...<option>
 option:- 
 -k <OID>       : Target key OID: 0xE200 
@@ -1227,7 +1230,7 @@ For detailed example for Integrity and Confidentiality Protected Update for AES 
 Simple demo to show the process to do protected update for ECC key of target OID(0xE0F1-E0F3) by using the trust Anchor installed in OPTIGA™ Trust M and/or the secret installed in OPTIGA™ Trust M .
 
 ```console
-foo@bar:~$ ./bin/trustm_protected_update_ecckey -h
+./bin/trustm_protected_update_ecckey -h
 Help menu: trustm_protected_update_ecckey <option> ...<option>
 option:- 
 -k <OID>       : Target ECC Key OID[0xE0F1-0xE0F3]  
@@ -1247,7 +1250,7 @@ For detailed example for Integrity and Confidentiality Protected Update for ECC 
 Simple demo to show the process to do protected update for RSA key of target OID(0xE0FC-E0FD) by using the trust Anchor installed in OPTIGA™ Trust M and/or the secret installed in OPTIGA™ Trust M .
 
 ```console
-foo@bar:~$ ./bin/trustm_protected_update_rsakey -h
+./bin/trustm_protected_update_rsakey -h
 Help menu: trustm_protected_update_rsakey <option> ...<option>
 option:- 
 -k <OID>       : Target RSA Key OID[0xE0FC-0xE0FD] 
@@ -1291,7 +1294,7 @@ Read/Write/Erase OID data object in raw format. Establish a shielded connection 
 This is relevant for OPTIGA Trust M Express and OPTIGA Trust M Matter-ready Configurations, where some slots are write-protected with PBS and AutoRef Secrets. 
 
 ```console
-foo@bar:~$ ./bin/trustm_update_with_PBS_Auto 
+./bin/trustm_update_with_PBS_Auto 
 Help menu: trustm_update_with_PBS_Auto <option> ...<option>
 option:- 
 -r <OID>      : Read from OID 0xNNNN 
@@ -1311,10 +1314,10 @@ option:-
 Example : Writing a new Security Monitor Configuration into protected OID 0xE0C9 and reading after writing. PBS and Authorization Reference are supplied on the CLI but must match the Trust M's dataslots in 0xE140 and 0xF1D0. For readability, PBS and AUTOREF are declared as variables.
 
 ```console
-foo@bar:~$ PBS=4AC4E0C890EF3ADE16A95025ADA2F6564DD74BC2374EEF2FE70393F300AA2C37ADAAD66F2615BE82E731B0D3948C84CCEA1E51BF4EF7CFFAB21695E82454EB19
-foo@bar:~$ AUTOREF=D3DEBC1125CBE59E3D5D177B171DA8AF1121976EA5E7155819443FBC20910735E174EF6988E85EB08FB50A267448D3B742B18292AB501FD390BB3B68DC936FDE
+PBS=4AC4E0C890EF3ADE16A95025ADA2F6564DD74BC2374EEF2FE70393F300AA2C37ADAAD66F2615BE82E731B0D3948C84CCEA1E51BF4EF7CFFAB21695E82454EB19
+ AUTOREF=D3DEBC1125CBE59E3D5D177B171DA8AF1121976EA5E7155819443FBC20910735E174EF6988E85EB08FB50A267448D3B742B18292AB501FD390BB3B68DC936FDE
 
-foo@bar:~$ ./bin/trustm_update_with_PBS_Auto -w 0xe0c9 -P $PBS -A $AUTOREF -I 3200050100000000
+./bin/trustm_update_with_PBS_Auto -w 0xe0c9 -P $PBS -A $AUTOREF -I 3200050100000000
 
 ========================================================
 Security Monitor configurations        [0xE0C9] 
@@ -1346,29 +1349,29 @@ A simple script to probe for a connected Trust M chip on the I2C bus.
 If it finds a connection, the Chip-UID is returned. If no chip is found, returns an error.
 
 ```console
-foo@bar:~$ ./bin/trustm_probe
+./bin/trustm_probe
 0A091B5C001500930025
 ```
 
 
 ## <a name="provider_usage"></a>OPTIGA™ Trust M3 OpenSSL Provider usage
 
-The Provider is tested base on OpenSSL version 3.1.0
+OPTIGA™ Trust M Provider is tested base on OpenSSL version 3.0.14.
 
 ### <a name="rand"></a>rand
 
-Usuage : Random number generation
+Usage : Random number generation
 Example
 
 ```console 
-foo@bar:~$ openssl rand -provider trustm_provider -base64 32
+openssl rand -provider trustm_provider -base64 32
 ```
 *Note :* 
 *If OPTIGA™ Trust M random number generation fails, there will still be random number output.* 
 *This is control by OpenSSL provider do not have control over it.*
 
 ### <a name="req"></a>req
-Usuage : Certificate request / self signed cert / key generation
+Usage : Certificate request / self signed cert / key generation
 
 OPTIGA™ Trust M provider uses the -key parameter to pass input to the key generation/usage function.
 
@@ -1434,14 +1437,14 @@ where :
 Example : Generating a certificate request using OID 0xE0F3 with new key generated, ECC 384 key length and Auth/Enc/Sign usage. Verify that public key match the private key in the OID.
 
 ```console 
-foo@bar:~$ openssl req -provider trustm_provider -key 0xe0f3:*:NEW:0x04:0x13 -new -out test_e0f3.csr -verify
+openssl req -provider trustm_provider -key 0xe0f3:*:NEW:0x04:0x13 -new -out test_e0f3.csr -verify
 ```
 *Note:*
 *If wrong public is used or no pubkey is submitted the certificate generation will still* 
 *go through but verification will fail. Pubic key input only in PEM*
 
 ### <a name="pkey"></a>pkey
-Usuage : Key tools / Key generation
+Usage : Key tools / Key generation
 
 OPTIGA™ Trust M provider uses the -in parameter to pass input to the key generation/usage function.
 
@@ -1464,12 +1467,190 @@ Example:
 Signing the message in the test_sign.txt file using the TrustM EC key and saving the generated signature in the test_sign.sig file.
 
 ```console 
-foo@bar:~$ openssl pkeyutl -provider trustm_provider -inkey 0xe0fd:^  -sign -rawin -in test_sign.txt -out test_sign.sig
+openssl pkeyutl -provider trustm_provider -inkey 0xe0fd:^  -sign -rawin -in test_sign.txt -out test_sign.sig
 ```
 Verifying the signature of the raw input data in test_sign.txt using the provided public key in eofd_pub.pem and the signature in test_sign.sig
 
 ```console 
-foo@bar:~$ openssl pkeyutl -verify -pubin -inkey e0fd_pub.pem -rawin -in test_sign.txt -sigfile test_sign.sig
+openssl pkeyutl -verify -pubin -inkey e0fd_pub.pem -rawin -in test_sign.txt -sigfile test_sign.sig
+```
+
+### <a name="test_tls_ecc"></a>Testing TLS connection with ECC key
+
+#### Scenario where Trust M is on the client :
+
+*Note : To generate a test server certificate refer to [Generating a Test Server Certificate](#test_Server_cert)*  or refer below
+
+Generate Server ECC Private Key on Trust M
+
+```
+openssl ecparam -out server1_privkey.pem \
+-name prime256v1 -genkey
+```
+
+Generate CSR for Server 
+
+```
+openssl req -new -key server1_privkey.pem \
+-subj "/C=SG/CN=Server1/O=Infineon" \
+-out server1.csr
+```
+
+Generate Server certificate using CA
+
+```
+openssl x509 -req -in server1.csr \
+-CA scripts/certificates/OPTIGA_Trust_M_Infineon_Test_CA.pem \
+-CAkey scripts/certificates/OPTIGA_Trust_M_Infineon_Test_CA_Key.pem \
+-CAcreateserial -out server1.crt \
+-days 365 \
+-sha256 \
+-extfile ../openssl.cnf -extensions cert_ext
+```
+
+Create new ECC 256 key length and Auth/Enc/Sign usage and generate a certificate request for OPTIGA™ Trust M key 0xE0F1
+
+```console
+openssl req -provider trustm_provider \
+-key 0xe0f1:*:NEW:0x03:0x13 \
+-new -out test_e0f1.csr \
+-subj "/C=SG/CN=TrustM/O=Infineon"
+```
+
+Extract the public key from certificate request for OPTIGA™ Trust M key 0xE0F1
+
+```
+openssl req -in client1_e0f1.csr \
+-pubkey -noout \
+-out client1_e0f1.pub
+```
+
+Issue the certificate with keyUsage=digitalSignature,keyEncipherment on the client side with OPTIGA_Trust_M_Infineon_Test_CA.
+
+*Note : Refer to [Generating a Test Server Certificate](#test_Server_cert)  for openssl.cnf*
+
+```console
+openssl x509 -req -in test_e0f1.csr \
+-CA scripts/certificates/OPTIGA_Trust_M_Infineon_Test_CA.pem \
+-CAkey scripts/certificates/OPTIGA_Trust_M_Infineon_Test_CA_Key.pem \
+-CAcreateserial \
+-out test_e0f1.crt \
+-days 365 \
+-sha256
+
+```
+
+Running the test server : 
+
+```console
+lxterminal -e openssl s_server \
+-cert server1.crt \
+-key privkey.pem \
+-accept 5000 \
+-verify_return_error \
+-Verify 1 \
+-CAfile scripts/certificates/OPTIGA_Trust_M_Infineon_Test_CA.pem
+
+```
+
+Running the test client : *(open a new console)* 
+
+```console
+lxterminal -e openssl s_client \
+-connect localhost:5000 \
+-servername Server1 \
+-provider trustm_provider \
+-provider default \
+-cert test_e0f1.crt \
+-key 0xe0f1:^ \
+-CAfile scripts/certificates/OPTIGA_Trust_M_Infineon_Test_CA.pem
+
+```
+
+#### Scenario where Trust M is on the server :
+
+Create new ECC 256 key length and Auth/Enc/Sign usage and generate a certificate request for OPTIGA™ Trust M key 0xE0F2
+
+```console
+openssl req -provider trustm_provider \
+-key 0xe0f2:*:NEW:0x03:0x13 -new \
+-out test_e0f2.csr \
+-subj "/C=SG/CN=TrustM/O=Infineon"
+```
+
+Extract Public Key from certificate request for OPTIGA™ Trust M key 0xE0F2
+
+```
+openssl req -in test_e0f2.csr \
+-pubkey -noout \
+-out test_e0f2.pub
+```
+
+Issue the certificate with keyUsage=keyCertSign, cRLSign, digitalSignature on the server side with OPTIGA_Trust_M_Infineon_Test_CA.
+
+```console
+openssl x509 -req -in test_e0f2.csr \
+-CA scripts/certificates/OPTIGA_Trust_M_Infineon_Test_CA.pem \
+-CAkey scripts/certificates/OPTIGA_Trust_M_Infineon_Test_CA_Key.pem \
+-CAcreateserial \
+-out test_e0f2.crt \
+-days 365 \
+-sha256 \
+-extfile openssl.cnf \
+-extensions cert_ext
+```
+
+Generate Client ECC Private Key
+
+```
+openssl ecparam -out privkey.pem \
+-name prime256v1 -genkey
+```
+
+Generate Client CSR
+
+```
+openssl req -new \
+-key privkey.pem \
+-subj "/C=SG/CN=Server1/O=Infineon" \
+-out client.csr
+```
+
+Generate Client certificate using CA
+
+```
+openssl x509 -req -in client.csr \
+-CA scripts/certificates/OPTIGA_Trust_M_Infineon_Test_CA.pem \
+-CAkey $CERT_PATH/OPTIGA_Trust_M_Infineon_Test_CA_Key.pem \
+-CAcreateserial -out client.crt \
+-days 365 \
+-sha256
+```
+
+Running the test server : 
+
+```console
+lxterminal -e openssl s_server \
+-cert test_e0f2.crt \
+-provider trustm_provider -provider default \
+-key 0xe0f2:^ \
+-accept 5000 \
+-verify_return_error \
+-Verify 1 \
+-CAfile scripts/certificates/OPTIGA_Trust_M_Infineon_Test_CA.pem
+
+```
+
+Running the test client : *(open a new console)* 
+
+```console
+lxterminal -e openssl s_client \
+-connect localhost:5000 \
+-servername Server1 \
+-cert client.crt \
+-key privkey.pem \
+-CAfile scripts/certificates/OPTIGA_Trust_M_Infineon_Test_CA.pem
+
 ```
 
 ### <a name="test_tls_rsa"></a>Testing TLS connection with RSA key
@@ -1481,7 +1662,7 @@ foo@bar:~$ openssl pkeyutl -verify -pubin -inkey e0fd_pub.pem -rawin -in test_si
 Creates new RSA 2048 key length and Auth/Enc/Sign usage and generate a certificate  request for OPTIGA™ Trust M key 0xE0FC
 
 ```console
-foo@bar:~$ openssl req -provider trustm_provider \
+openssl req -provider trustm_provider \
 -key 0xe0fd:*:NEW:0x42:0x13 \
 -new \
 -subj "/C=SG/CN=TrustM/O=Infineon" \
@@ -1493,7 +1674,7 @@ Issue the certificate with keyUsage=digitalSignature,keyEncipherment on the clie
 **Note : Refer to [Generating a Test Server Certificate](#test_server_cert)  for openssl.cnf**
 
 ```console
-foo@bar:~$ openssl x509 -req -in test_e0fd.csr \
+openssl x509 -req -in test_e0fd.csr \
 -CA scripts/certificates/OPTIGA_Trust_M_Infineon_Test_CA.pem \
 -CAkey scripts/certificates/OPTIGA_Trust_M_Infineon_Test_CA_Key.pem \
 -CAcreateserial \
@@ -1507,7 +1688,7 @@ foo@bar:~$ openssl x509 -req -in test_e0fd.csr \
 Running the test server : 
 
 ```console
-foo@bar:~$ openssl s_server \
+openssl s_server \
 -cert test_opensslserver.crt \
 -key privkey.pem -accept 5000 \
 -verify_return_error \
@@ -1519,7 +1700,7 @@ foo@bar:~$ openssl s_server \
 Running the test client : *(open a new console)* 
 
 ```console
-foo@bar:~$ openssl s_client -provider trustm_provider -provider default \
+openssl s_client -provider trustm_provider -provider default \
 -client_sigalgs RSA+SHA256 \
 -cert test_e0fd.crt \
 -key 0xe0fd:^ \
@@ -1553,7 +1734,7 @@ openssl x509 -req -in test_e0fc.csr -CA  scripts/certificates/OPTIGA_Trust_M_Inf
 Running the test server : 
 
 ```console
-foo@bar:~$ openssl s_server -provider trustm_provider -provider default \
+openssl s_server -provider trustm_provider -provider default \
 -cert test_e0fc.crt \
 -key 0xe0fc:^ \
 -accept 5000 \
@@ -1565,7 +1746,7 @@ foo@bar:~$ openssl s_server -provider trustm_provider -provider default \
 Running the test client : *(open a new console)* 
 
 ```console
-foo@bar:~$ openssl s_client \
+openssl s_client \
 -CAfile scripts/certificates/OPTIGA_Trust_M_Infineon_Test_CA.pem \
 -connect localhost:5000 -tls1_2
 -client_sigalgs RSA+SHA256
@@ -1576,13 +1757,13 @@ foo@bar:~$ openssl s_client \
 Generate a new key pair and certificate request. Private key is output to private.pem
 
 ```console
-foo@bar:~$ openssl req -new -nodes -subj "/C=SG/O=Infineon" -out test_opensslserver.csr
+openssl req -new -nodes -subj "/C=SG/O=Infineon" -out test_opensslserver.csr
 ```
 
 Creates the openssl.cnf with the below contain:
 
 ```console
-foo@bar:~$ cat openssl.cnf 
+cat openssl.cnf 
 ```
 
 Creates and displays the openssl.cnf as shown below:
@@ -1606,7 +1787,7 @@ keyUsage=keyCertSign, cRLSign, digitalSignature
 Issue the certificate with keyUsage=keyCertSign, cRLSign, digitalSignature on the server side with OPTIGA_Trust_M_Infineon_Test_CA.
 
 ```console
-foo@bar:~$ openssl x509 -req -in test_opensslserver.csr \
+openssl x509 -req -in test_opensslserver.csr \
 -CA scripts/certificates/OPTIGA_Trust_M_Infineon_Test_CA.pem \
 -CAkey scripts/certificates/OPTIGA_Trust_M_Infineon_Test_CA_Key.pem \
 -CAcreateserial \
@@ -1619,13 +1800,87 @@ foo@bar:~$ openssl x509 -req -in test_opensslserver.csr \
 
 
 
+### <a name="issue_cert"></a>Using OPTIGA™ Trust M OpenSSL provider to sign and issue certificate
+
+In this section, we will demonstrate how you can use OPTIGA™ Trust M OpenSSL provide/ to enable OPTIGA™ Trust M as a simple Certificate Authorities (CA) without revocation and tracking of certificate it issue.
+
+#### Generating CA key pair and Creating OPTIGA™ Trust M CA self sign certificate
+
+Create OPTIGA™ Trust M CA key pair with the following parameters:
+
+- OID 0xE0F2
+- public key store in 0xF1D2
+- Self signed CA cert with subject
+  - Organization : Infineon OPTIGA(TM) Trust M
+  - Common Name : UID of Trust M
+  - expiry days : ~10 years
+
+```console
+openssl req -provider trustm_provider -provider default \
+-key 0xe0f2:^:NEW:0x03:0x13 \
+-new \
+-x509 \
+-days 3650 \
+-subj /O="Infineon OPTIGA(TM) Trust M"\
+-sha256 \
+-extensions v3_req \
+-out test_e0f2.crt \
+```
+
+#### Generating a Certificate Request (CSR)
+
+You may use the example given in [req](#req) to generate a CSR or used any valid CSR
+
+or
+
+The following command generates an Elliptic Curve Cryptography (ECC) private key.
+
+```
+openssl ecparam \
+-out dev_privkey.pem \
+-name prime256v1 \
+-genkey
+```
+
+Following command generates a CSR, which is a request to a Certificate Authority (CA) to sign the public key along with the information provided. The CSR contains the public key from the private key file and the subject information.
+
+```
+openssl req -new \
+-key dev_privkey.pem \
+-subj /CN=TrustM_Dev1/O=Infineon/C=SG \
+-out test_e0f3.csr
+```
+
+These scripts are part of the initial steps for setting up a secure communication channel, enabling the device or server to prove its identity to clients or other servers. The CSR would typically be sent to a CA, who verifies the information and issues a certificate, which can then be used in SSL/TLS handshakes.
+
+#### Signing and issuing the Certificate with Trust M
+
+Following demonstrate how you can issue and sign certificate with OPTIGA™ Trust M with the following inputs:
+
+- input csr file : test_e0f3.csr
+- CA Cert : test_e0f2.crt
+- CA key : 0xE0F2 with public key store in 0xF1D2
+- Create new serial number for certificate (serial number is store in test_e0f3.srl)
+- using extension cert_ext in extension file
+- expiry days : 1 year
+
+*Note : Refer to [Generating a Test Server Certificate](#test_Server_cert)  for openssl.cnf*
+
+```console
+openssl ca -batch -create_serial \
+-provider trustm_provider -provider default \
+-keyfile 0xe0f2:^ \
+-in test_e0f3.csr \
+-out test_e0f3.crt \
+-cert test_e0f2.crt \
+-days 365 \
+-config openssl.cnf \
+-md sha256
+```
+
 ## <a name="known_observations"></a>Known observations
 
 ### Secure communication bypass
 
 The I2C secure communication bypass option for CLI only works if the default reset protection level for OPTIGA CRYPT and UTIL APIs is set to OPTIGA_COMMS_NO_PROTECTION.
-
-### OPTIGA™ Trust M Sporadic hang
-
-Check the hardware reset pin if it is connected with an active reset GPIO as assigned n the OPTIGA™ Trust M library. Alternatively, you could configure the library to use software reset.
 
