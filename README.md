@@ -56,7 +56,6 @@
     - [Using OPTIGA™ Trust M OpenSSL provider to sign and issue certificate](#using-optiga-trust-m-openssl-provider-to-sign-and-issue-certificate)
   - [Known observations](#known-observations)
     - [Secure communication bypass](#secure-communication-bypass)
-    - [OPTIGA™ Trust M Sporadic hang](#optiga-trust-m-sporadic-hang)
 
 ## <a name="about"></a>About
 
