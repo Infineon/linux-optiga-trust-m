@@ -107,22 +107,8 @@ Hardware platforms and boards:
 
 Getting the initial code from GitHub with submodules
 
-```console
-git clone -b provider_dev --recurse-submodules https://github.com/Infineon/linux-optiga-trust-m.git
-```
-
-Note: If you use the command below to clone
-
 ```
 git clone --recurse-submodules https://github.com/Infineon/optiga-trust-m-explorer.git
-```
-
-Go to the following directory, use the commands below to checkout from provider_dev branch and update the submodule:
-
-```
-cd linux-optiga-trust-m
-git checkout provider_dev
-git submodule update -f
 ```
 
 ### <a name="build_lib"></a>First time building the library
@@ -133,16 +119,8 @@ Run the commands below in sequence to install the required dependencies and the 
 
 Note: 
 
-1)Enable I2C interface for Raspberry Pi to communicate with optiga trustm m
+Enable I2C interface for Raspberry Pi to communicate with OPTIGA™ Trust M
 
-2)The patch applied inside provider_installation_script.sh will change the reset type to use soft reset as follow in the header file at "linux-optiga-trust-m/trustm_lib/optiga/include/optiga/"
-
-- optiga_lib_config_m_v3.h for OPTIGA™ Trust M3 
-
-
-```console
-#define OPTIGA_COMMS_DEFAULT_RESET_TYPE     (1U)
-```
 ## <a name="cli_usage"></a>CLI Tools Usage
 
 ### Important Notes:  
@@ -1906,8 +1884,4 @@ openssl ca -batch -create_serial \
 ### Secure communication bypass
 
 The I2C secure communication bypass option for CLI only works if the default reset protection level for OPTIGA CRYPT and UTIL APIs is set to OPTIGA_COMMS_NO_PROTECTION.
-
-### OPTIGA™ Trust M Sporadic hang
-
-Check the hardware reset pin if it is connected with an active reset GPIO as assigned n the OPTIGA™ Trust M library. Alternatively, you could configure the library to use software reset.
 
