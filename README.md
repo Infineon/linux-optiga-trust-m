@@ -1,6 +1,6 @@
-# Linux tools and examples</br> for OPTIGA™ Trust M1/M3 security solution
+# Linux tools and examples</br> for OPTIGA™ Trust V1/V3 security solution
 
-- [Linux tools and examples for OPTIGA™ Trust M1/M3 security solution](#linux-tools-and-examples-for-optiga-trust-m1m3-security-solution)
+- [Linux tools and examples for OPTIGA™ Trust V1/V3 security solution](#linux-tools-and-examples-for-optiga-trust-m1m3-security-solution)
   - [About](#about)
     - [Prerequisites](#prerequisites)
   - [Getting Started](#getting-started)
@@ -59,7 +59,7 @@
 
 ## <a name="about"></a>About
 
-This is a Linux Tools for OPTIGA Trust M1/M3 on Linux platform that consist of:
+This is a Linux Tools for OPTIGA Trust V1/V3 on Linux platform that consist of:
 
 - [Command Line Interface examples](#cli_usage)
 - [OpenSSL Provider](#provider_usage)
@@ -70,7 +70,7 @@ This is a Linux Tools for OPTIGA Trust M1/M3 on Linux platform that consist of:
 Following is the software component to build the tools :
 * GCC
 * OpenSSL 3.x
-* OPTIGA Trust M3 library (source code)
+* OPTIGA Trust V3 library (source code)
 * pthread
 * rt
 
@@ -107,7 +107,7 @@ Hardware platforms and boards:
 Getting the initial code from GitHub with submodules
 
 ```
-git clone --recurse-submodules https://github.com/Infineon/optiga-trust-m-explorer.git
+git clone --recurse-submodules https://github.com/Infineon/linux-optiga-trust-m.git
 ```
 
 ### <a name="build_lib"></a>First time building the library
@@ -1354,7 +1354,7 @@ If it finds a connection, the Chip-UID is returned. If no chip is found, returns
 ```
 
 
-## <a name="provider_usage"></a>OPTIGA™ Trust M3 OpenSSL Provider usage
+## <a name="provider_usage"></a>OPTIGA™ Trust V3 OpenSSL Provider usage
 
 OPTIGA™ Trust M Provider is tested base on OpenSSL version 3.0.14.
 

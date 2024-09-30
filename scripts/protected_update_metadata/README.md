@@ -27,9 +27,9 @@ The following example shows how to do Integrity Protected Update for data object
    ========================================================
    ```
 
-   For detailed data object type, please refer to Table70(Page100) in https://github.com/Infineon/optiga-trust-m/blob/trust_m1_m3/documents/OPTIGA_Trust_M_Solution_Reference_Manual_v3.15.pdf
+   For detailed data object type, please refer to Table67(Page84) of  [OPTIGA_Trust_M_Solution_Reference_Manual_v3.60.pdf](https://github.com/Infineon/optiga-trust-m-overview/blob/main/docs/pdf/OPTIGA_Trust_M_Solution_Reference_Manual_v3.60.pdf)
 
-   For detailed metadata associated with data and key objects, please refer to Table74(Page106) in https://github.com/Infineon/optiga-trust-m/blob/trust_m1_m3/documents/OPTIGA_Trust_M_Solution_Reference_Manual_v3.15.pdf
+   For detailed metadata associated with data and key objects, please refer to Table71(Page89) in [OPTIGA_Trust_M_Solution_Reference_Manual_v3.60.pdf](https://github.com/Infineon/optiga-trust-m-overview/blob/main/docs/pdf/OPTIGA_Trust_M_Solution_Reference_Manual_v3.60.pdf) 
 
 2. Write Protected Update Secret into the data object(can choose from 0xF1D0, 0xF1D4-0XF1DB) and change the data object type to UPDATSEC.
 
@@ -53,9 +53,9 @@ The following example shows how to do Integrity Protected Update for data object
    	LcsO:0x01, Max Size:140, Used Size:64, Change:LcsO<0x07, Read:LcsO<0x07, Execute:ALW, Data Type:UPDATSEC, 
    ```
 
-   For detailed data object type, please refer to Table70(Page100) in https://github.com/Infineon/optiga-trust-m/blob/trust_m1_m3/documents/OPTIGA_Trust_M_Solution_Reference_Manual_v3.15.pdf
+   For detailed data object type, please refer to Table67(Page84) of  [OPTIGA_Trust_M_Solution_Reference_Manual_v3.60.pdf](https://github.com/Infineon/optiga-trust-m-overview/blob/main/docs/pdf/OPTIGA_Trust_M_Solution_Reference_Manual_v3.60.pdf)
 
-   For detailed metadata associated with data and key objects, please refer to Table74(Page106) in https://github.com/Infineon/optiga-trust-m/blob/trust_m1_m3/documents/OPTIGA_Trust_M_Solution_Reference_Manual_v3.15.pdf
+   For detailed metadata associated with data and key objects, please refer to Table71(Page89) in [OPTIGA_Trust_M_Solution_Reference_Manual_v3.60.pdf](https://github.com/Infineon/optiga-trust-m-overview/blob/main/docs/pdf/OPTIGA_Trust_M_Solution_Reference_Manual_v3.60.pdf) 
 
 3. Write test data into the target data object and change the metadata of the target OID accordingly. The version number,metadata update descriptor and Reset type are the parts which are needed to be changed. The metadata of the Target OID can be set as shown in the test script: 
 
@@ -70,7 +70,7 @@ The following example shows how to do Integrity Protected Update for data object
 
    D8 means metadata Update descriptor, this  tag  defines  the  condition  under  which  the  metadata update is permitted. The following "03" means the length of the coming data."21" means integrity protection," $TRUST_ANCHOR_OID" is the OID used to store Trust Anchor,"20" means confidentiality protection,"${PROTECTED_UPDATE_SECRET_OID}"is the OID used to store Protected Update Secret.
 
-   For detailed metadata associated with data and key objects, please refer to Table74(Page106) in https://github.com/Infineon/optiga-trust-m/blob/trust_m1_m3/documents/OPTIGA_Trust_M_Solution_Reference_Manual_v3.15.pdf
+   For detailed metadata associated with data and key objects, please refer to Table71(Page89) in [OPTIGA_Trust_M_Solution_Reference_Manual_v3.60.pdf](https://github.com/Infineon/optiga-trust-m-overview/blob/main/docs/pdf/OPTIGA_Trust_M_Solution_Reference_Manual_v3.60.pdf) 
 
    After running  "**protected_update_provisioning_step1.sh**", the metadata of target OID should be like this: 
 
