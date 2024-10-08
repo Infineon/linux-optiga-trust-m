@@ -644,7 +644,7 @@ int trustm_ec_keymgmt_export(void *keydata, int selection, OSSL_CALLBACK *param_
     void *pubbuff = NULL;
     size_t pubsize;
 
-    if (trustm_ec_key == NULL)
+    if (trustm_ec_key == NULL || (selection & OSSL_KEYMGMT_SELECT_PRIVATE_KEY))
         return 0;
 
     curve_nid = trustm_ecc_curve_to_nid(trustm_ec_key->key_curve);

@@ -336,8 +336,8 @@ extern const OSSL_DISPATCH trustm_ec_keymgmt_functions[];
 
 // todo: add ec key management here too
 static const OSSL_ALGORITHM trustm_keymgmts[] = {
-    { "RSA:rsaEncryption", NULL, trustm_rsa_keymgmt_functions },
-    { "EC:id-ecPublicKey", NULL, trustm_ec_keymgmt_functions },
+    { "RSA:rsaEncryption", "provider=trustm", trustm_rsa_keymgmt_functions },
+    { "EC:id-ecPublicKey", "provider=trustm", trustm_ec_keymgmt_functions },
     { NULL, NULL, NULL }
 };
 

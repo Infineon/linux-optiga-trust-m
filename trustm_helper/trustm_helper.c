@@ -65,6 +65,8 @@ optiga_lib_status_t optiga_lib_status;
 uint16_t trustm_open_flag = 0;
 uint8_t trustm_hibernate_flag = 0;
 shared_mutex_t trustm_mutex;
+uint8_t E0_algo_flag;
+
 /*************************************************************************
 *  functions
 *************************************************************************/
@@ -731,6 +733,7 @@ optiga_lib_status_t trustmProviderReadMetadata(optiga_util_t *me_util, uint16_t 
     oidMetadata->D3_executeLen = 0;
     oidMetadata->C4_maxSize = 0;
     oidMetadata->C5_used = 0;
+    E0_algo_flag = 0;
         
     do
     {
@@ -796,7 +799,8 @@ optiga_lib_status_t trustmProviderReadMetadata(optiga_util_t *me_util, uint16_t 
                                 oidMetadata->D8_metaUpdate[j] = read_data_buffer[i+2+j];
                             break;
                         case 0xE0:
-                            oidMetadata->E0_algo = read_data_buffer[i+2];                        
+                            oidMetadata->E0_algo = read_data_buffer[i+2];
+                            E0_algo_flag = 1;                        
                             break;
                         case 0xE1:
                             oidMetadata->E1_keyUsage = read_data_buffer[i+2];

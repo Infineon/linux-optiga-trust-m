@@ -496,7 +496,7 @@ int trustm_rsa_keymgmt_export(void *keydata, int selection, OSSL_CALLBACK *param
     OSSL_PARAM params[3];
     OSSL_PARAM *p = params;
 
-    if (trustm_rsa_key == NULL)
+    if (trustm_rsa_key == NULL || (selection & OSSL_KEYMGMT_SELECT_PRIVATE_KEY))
         return 0;
 
     if (selection & OSSL_KEYMGMT_SELECT_PUBLIC_KEY) 
