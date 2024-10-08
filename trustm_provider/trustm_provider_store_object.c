@@ -367,7 +367,11 @@ static int trustm_object_load_pkey_rsa(trustm_object_ctx_t *trustm_object_ctx, O
         printf("Error reading metadata of OID: 0x%.4X\nError code: 0x%.4X\n", trustm_rsa_key->private_key_id + 0x10E4, return_status);
         return 0;
     }
-
+    if (E0_algo_flag == 0)
+    {
+        printf("Key is not initialized, Please Generate Key\n");
+        return 0;
+    }
     trustm_rsa_key->key_size = oidMetadata.E0_algo;
     trustm_rsa_key->key_usage = oidMetadata.E1_keyUsage;
 
@@ -724,7 +728,11 @@ static int trustm_object_load_pkey_ec(trustm_object_ctx_t *trustm_object_ctx, OS
         printf("Error reading metadata of OID: 0x%.4X\nError code: 0x%.4X\n", trustm_ec_key->private_key_id, return_status);
         return 0;
     }
-
+    if (E0_algo_flag == 0)
+    {
+        printf("Key is not initialized, Please Generate Key\n");
+        return 0;
+    }
     trustm_ec_key->key_curve = oidMetadata.E0_algo;
     trustm_ec_key->key_usage = oidMetadata.E1_keyUsage;
 
