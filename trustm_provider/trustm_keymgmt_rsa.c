@@ -492,6 +492,7 @@ int trustm_rsa_keymgmt_export(void *keydata, int selection, OSSL_CALLBACK *param
     trustm_rsa_key_t *trustm_rsa_key = keydata;
     uint32_t exponent;
     int ok = 1;
+    void * key_data = NULL;
 
     OSSL_PARAM params[3];
     OSSL_PARAM *p = params;
@@ -501,16 +502,34 @@ int trustm_rsa_keymgmt_export(void *keydata, int selection, OSSL_CALLBACK *param
 
     if (selection & OSSL_KEYMGMT_SELECT_PUBLIC_KEY) 
     {
-        *p++ = OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_RSA_N,
-                                        trustm_rsa_key->modulus,
-                                        trustm_rsa_key->modulus_length);
+        BIGNUM * bn = BN_bin2bn(trustm_rsa_key->modulus, trustm_rsa_key->modulus_length, NULL);
+        if (!bn) {
+            return 0;
+        }
+        p->key = OSSL_PKEY_PARAM_RSA_N;
+        p->data_type = OSSL_PARAM_UNSIGNED_INTEGER;
+        key_data = OPENSSL_malloc(trustm_rsa_key->modulus_length);
+        if (!key_data) {
+            BN_free(bn);
+            return 0;
+        }
+        p->data = keydata;
+        p->data_size = trustm_rsa_key->modulus_length;
+        if (!OSSL_PARAM_set_BN(p++, bn))
+        {
+            BN_free(bn);
+            OPENSSL_free(key_data);
+            return 0;
+        }
+        printf("RSA key modulus in exported key: %s\n", BN_bn2hex(bn));
+        BN_free(bn);                                       
         exponent = 0x10001;
-        *p = OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_RSA_E, (unsigned char*)&exponent, sizeof(exponent));
+        *p++ = OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_RSA_E, (unsigned char*)&exponent, sizeof(exponent));
     }
     *p = OSSL_PARAM_construct_end();
 
     ok = param_cb(params, cbarg);
-
+    OPENSSL_free(key_data);
     return ok;
 }
 
