@@ -61,7 +61,7 @@ static void *rsa_asymcipher_newctx(void *provctx)
 static int rsa_asymcipher_decrypt_init(void *ctx, void *provkey, const OSSL_PARAM params[])
 {
     trustm_rsa_asymcipher_ctx_t *trustm_rsa_asymcipher_ctx = ctx;
-
+    trustm_rsa_asymcipher_ctx->me_crypt = me_crypt;
     // assign key
     trustm_rsa_asymcipher_ctx->trustm_rsa_key = (trustm_rsa_key_t *) provkey;
 
@@ -84,10 +84,6 @@ static int rsa_asymcipher_encrypt(void *ctx, unsigned char *out, size_t *outlen,
     public_key_from_host.length = (trustm_rsa_asymcipher_ctx->trustm_rsa_key->public_key_length) - 
                                     (trustm_rsa_asymcipher_ctx->trustm_rsa_key->public_key_header_length);
     public_key_from_host.key_type = trustm_rsa_asymcipher_ctx->trustm_rsa_key->key_size;
-
-    printf("Enc scheme : %.2x\n", trustm_rsa_asymcipher_ctx->encryption_scheme);
-    printf("Private OID : %.4x\n", trustm_rsa_asymcipher_ctx->trustm_rsa_key->private_key_id);
-    printf("inlen : %d\n", inlen);
 
     optiga_lib_status = OPTIGA_LIB_BUSY;
     return_status = optiga_crypt_rsa_encrypt_message(trustm_rsa_asymcipher_ctx->me_crypt, 
@@ -145,13 +141,6 @@ static int rsa_asymcipher_decrypt(void *ctx, unsigned char *out, size_t *outlen,
     optiga_lib_status_t return_status;
 
     TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE
-
-    printf("Enc scheme : %.2x\n", trustm_rsa_asymcipher_ctx->encryption_scheme);
-    printf("Private OID : %.4x\n", trustm_rsa_asymcipher_ctx->trustm_rsa_key->private_key_id);
-    printf("inlen : %d\n", inlen);
-
-    if (in == NULL)
-        printf("in is NULL");
 
     optiga_lib_status = OPTIGA_LIB_BUSY;
     return_status = optiga_crypt_rsa_decrypt_and_export(trustm_rsa_asymcipher_ctx->me_crypt,

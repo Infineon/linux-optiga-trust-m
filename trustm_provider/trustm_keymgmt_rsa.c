@@ -505,7 +505,7 @@ int trustm_rsa_keymgmt_export(void *keydata, int selection, OSSL_CALLBACK *param
                                         trustm_rsa_key->modulus,
                                         trustm_rsa_key->modulus_length);
         exponent = 0x10001;
-        *p = OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_RSA_E, (unsigned char*)&exponent, sizeof(exponent));
+        *p++ = OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_RSA_E, (unsigned char*)&exponent, sizeof(exponent));
     }
     *p = OSSL_PARAM_construct_end();
 
