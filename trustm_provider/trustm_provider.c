@@ -12,7 +12,7 @@
 
 #include "pal_ifx_i2c_config.h"
 #include "trustm_helper.h"
-#include "trustm_helper_ipc_lock.h"
+#include "pal_shared_mutex.h"
 
 #include "trustm_provider_common.h"
 
@@ -89,7 +89,7 @@ optiga_lib_status_t trustmProvider_Open(void)
     {
         
         //Create an instance of optiga_util to open the application on OPTIGA.
-        trustm_ipc_acquire(&trustm_eng_mutex,"/trustm-mutex");
+        pal_shm_mutex_acquire(&trustm_eng_mutex,"/trustm-mutex");
         if (me_util == NULL)
         {
             me_util = optiga_util_create(0, provider_optiga_util_callback, NULL);
@@ -281,7 +281,7 @@ optiga_lib_status_t trustmProvider_App_Close(void)
     trustmProvider_Close();
     
     *trustm_eng_mutex.pid=EMPTY_PID;
-    trustm_ipc_release(&trustm_eng_mutex);
+    pal_shm_mutex_release(&trustm_eng_mutex);
     TRUSTM_ENGINE_DBGFN("<");
     return return_status;
 }
@@ -294,7 +294,7 @@ void trustmProvider_App_Release(void)
 {
     TRUSTM_ENGINE_DBGFN(">");
     TRUSTM_WORKAROUND_TIMER_DISARM;
-    trustm_ipc_release(&trustm_eng_mutex);
+    pal_shm_mutex_release(&trustm_eng_mutex);
     TRUSTM_ENGINE_DBGFN("<");
       
 }
@@ -303,13 +303,13 @@ void trustmProvider_App_Release(void)
 void trustmProvider_SSLMutex_Acquire(void) 
 {
     //TRUSTM_WORKAROUND_TIMER_ARM;
-    trustm_ipc_acquire(&ssl_mutex, "/ssl-mutex");
+    pal_shm_mutex_acquire(&ssl_mutex,"/ssl-mutex");
 }
 
 void trustmProvider_SSLMutex_Release(void)
 {
     //TRUSTM_WORKAROUND_TIMER_DISARM;
-    trustm_ipc_release(&ssl_mutex);
+    pal_shm_mutex_release(&ssl_mutex);
 }
 ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -485,13 +485,16 @@ static void trustm_teardown(void *provctx)
     trustm_ctx_t * trustm_ctx = provctx;
     
     TRUSTM_ENGINE_DBGFN("> Provider destroy");
-    trustm_ipc_acquire(&ssl_mutex, "/ssl-mutex");
+    //trustm_ipc_acquire(&ssl_mutex, "/ssl-mutex");
+    pal_shm_mutex_acquire(&ssl_mutex,"/ssl-mutex");
     
     trustm_ctx->me_crypt = NULL;
     
     trustmProvider_Close();
     
-    trustm_ipc_release(&ssl_mutex);
+    //trustm_ipc_release(&ssl_mutex);
+    pal_shm_mutex_release(&ssl_mutex);
+    //pal_os_lock_release(&ssl_mutex);
     TRUSTM_ENGINE_DBGFN("<");
     
     OSSL_LIB_CTX_free(trustm_ctx->libctx);
@@ -543,7 +546,8 @@ OPENSSL_EXPORT int OSSL_provider_init(const OSSL_CORE_HANDLE *handle, const OSSL
     
     
     // Init trust m chip
-    trustm_ipc_acquire(&ssl_mutex, "/ssl-mutex");
+    //trustm_ipc_acquire(&ssl_mutex, "/ssl-mutex");
+    pal_shm_mutex_acquire(&ssl_mutex,"/ssl-mutex");
     do {
         me_util = NULL;
         me_crypt = NULL;
@@ -551,7 +555,8 @@ OPENSSL_EXPORT int OSSL_provider_init(const OSSL_CORE_HANDLE *handle, const OSSL
         pal_gpio_init(&optiga_reset_0);
         pal_gpio_init(&optiga_vdd_0);
     } while (FALSE);
-    trustm_ipc_release(&ssl_mutex);
+    //trustm_ipc_release(&ssl_mutex);
+    pal_shm_mutex_release(&ssl_mutex);
     
     *provctx = trustm_ctx;
     *out = trustm_dispatch_table;

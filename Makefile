@@ -56,6 +56,7 @@ INCDIR += $(TRUSTM)/include/common
 INCDIR += $(TRUSTM)/include/cmd
 INCDIR += $(TRUSTM)/include/pal
 INCDIR += $(TRUSTM)/extras/pal/linux
+INCDIR += $(TRUSTM)/extras/pal/linux/include
 INCDIR += trustm_helper/include
 INCDIR += trustm_provider
 INCDIR += $(TRUSTM)/external/mbedtls/include
@@ -85,6 +86,7 @@ ifdef LIBDIR
 	        LIBSRC += $(PALDIR)/pal_os_timer.c
 	        LIBSRC += $(PALDIR)/pal_os_memory.c
 			LIBSRC += $(TRUSTM)/extras/pal/pal_crypt_mbedtls.c       	
+			LIBSRC += $(TRUSTM)/extras/pal/linux/pal_shared_mutex.c       	
         	ifeq ($(USE_LIBGPIOD_RPI), YES)
 	                LIBSRC += $(PALDIR)/target/gpiod/pal_ifx_i2c_config.c
         	endif

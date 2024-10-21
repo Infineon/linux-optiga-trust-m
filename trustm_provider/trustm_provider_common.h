@@ -31,7 +31,7 @@
 
 #include "optiga_lib_common.h"
 #include "trustm_helper.h"
-#include "trustm_helper_ipc_lock.h"
+#include "pal_shared_mutex.h"
 
 #include "sys/types.h"
 #include "unistd.h"
