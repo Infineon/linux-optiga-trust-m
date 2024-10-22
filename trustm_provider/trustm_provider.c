@@ -31,7 +31,7 @@ shared_mutex_t ssl_mutex;
 
 
 /**********************************************************************
-* engine_optiga_util_callback()
+* provider_optiga_util_callback()
 **********************************************************************/
 void provider_optiga_util_callback(void * context, optiga_lib_status_t return_status)
 {
@@ -40,7 +40,7 @@ void provider_optiga_util_callback(void * context, optiga_lib_status_t return_st
 }
 
 /**********************************************************************
-* engine_optiga_crypt_callback()
+* provider_optiga_crypt_callback()
 **********************************************************************/
 void provider_optiga_crypt_callback(void * context, optiga_lib_status_t return_status)
 {
@@ -52,7 +52,7 @@ void provider_optiga_crypt_callback(void * context, optiga_lib_status_t return_s
 }
 
 /**********************************************************************
-* trustmEngine_WaitForCompletion()
+* trustmProvider_WaitForCompletion()
 **********************************************************************/
 optiga_lib_status_t trustmProvider_WaitForCompletion(uint16_t wait_time)
 {
@@ -65,25 +65,25 @@ optiga_lib_status_t trustmProvider_WaitForCompletion(uint16_t wait_time)
         tickcount++;
         if (tickcount >= wait_time)
         {
-            TRUSTM_ENGINE_ERRFN("Fail : Optiga Busy Time Out:%d\n",tickcount);
+            TRUSTM_PROVIDER_ERRFN("Fail : Optiga Busy Time Out:%d\n",tickcount);
             return OPTIGA_LIB_BUSY;
         }
          
     }while (optiga_lib_status == OPTIGA_LIB_BUSY);
-    TRUSTM_ENGINE_DBGFN(" max wait_time:%d, Tick Counter: %d", wait_time,tickcount);
+    TRUSTM_PROVIDER_DBGFN(" max wait_time:%d, Tick Counter: %d", wait_time,tickcount);
     return optiga_lib_status;
     
 }
 
 
 /**********************************************************************
-* trustmEngine_Open()
+* trustmProvider_Open()
 **********************************************************************/
 optiga_lib_status_t trustmProvider_Open(void)
 {
     optiga_lib_status_t return_status;
 
-    TRUSTM_ENGINE_DBGFN(">");
+    TRUSTM_PROVIDER_DBGFN(">");
 
     do
     {
@@ -95,13 +95,13 @@ optiga_lib_status_t trustmProvider_Open(void)
             me_util = optiga_util_create(0, provider_optiga_util_callback, NULL);
             if (NULL == me_util)
             {
-                TRUSTM_ENGINE_ERRFN("Fail : optiga_util_create\n");
+                TRUSTM_PROVIDER_ERRFN("Fail : optiga_util_create\n");
                 return_status = OPTIGA_UTIL_ERROR;
                 break;
             }
-            TRUSTM_ENGINE_DBGFN("optiga_util_create OK \n");
+            TRUSTM_PROVIDER_DBGFN("optiga_util_create OK \n");
         }else
-        {   TRUSTM_ENGINE_DBGFN("TrustM util instance exists. \n");
+        {   TRUSTM_PROVIDER_DBGFN("TrustM util instance exists. \n");
         }
 
         if(me_crypt ==NULL)
@@ -109,69 +109,69 @@ optiga_lib_status_t trustmProvider_Open(void)
             me_crypt = optiga_crypt_create(0, provider_optiga_crypt_callback, NULL);
             if (NULL == me_crypt)
             {
-                TRUSTM_ENGINE_ERRFN("Fail : optiga_crypt_create\n");
+                TRUSTM_PROVIDER_ERRFN("Fail : optiga_crypt_create\n");
                 return_status = OPTIGA_CRYPT_ERROR;
                 break;
             }
-            TRUSTM_ENGINE_DBGFN("optiga_crypt_create OK \n");
+            TRUSTM_PROVIDER_DBGFN("optiga_crypt_create OK \n");
         }else
         {
-            TRUSTM_ENGINE_DBGFN("TrustM crypt instance exists. \n");
+            TRUSTM_PROVIDER_DBGFN("TrustM crypt instance exists. \n");
         }
         TRUSTM_WORKAROUND_TIMER_ARM;
         return_status = OPTIGA_LIB_SUCCESS;
-        TRUSTM_ENGINE_DBGFN("TrustM crypt instance created. \n");
+        TRUSTM_PROVIDER_DBGFN("TrustM crypt instance created. \n");
         
 
     }while(FALSE);      
 
-    TRUSTM_ENGINE_DBGFN("<");
+    TRUSTM_PROVIDER_DBGFN("<");
     return return_status;
 }
 
 
 /**********************************************************************
-* trustmEngine_App_Open_Recovery()
+* trustmProvider_App_Open_Recovery()
 **********************************************************************/
 optiga_lib_status_t trustmProvider_App_Open_Recovery(void)
 {
     optiga_lib_status_t return_status;
     
-    TRUSTM_ENGINE_DBGFN(">");
+    TRUSTM_PROVIDER_DBGFN(">");
       
     trustm_hibernate_flag = 0; 
     return_status = trustmProvider_App_Open();
     if (return_status != OPTIGA_LIB_SUCCESS) 
     { 
-       TRUSTM_ENGINE_DBGFN("Error opening Trust M, Retry 1");
+       TRUSTM_PROVIDER_DBGFN("Error opening Trust M, Retry 1");
       
        trustmProvider_App_Close();
        return_status = trustmProvider_App_Open();
        if (return_status != OPTIGA_LIB_SUCCESS)
        {
-           TRUSTM_ENGINE_ERRFN("Error opening Trust M, EXIT");
+           TRUSTM_PROVIDER_ERRFN("Error opening Trust M, EXIT");
         }            
     }    
      
-    TRUSTM_ENGINE_DBGFN("<");
+    TRUSTM_PROVIDER_DBGFN("<");
     return return_status;
 }
 
 /**********************************************************************
-* trustmEngine_App_Open()
+* trustmProvider_App_Open()
 **********************************************************************/
 optiga_lib_status_t trustmProvider_App_Open(void)
 {
     optiga_lib_status_t return_status;
 
-    TRUSTM_ENGINE_DBGFN(">");
+    TRUSTM_PROVIDER_DBGFN(">");
     do
     {
        
         return_status = trustmProvider_Open();
         if (return_status != OPTIGA_LIB_SUCCESS)
         {
-            TRUSTM_ENGINE_ERRFN("Fail to create instances");
+            TRUSTM_PROVIDER_ERRFN("Fail to create instances");
             break;
         }
         /**
@@ -180,19 +180,19 @@ optiga_lib_status_t trustmProvider_App_Open(void)
          */        
         if(*trustm_eng_mutex.pid==EMPTY_PID || *trustm_eng_mutex.pid != getpid() )
         {   
-            TRUSTM_ENGINE_DBGFN("optiga_util_open_application:Init");
+            TRUSTM_PROVIDER_DBGFN("optiga_util_open_application:Init");
             optiga_lib_status = OPTIGA_LIB_BUSY;
             return_status = optiga_util_open_application(me_util, 0);
             
             if (OPTIGA_LIB_SUCCESS != return_status)
             {
-                TRUSTM_ENGINE_ERRFN("Fail : optiga_util_open_application[1] \n");
+                TRUSTM_PROVIDER_ERRFN("Fail : optiga_util_open_application[1] \n");
                 break;
             }
             //Wait until the optiga_util_open_application is completed
             return_status=trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
             if (return_status != OPTIGA_LIB_SUCCESS)
-            {   TRUSTM_ENGINE_ERRFN("Fail : optiga_util_open_application time out[1] \n");
+            {   TRUSTM_PROVIDER_ERRFN("Fail : optiga_util_open_application time out[1] \n");
                 trustmPrintErrorCode(return_status);
                 break;
             }
@@ -200,37 +200,37 @@ optiga_lib_status_t trustmProvider_App_Open(void)
         }
         
         
-        TRUSTM_ENGINE_DBGFN("Success : optiga_util_open_application \n");
+        TRUSTM_PROVIDER_DBGFN("Success : optiga_util_open_application \n");
     }while(FALSE);      
 
-    TRUSTM_ENGINE_DBGFN("<");
+    TRUSTM_PROVIDER_DBGFN("<");
     return return_status;
 }
 
 
 
 /**********************************************************************
-* trustmEngine_Close()
+* trustmProvider_Close()
 **********************************************************************/
 optiga_lib_status_t trustmProvider_Close(void)
 {
     optiga_lib_status_t return_status;
 
-    TRUSTM_ENGINE_DBGFN(">");
+    TRUSTM_PROVIDER_DBGFN(">");
 
     // destroy util and crypt instances
     if (me_crypt!=NULL)
     {
-        TRUSTM_ENGINE_DBGFN("optiga_crypt_destroy\n");
+        TRUSTM_PROVIDER_DBGFN("optiga_crypt_destroy\n");
         return_status = optiga_crypt_destroy(me_crypt);
         if(OPTIGA_LIB_SUCCESS != return_status)
         {
-        TRUSTM_ENGINE_ERRFN("Fail : optiga_crypt_destroy \n");
+        TRUSTM_PROVIDER_ERRFN("Fail : optiga_crypt_destroy \n");
         }
     }
 
     if (me_util != NULL)
-    {   TRUSTM_ENGINE_DBGFN("optiga_util_destroy\n");
+    {   TRUSTM_PROVIDER_DBGFN("optiga_util_destroy\n");
         return_status=optiga_util_destroy(me_util);   
     }
     //~ TRUSTM_WORKAROUND_TIMER_DISARM;
@@ -240,13 +240,13 @@ optiga_lib_status_t trustmProvider_Close(void)
     //pal_gpio_deinit(&optiga_vdd_0);
     me_util=NULL;
     me_crypt=NULL;    
-    TRUSTM_ENGINE_DBGFN("TrustM instance destroyed.\n");
-    TRUSTM_ENGINE_DBGFN("<");
+    TRUSTM_PROVIDER_DBGFN("TrustM instance destroyed.\n");
+    TRUSTM_PROVIDER_DBGFN("<");
     return return_status;
 }
 
 /**********************************************************************
-* trustmEngine_App_Close()
+* trustmProvider_App_Close()
 **********************************************************************/
 optiga_lib_status_t trustmProvider_App_Close(void)
 {
@@ -269,10 +269,10 @@ optiga_lib_status_t trustmProvider_App_Close(void)
         return_status=trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
         if (OPTIGA_LIB_SUCCESS != return_status)
         {
-            TRUSTM_ENGINE_ERRFN("Fail : optiga_util_close_application time out \n");
+            TRUSTM_PROVIDER_ERRFN("Fail : optiga_util_close_application time out \n");
             break;
         }
-        TRUSTM_ENGINE_DBGFN("Success : optiga_util_close_application \n");
+        TRUSTM_PROVIDER_DBGFN("Success : optiga_util_close_application \n");
 
     }while(FALSE);
 
@@ -282,20 +282,20 @@ optiga_lib_status_t trustmProvider_App_Close(void)
     
     *trustm_eng_mutex.pid=EMPTY_PID;
     trustm_ipc_release(&trustm_eng_mutex);
-    TRUSTM_ENGINE_DBGFN("<");
+    TRUSTM_PROVIDER_DBGFN("<");
     return return_status;
 }
 
 
 /**********************************************************************
-* trustmEngine_App_Release()
+* trustmProvider_App_Release()
 **********************************************************************/
 void trustmProvider_App_Release(void)
 {
-    TRUSTM_ENGINE_DBGFN(">");
+    TRUSTM_PROVIDER_DBGFN(">");
     TRUSTM_WORKAROUND_TIMER_DISARM;
     trustm_ipc_release(&trustm_eng_mutex);
-    TRUSTM_ENGINE_DBGFN("<");
+    TRUSTM_PROVIDER_DBGFN("<");
       
 }
 
@@ -484,7 +484,7 @@ static void trustm_teardown(void *provctx)
 {
     trustm_ctx_t * trustm_ctx = provctx;
     
-    TRUSTM_ENGINE_DBGFN("> Provider destroy");
+    TRUSTM_PROVIDER_DBGFN("> Provider destroy");
     trustm_ipc_acquire(&ssl_mutex, "/ssl-mutex");
     
     trustm_ctx->me_crypt = NULL;
@@ -492,7 +492,7 @@ static void trustm_teardown(void *provctx)
     trustmProvider_Close();
     
     trustm_ipc_release(&ssl_mutex);
-    TRUSTM_ENGINE_DBGFN("<");
+    TRUSTM_PROVIDER_DBGFN("<");
     
     OSSL_LIB_CTX_free(trustm_ctx->libctx);
     OPENSSL_clear_free(trustm_ctx, sizeof(trustm_ctx_t));

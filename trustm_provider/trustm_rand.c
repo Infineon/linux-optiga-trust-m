@@ -94,11 +94,11 @@ trustm_rand_generate(void *ctx, unsigned char *out, size_t outlen,
     optiga_lib_status_t return_status;
     int i,j,k;
     uint8_t tempbuf[MAX_RAND_INPUT];    
-    int ret = TRUSTM_ENGINE_FAIL;
+    int ret = TRUSTM_PROVIDER_FAIL;
     
     //printf("Reached here. outlen : %d\n", outlen);
 
-    TRUSTM_ENGINE_DBGFN("> outlen : %d", outlen);
+    TRUSTM_PROVIDER_DBGFN("> outlen : %d", outlen);
     
     i = outlen % MAX_RAND_INPUT; // max random number output, find the reminder
     j = (outlen - i)/MAX_RAND_INPUT; // Get the count 
@@ -156,7 +156,7 @@ trustm_rand_generate(void *ctx, unsigned char *out, size_t outlen,
             k += (MAX_RAND_INPUT);
         }
 
-        ret = TRUSTM_ENGINE_SUCCESS;
+        ret = TRUSTM_PROVIDER_SUCCESS;
     }while(FALSE);
     
     TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
@@ -168,16 +168,16 @@ trustm_rand_generate(void *ctx, unsigned char *out, size_t outlen,
         TRUSTM_ERROR_raise(trustm_rand_ctx->core, TRUSTM_ERR_CANNOT_GET_RANDOM);
     }
     // if fail returns all zero
-    if (ret != TRUSTM_ENGINE_SUCCESS)
+    if (ret != TRUSTM_PROVIDER_SUCCESS)
     {
-        TRUSTM_ENGINE_DBGFN("error ret 0!!!\n");
+        TRUSTM_PROVIDER_DBGFN("error ret 0!!!\n");
         for(i=0;i<outlen;i++)
         {
             *(out+i) = 0;
         }
     }
     
-    TRUSTM_ENGINE_DBGFN("<");    
+    TRUSTM_PROVIDER_DBGFN("<");    
     return ret;
     #undef MAX_RAND_INPUT    
 }
