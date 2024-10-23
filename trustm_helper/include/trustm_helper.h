@@ -125,6 +125,7 @@ typedef struct trustm_metadata_str
   uint8_t F0_ResetType;
 } trustm_metadata_t;
 
+extern uint8_t E0_algo_flag;
 
 // *********** Extern
 extern optiga_util_t * me_util;

@@ -22,8 +22,8 @@
 * SOFTWARE
 
 */
-#ifndef _TRUSTM_ENGINE_COMMON_H_
-#define _TRUSTM_ENGINE_COMMON_H_
+#ifndef _TRUSTM_PROVIDER_COMMON_H_
+#define _TRUSTM_PROVIDER_COMMON_H_
 
 #include <stdio.h>
 #include <pthread.h>
@@ -46,7 +46,7 @@
 
 #define WORKAROUND 1
 #define TRUSTM_RAND_ENABLED 
-//~ #define TRUSTM_ENGINE_DEBUG 
+//~ #define TRUSTM_PROVIDER_DEBUG 
 //~ #define TRUST_ENG_CLOSE_APP_ENABLE
 
 #ifdef WORKAROUND
@@ -59,39 +59,39 @@
 #define TRUSTM_WORKAROUND_TIMER_DESTROY    
 #endif
 
-#ifdef TRUSTM_ENGINE_DEBUG
+#ifdef TRUSTM_PROVIDER_DEBUG
 
-#define TRUSTM_ENGINE_DBG(x, ...)      fprintf(stderr, "%d:%s:%d " x "\n", getpid(),__FILE__, __LINE__, ##__VA_ARGS__)
-#define TRUSTM_ENGINE_DBGFN(x, ...)    fprintf(stderr, "%d:%s:%d %s: " x "\n", getpid(),__FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
-#define TRUSTM_ENGINE_ERRFN(x, ...)    fprintf(stderr, "%d:Error in %s:%d %s: " x "\n",getpid(), __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
-#define TRUSTM_ENGINE_MSGFN(x, ...)    fprintf(stderr, "%d:Message:%s:%d %s: " x "\n",getpid(), __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
+#define TRUSTM_PROVIDER_DBG(x, ...)      fprintf(stderr, "%d:%s:%d " x "\n", getpid(),__FILE__, __LINE__, ##__VA_ARGS__)
+#define TRUSTM_PROVIDER_DBGFN(x, ...)    fprintf(stderr, "%d:%s:%d %s: " x "\n", getpid(),__FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
+#define TRUSTM_PROVIDER_ERRFN(x, ...)    fprintf(stderr, "%d:Error in %s:%d %s: " x "\n",getpid(), __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
+#define TRUSTM_PROVIDER_MSGFN(x, ...)    fprintf(stderr, "%d:Message:%s:%d %s: " x "\n",getpid(), __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
 #else
 
-#define TRUSTM_ENGINE_DBG(x, ...)
-#define TRUSTM_ENGINE_DBGFN(x, ...)
-#define TRUSTM_ENGINE_ERRFN(x, ...)    fprintf(stderr, "Error in %s:%d %s: " x "\n", __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
-#define TRUSTM_ENGINE_MSGFN(x, ...)    fprintf(stderr, "Message:%s:%d %s: " x "\n", __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
+#define TRUSTM_PROVIDER_DBG(x, ...)
+#define TRUSTM_PROVIDER_DBGFN(x, ...)
+#define TRUSTM_PROVIDER_ERRFN(x, ...)    fprintf(stderr, "Error in %s:%d %s: " x "\n", __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
+#define TRUSTM_PROVIDER_MSGFN(x, ...)    fprintf(stderr, "Message:%s:%d %s: " x "\n", __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
 
 #endif
 
-/*#define TRUSTM_ENGINE_APP_OPEN         if (trustm_ctx.appOpen == 0) \
+/*#define TRUSTM_PROVIDER_APP_OPEN         if (trustm_ctx.appOpen == 0) \
                                           {trustm_hibernate_flag = 0; \
-                                           return_status = trustmEngine_App_Open(); \
+                                           return_status = trustmProvider_App_Open(); \
                                           }else{trustm_ctx.appOpen = 2;}
 */
-/*#define TRUSTM_ENGINE_APP_OPEN_RET(x,y)  if (trustm_ctx.appOpen == 0) \
+/*#define TRUSTM_PROVIDER_APP_OPEN_RET(x,y)  if (trustm_ctx.appOpen == 0) \
                                            {trustm_hibernate_flag = 0; \
-                                            return_status = trustmEngine_App_Open(); \
+                                            return_status = trustmProvider_App_Open(); \
                                             if (return_status != OPTIGA_LIB_SUCCESS) { \
-                                               TRUSTM_ENGINE_ERRFN("Fail to open trustM!!"); \
+                                               TRUSTM_PROVIDER_ERRFN("Fail to open trustM!!"); \
                                                x = y;return x;} \
                                            }else{trustm_ctx.appOpen = 2;}
 */                                           
 //#define TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE   trustmProvider_SSLMutex_Acquire();
 //#define TRUSTM_PROVIDER_SSL_MUTEX_RELEASE   trustmProvider_SSLMutex_Release();
-#ifdef TRUSTM_ENGINE_DEBUG
-#define TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE   TRUSTM_ENGINE_DBGFN(">");trustmProvider_App_Open_Recovery();
-#define TRUSTM_PROVIDER_SSL_MUTEX_RELEASE   TRUSTM_ENGINE_DBGFN("<");trustmProvider_App_Release();
+#ifdef TRUSTM_PROVIDER_DEBUG
+#define TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE   TRUSTM_PROVIDER_DBGFN(">");trustmProvider_App_Open_Recovery();
+#define TRUSTM_PROVIDER_SSL_MUTEX_RELEASE   TRUSTM_PROVIDER_DBGFN("<");trustmProvider_App_Release();
 #else
 #define TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE   trustmProvider_App_Open_Recovery();
 #define TRUSTM_PROVIDER_SSL_MUTEX_RELEASE   trustmProvider_App_Release();
@@ -99,9 +99,9 @@
 #endif
 
 #ifdef TRUST_ENG_CLOSE_APP_ENABLE
-#define TRUSTM_ENGINE_APP_CLOSE           trustmProvider_App_Close(); 
+#define TRUSTM_PROVIDER_APP_CLOSE           trustmProvider_App_Close(); 
 #else
-#define TRUSTM_ENGINE_APP_CLOSE           trustmProvider_App_Release(); 
+#define TRUSTM_PROVIDER_APP_CLOSE           trustmProvider_App_Release(); 
 #endif                                          
 
 //Macro define
@@ -115,9 +115,9 @@
 #define TRUE                (1U)
 #endif
 
-// trustm engine return code
-#define TRUSTM_ENGINE_SUCCESS	1
-#define TRUSTM_ENGINE_FAIL		0
+// trustm Provider return code
+#define TRUSTM_PROVIDER_SUCCESS	1
+#define TRUSTM_PROVIDER_FAIL		0
 
 /*
 Shared SSL mutex across functions
@@ -137,14 +137,14 @@ Shared SSL mutex across functions
 
 
 //typedefine
-typedef enum trustmEngine_flag
+typedef enum trustmProvider_flag
 {
-    TRUSTM_ENGINE_FLAG_NONE = 0x00,
-    TRUSTM_ENGINE_FLAG_NEW = 0x01,
-    TRUSTM_ENGINE_FLAG_SAVEPUBKEY = 0x02,
-    TRUSTM_ENGINE_FLAG_LOADPUBKEY = 0x02,
-    TRUSTM_ENGINE_FLAG_LOCK = 0x80
-} trustmEngine_flag_t;
+    TRUSTM_PROVIDER_FLAG_NONE = 0x00,
+    TRUSTM_PROVIDER_FLAG_NEW = 0x01,
+    TRUSTM_PROVIDER_FLAG_SAVEPUBKEY = 0x02,
+    TRUSTM_PROVIDER_FLAG_LOADPUBKEY = 0x02,
+    TRUSTM_PROVIDER_FLAG_LOCK = 0x80
+} trustmProvider_flag_t;
 
 typedef struct trustm_ctx_str
 {
@@ -268,4 +268,4 @@ enum {
 optiga_lib_status_t trustmProvider_WaitForCompletion(uint16_t wait_time);
 
 
-#endif // _TRUSTM_ENGINE_COMMON_H_
+#endif // _TRUSTM_PROVIDER_COMMON_H_
