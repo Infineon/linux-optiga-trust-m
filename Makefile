@@ -26,20 +26,18 @@
 
 TRUSTM = trustm_lib
 
-BUILD_FOR_RPI = YES
 BUILD_FOR_ULTRA96 = NO
-USE_LIBGPIOD_RPI = NO
+USE_LIBGPIOD_RPI = YES
 
-PALDIR =  $(TRUSTM)/pal/linux
-LIBDIR = $(TRUSTM)/optiga/util
-LIBDIR += $(TRUSTM)/optiga/crypt
-LIBDIR += $(TRUSTM)/optiga/comms
-LIBDIR += $(TRUSTM)/optiga/common
-LIBDIR += $(TRUSTM)/optiga/cmd
-LIBDIR += $(TRUSTM)/externals/mbedtls
+PALDIR =  $(TRUSTM)/extras/pal/linux
+LIBDIR = $(TRUSTM)/src/util
+LIBDIR += $(TRUSTM)/src/crypt
+LIBDIR += $(TRUSTM)/src/comms
+LIBDIR += $(TRUSTM)/src/common
+LIBDIR += $(TRUSTM)/src/cmd
+LIBDIR += $(TRUSTM)/external/mbedtls/library
 LIBDIR += trustm_helper
 
-#OTHDIR = $(TRUSTM)/examples/optiga
 ARCH := $(shell dpkg --print-architecture)
 BINDIR = bin
 APPDIR = ex_cli_applications
@@ -51,17 +49,19 @@ LIB_INSTALL_DIR = /usr/lib/arm-linux-gnueabihf
 endif
 PROVIDER_INSTALL_DIR = $(LIB_INSTALL_DIR)/ossl-modules
 
-INCDIR = $(TRUSTM)/optiga/include
-INCDIR += $(TRUSTM)/optiga/include/optiga
-INCDIR += $(TRUSTM)/optiga/include/optiga/ifx_i2c
-INCDIR += $(TRUSTM)/optiga/include/optiga/comms
-INCDIR += $(TRUSTM)/optiga/include/optiga/common
-INCDIR += $(TRUSTM)/optiga/include/optiga/cmd
-INCDIR += $(TRUSTM)/optiga/include/optiga/pal
-INCDIR += $(TRUSTM)/pal/linux
+INCDIR = $(TRUSTM)/include
+INCDIR += $(TRUSTM)/include/ifx_i2c
+INCDIR += $(TRUSTM)/include/comms
+INCDIR += $(TRUSTM)/include/common
+INCDIR += $(TRUSTM)/include/cmd
+INCDIR += $(TRUSTM)/include/pal
+INCDIR += $(TRUSTM)/extras/pal/linux
+INCDIR += $(TRUSTM)/extras/pal/linux/include
 INCDIR += trustm_helper/include
 INCDIR += trustm_provider
-INCDIR += $(TRUSTM)/externals/mbedtls/include
+INCDIR += $(TRUSTM)/external/mbedtls/include
+#INCDIR += $(TRUSTM)/external/mbedtls/include/mbedtls
+INCDIR += $(TRUSTM)/config
 
 
 ifdef INCDIR
@@ -72,9 +72,6 @@ endif
 ifdef LIBDIR
 	ifdef PALDIR
 	        LIBSRC =  $(PALDIR)/pal.c	       
-	        ifeq ($(BUILD_FOR_RPI), YES)
-	                 LIBSRC += $(PALDIR)/pal_gpio.c
-        	endif
 	        ifeq ($(BUILD_FOR_ULTRA96), YES)
 	                 LIBSRC += $(PALDIR)/pal_gpio.c
         	endif
@@ -88,11 +85,8 @@ ifdef LIBDIR
         	LIBSRC += $(PALDIR)/pal_os_lock.c
 	        LIBSRC += $(PALDIR)/pal_os_timer.c
 	        LIBSRC += $(PALDIR)/pal_os_memory.c
-			LIBSRC += $(TRUSTM)/pal/pal_crypt_mbedtls.c
-	        ifeq ($(BUILD_FOR_RPI), YES)
-	                LIBSRC += $(PALDIR)/target/rpi3/pal_ifx_i2c_config.c
-        	endif
-        	
+			LIBSRC += $(TRUSTM)/extras/pal/pal_crypt_mbedtls.c       	
+			LIBSRC += $(TRUSTM)/extras/pal/linux/pal_shared_mutex.c       	
         	ifeq ($(USE_LIBGPIOD_RPI), YES)
 	                LIBSRC += $(PALDIR)/target/gpiod/pal_ifx_i2c_config.c
         	endif
@@ -138,7 +132,8 @@ ifeq ($(USE_LIBGPIOD_RPI), YES)
 	  CFLAGS += -DHAS_LIBGPIOD
 endif
 #CFLAGS += -DENGINE_DYNAMIC_SUPPORT
-#CFLAGS += -DMODULE_ENABLE_DTLS_MUTUAL_AUTH
+CFLAGS += -DOPTIGA_COMMS_SET_RESET_SOFT
+CFLAGS += -DMBEDTLS_USER_CONFIG_FILE=\"../../../trustm_lib/config/mbedtls_default_config.h\"
 
 LDFLAGS += -lpthread
 LDFLAGS += -lssl

@@ -36,13 +36,13 @@
 #include <openssl/pem.h>
 #include <openssl/asn1.h>
 
-#include "optiga/optiga_util.h"
-#include "optiga/pal/pal_os_timer.h"
-#include "optiga/pal/pal_gpio.h"
-#include "optiga/pal/pal_ifx_i2c_config.h"
+#include "optiga_util.h"
+#include "pal_os_timer.h"
+#include "pal_gpio.h"
+#include "pal_ifx_i2c_config.h"
 
 #include "trustm_helper.h"
-#include "trustm_helper_ipc_lock.h"
+#include "pal_shared_mutex.h"
 
 
 #include <openssl/core_names.h>
@@ -64,7 +64,7 @@ optiga_crypt_t * me_crypt;
 optiga_lib_status_t optiga_lib_status;
 uint16_t trustm_open_flag = 0;
 uint8_t trustm_hibernate_flag = 0;
-shared_mutex_t trustm_mutex;
+shared_mutex_t optiga_mutex;
 uint8_t E0_algo_flag;
 
 /*************************************************************************
@@ -1158,8 +1158,7 @@ optiga_lib_status_t _trustm_Open(void)
 {
     optiga_lib_status_t return_status = OPTIGA_LIB_BUSY;
     
-    
-    trustm_ipc_acquire(&trustm_mutex,"/trustm-mutex");
+    pal_shm_mutex_acquire(&optiga_mutex,"/trustm-mutex");
 
 
     TRUSTM_HELPER_DBGFN(">");
@@ -1202,7 +1201,7 @@ optiga_lib_status_t _trustm_Open(void)
          * Open the application on OPTIGA which is a precondition to perform any other operations
          * using optiga_util_open_application
          */        
-        if(*trustm_mutex.pid==EMPTY_PID || *trustm_mutex.pid != getpid() )
+        if(*optiga_mutex.pid==EMPTY_PID || *optiga_mutex.pid != getpid() )
         {
             TRUSTM_HELPER_DBGFN("optiga_util_open_application:Init\n");
             optiga_lib_status = OPTIGA_LIB_BUSY;
@@ -1218,7 +1217,7 @@ optiga_lib_status_t _trustm_Open(void)
                 return_status = optiga_lib_status;
                 break;
             }
-            *trustm_mutex.pid = getpid(); 
+            *optiga_mutex.pid = getpid(); 
         }
 
         
@@ -1290,7 +1289,7 @@ optiga_lib_status_t trustm_Close(void)
         TRUSTM_HELPER_DBGFN("Success : optiga_util_close_application \n");
 
     }while(FALSE);
-    *trustm_mutex.pid=EMPTY_PID; 
+    *optiga_mutex.pid=EMPTY_PID; 
 
     if (return_status != OPTIGA_LIB_SUCCESS)
         trustmPrintErrorCode(return_status);
@@ -1316,9 +1315,9 @@ optiga_lib_status_t trustm_Close(void)
     TRUSTM_CLI_WORKAROUND_TIMER_DISARM;   
 #endif   
     
-    /// IPC Release 
+    /// Mutex Release 
     //~ TRUSTM_CLI_WORKAROUND_TIMER_DISARM;
-    trustm_ipc_release(&trustm_mutex);
+    pal_shm_mutex_release(&optiga_mutex);
     TRUSTM_HELPER_DBGFN("Release shared memory mutex.\n");
     TRUSTM_HELPER_DBGFN("<");
     return return_status;
