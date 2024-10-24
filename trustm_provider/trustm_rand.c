@@ -95,8 +95,6 @@ trustm_rand_generate(void *ctx, unsigned char *out, size_t outlen,
     int i,j,k;
     uint8_t tempbuf[MAX_RAND_INPUT];    
     int ret = TRUSTM_PROVIDER_FAIL;
-    
-    //printf("Reached here. outlen : %d\n", outlen);
 
     TRUSTM_PROVIDER_DBGFN("> outlen : %d", outlen);
     

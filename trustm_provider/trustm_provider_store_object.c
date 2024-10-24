@@ -78,7 +78,7 @@ static void *trustm_object_open(void *provctx, const char *uri)
     opts[0] = strtok(baseuri, ":");
     if (opts[0] == NULL)
     {
-        printf("No OID input. Abortting...\n");
+        TRUSTM_PROVIDER_ERRFN("No OID input. Abortting...\n");
         OPENSSL_clear_free(trustm_object_ctx, sizeof(trustm_object_ctx_t));
         return NULL;
     }
@@ -108,7 +108,7 @@ static void *trustm_object_open(void *provctx, const char *uri)
     if (((key_id < 0xE0F0) || (key_id > 0xE0F3)) &&
         ((key_id < 0xE0FC) || (key_id > 0xE0FD)))
     {
-        printf("Invalid key OID\n");
+        TRUSTM_PROVIDER_ERRFN("Invalid key OID\n");
         OPENSSL_clear_free(trustm_object_ctx, sizeof(trustm_object_ctx_t));
         return NULL;
     }
@@ -120,7 +120,7 @@ static void *trustm_object_open(void *provctx, const char *uri)
     // processing opts[1]
     if (opts[1] == NULL)
     {
-        printf("Specify public key input\n");
+        TRUSTM_PROVIDER_ERRFN("Specify public key input\n");
         OPENSSL_clear_free(trustm_object_ctx, sizeof(trustm_object_ctx_t));
         return NULL;
     }
@@ -137,7 +137,7 @@ static void *trustm_object_open(void *provctx, const char *uri)
         trustm_object_ctx->bio = BIO_new_file((opts[1]), "rb");
         if (trustm_object_ctx->bio == NULL)
         {
-            printf("Failed to open public key file\n");
+            TRUSTM_PROVIDER_ERRFN("Failed to open public key file\n");
             OPENSSL_free(baseuri);
         }
     }
@@ -154,7 +154,7 @@ static void *trustm_object_open(void *provctx, const char *uri)
             {
                 if (opts[3] == NULL)
                 {
-                    printf("Specify key size\n");
+                    TRUSTM_PROVIDER_ERRFN("Specify key size\n");
                     OPENSSL_clear_free(trustm_object_ctx, sizeof(trustm_object_ctx_t));
                     return NULL;
                 }
@@ -162,7 +162,7 @@ static void *trustm_object_open(void *provctx, const char *uri)
 
                 if (opts[4] == NULL)
                 {
-                    printf("Specify key usage\n");
+                    TRUSTM_PROVIDER_ERRFN("Specify key usage\n");
                     OPENSSL_clear_free(trustm_object_ctx, sizeof(trustm_object_ctx_t));
                     return NULL;
                 }
@@ -174,7 +174,7 @@ static void *trustm_object_open(void *provctx, const char *uri)
             {
                 if (opts[3] == NULL)
                 {
-                    printf("Specify key curve\n");
+                    TRUSTM_PROVIDER_ERRFN("Specify key curve\n");
                     OPENSSL_clear_free(trustm_object_ctx, sizeof(trustm_object_ctx_t));
                     return NULL;
                 }
@@ -182,7 +182,7 @@ static void *trustm_object_open(void *provctx, const char *uri)
 
                 if (opts[4] == NULL)
                 {
-                    printf("Specify key usage\n");
+                    TRUSTM_PROVIDER_ERRFN("Specify key usage\n");
                     OPENSSL_clear_free(trustm_object_ctx, sizeof(trustm_object_ctx_t));
                     return NULL;
                 }
@@ -282,7 +282,7 @@ static int trustm_genpkey_rsa(trustm_object_ctx_t *trustm_object_ctx)
     
     if (OPTIGA_LIB_SUCCESS != return_status)
     {
-        printf("Error generating RSA key pair1\n");
+        TRUSTM_PROVIDER_ERRFN("Error generating RSA key pair\n");
         return 0;
     }
 
@@ -293,7 +293,7 @@ static int trustm_genpkey_rsa(trustm_object_ctx_t *trustm_object_ctx)
 
     if (return_status != OPTIGA_LIB_SUCCESS)
     {
-        printf("Error generating RSA key pair2. Return status: %d\n", return_status);
+        TRUSTM_PROVIDER_ERRFN("Error generating RSA key pair. Return status: %d\n", return_status);
         return 0;
     }
 
@@ -364,12 +364,12 @@ static int trustm_object_load_pkey_rsa(trustm_object_ctx_t *trustm_object_ctx, O
     return_status = trustmProviderReadMetadata(trustm_object_ctx->me_util, trustm_object_ctx->key_id, &oidMetadata);
     if (OPTIGA_LIB_SUCCESS != return_status)
     {
-        printf("Error reading metadata of OID: 0x%.4X\nError code: 0x%.4X\n", trustm_rsa_key->private_key_id + 0x10E4, return_status);
+        TRUSTM_PROVIDER_ERRFN("Error reading metadata of OID: 0x%.4X\nError code: 0x%.4X\n", trustm_rsa_key->private_key_id + 0x10E4, return_status);
         return 0;
     }
     if (E0_algo_flag == 0)
     {
-        printf("Key is not initialized, Please Generate Key\n");
+        TRUSTM_PROVIDER_ERRFN("Key is not initialized, Please Generate Key\n");
         return 0;
     }
     trustm_rsa_key->key_size = oidMetadata.E0_algo;
@@ -386,14 +386,14 @@ static int trustm_object_load_pkey_rsa(trustm_object_ctx_t *trustm_object_ctx, O
     
     if (OPTIGA_LIB_SUCCESS != return_status)
     {
-        printf("Error reading contents of OID: 0x%.4X\nError code: 0x%.4X\n", trustm_rsa_key->private_key_id + 0x10E4, return_status);
+        TRUSTM_PROVIDER_ERRFN("Error reading contents of OID: 0x%.4X\nError code: 0x%.4X\n", trustm_rsa_key->private_key_id + 0x10E4, return_status);
         return 0;
     }
     trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
     return_status = optiga_lib_status;
     if (return_status != OPTIGA_LIB_SUCCESS)
     {
-        printf("Error reading contents of OID: 0x%.4X\n", trustm_rsa_key->private_key_id + 0x10E4);
+        TRUSTM_PROVIDER_ERRFN("Error reading contents of OID: 0x%.4X\n", trustm_rsa_key->private_key_id + 0x10E4);
         return 0;
     }
 
@@ -402,7 +402,7 @@ static int trustm_object_load_pkey_rsa(trustm_object_ctx_t *trustm_object_ctx, O
     // check if we have a valid key header at all
     if (bytes_to_read < sizeof(rsaheader1024))
     {
-        printf("Invalid public key. Please generate another key\n");
+        TRUSTM_PROVIDER_ERRFN("Invalid public key. Please generate another key\n");
         return 0;
     }
 
@@ -410,7 +410,7 @@ static int trustm_object_load_pkey_rsa(trustm_object_ctx_t *trustm_object_ctx, O
     {
         if (memcmp((void *)read_data_buffer, (void *)rsaheader1024, sizeof(rsaheader1024)))
         {
-            printf("Invalid public key header. Please generate another key\n");
+            TRUSTM_PROVIDER_ERRFN("Invalid public key header. Please generate another key\n");
             return 0;
         }
     }
@@ -419,7 +419,7 @@ static int trustm_object_load_pkey_rsa(trustm_object_ctx_t *trustm_object_ctx, O
     {
         if (memcmp((void *)read_data_buffer, (void *)rsaheader2048, sizeof(rsaheader2048)))
         {
-            printf("Invalid public key header. Please generate another key\n");
+            TRUSTM_PROVIDER_ERRFN("Invalid public key header. Please generate another key\n");
             return 0;
         }
     }
@@ -608,7 +608,7 @@ static int trustm_genpkey_ec(trustm_object_ctx_t *trustm_object_ctx)
 
     if (OPTIGA_LIB_SUCCESS != return_status)
     {
-        printf("Error in EC key generation1\nError code : 0x%.4X\n", return_status);      
+        TRUSTM_PROVIDER_ERRFN("Error in EC key generation1\nError code : 0x%.4X\n", return_status);      
         return 0;
     }
     
@@ -617,7 +617,7 @@ static int trustm_genpkey_ec(trustm_object_ctx_t *trustm_object_ctx)
 
     if (return_status != OPTIGA_LIB_SUCCESS)
     {
-        printf("Error in EC key generation\nError code : 0x%.4X\n", return_status);      
+        TRUSTM_PROVIDER_ERRFN("Error in EC key generation\nError code : 0x%.4X\n", return_status);      
         return 0;
     } 
 
@@ -636,7 +636,6 @@ static int trustm_genpkey_ec(trustm_object_ctx_t *trustm_object_ctx)
 
     if (OPTIGA_LIB_SUCCESS != return_status)
     {
-        printf("Error in EC public key save\nError code : 0x%.4X\n", return_status);
         return 0;
     }
     
@@ -645,7 +644,7 @@ static int trustm_genpkey_ec(trustm_object_ctx_t *trustm_object_ctx)
 
     if (return_status != OPTIGA_LIB_SUCCESS)
     {
-        printf("Error in EC public key save\nError code : 0x%.4X\n", return_status);
+        TRUSTM_PROVIDER_ERRFN("Error in EC public key saving\nError code : 0x%.4X\n", return_status);
         return 0;
     }   
 
@@ -725,12 +724,12 @@ static int trustm_object_load_pkey_ec(trustm_object_ctx_t *trustm_object_ctx, OS
     return_status = trustmProviderReadMetadata(trustm_object_ctx->me_util, trustm_object_ctx->key_id, &oidMetadata);
     if (OPTIGA_LIB_SUCCESS != return_status)
     {
-        printf("Error reading metadata of OID: 0x%.4X\nError code: 0x%.4X\n", trustm_ec_key->private_key_id, return_status);
+        TRUSTM_PROVIDER_ERRFN("Error reading metadata of OID: 0x%.4X\nError code: 0x%.4X\n", trustm_ec_key->private_key_id, return_status);
         return 0;
     }
     if (E0_algo_flag == 0)
     {
-        printf("Key is not initialized, Please Generate Key\n");
+        TRUSTM_PROVIDER_ERRFN("Key is not initialized, Please Generate Key\n");
         return 0;
     }
     trustm_ec_key->key_curve = oidMetadata.E0_algo;
@@ -753,14 +752,14 @@ static int trustm_object_load_pkey_ec(trustm_object_ctx_t *trustm_object_ctx, OS
     
     if (OPTIGA_LIB_SUCCESS != return_status)
     {
-        printf("Error reading contents of OID: 0x%.4X\nError code: 0x%.4X\n", trustm_ec_key->private_key_id + public_key_offset, return_status);
+        TRUSTM_PROVIDER_ERRFN("Error reading contents of OID: 0x%.4X\nError code: 0x%.4X\n", trustm_ec_key->private_key_id + public_key_offset, return_status);
         return 0;
     }
     trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
     return_status = optiga_lib_status;
     if (return_status != OPTIGA_LIB_SUCCESS)
     {
-        printf("Error reading contents of OID: 0x%.4X\n", trustm_ec_key->private_key_id + public_key_offset);
+        TRUSTM_PROVIDER_ERRFN("Error reading contents of OID: 0x%.4X\n", trustm_ec_key->private_key_id + public_key_offset);
         return 0;
     }
 
@@ -769,7 +768,7 @@ static int trustm_object_load_pkey_ec(trustm_object_ctx_t *trustm_object_ctx, OS
     // check if we have a valid key header at all
     if (bytes_to_read < sizeof(eccheader384))
     {
-        printf("Invalid public key. Please generate another key\n");
+        TRUSTM_PROVIDER_ERRFN("Invalid public key. Please generate another key\n");
         return 0;
     }
 
@@ -777,7 +776,7 @@ static int trustm_object_load_pkey_ec(trustm_object_ctx_t *trustm_object_ctx, OS
     case OPTIGA_ECC_CURVE_NIST_P_256:
         if (memcmp((void *)read_data_buffer, (void *)eccheader256, sizeof(eccheader256)))
         {
-            printf("Invalid public key. Please generate another key\n");
+            TRUSTM_PROVIDER_ERRFN("Invalid public key. Please generate another key\n");
             return 0;
         }
         break;
@@ -785,7 +784,7 @@ static int trustm_object_load_pkey_ec(trustm_object_ctx_t *trustm_object_ctx, OS
     case OPTIGA_ECC_CURVE_NIST_P_384:
         if (memcmp((void *)read_data_buffer, (void *)eccheader384, sizeof(eccheader384)))
         {
-            printf("Invalid public key. Please generate another key\n");
+            TRUSTM_PROVIDER_ERRFN("Invalid public key. Please generate another key\n");
             return 0;
         }
         break;    
@@ -793,7 +792,7 @@ static int trustm_object_load_pkey_ec(trustm_object_ctx_t *trustm_object_ctx, OS
     case OPTIGA_ECC_CURVE_NIST_P_521:
         if (memcmp((void *)read_data_buffer, (void *)eccheader521, sizeof(eccheader521)))
         {
-            printf("Invalid public key. Please generate another key\n");
+            TRUSTM_PROVIDER_ERRFN("Invalid public key. Please generate another key\n");
             return 0;
         }
         break;
@@ -801,7 +800,7 @@ static int trustm_object_load_pkey_ec(trustm_object_ctx_t *trustm_object_ctx, OS
     case OPTIGA_ECC_CURVE_BRAIN_POOL_P_256R1:
         if (memcmp((void *)read_data_buffer, (void *)eccheaderBrainPool256, sizeof(eccheaderBrainPool256)))
         {
-            printf("Invalid public key. Please generate another key\n");
+            TRUSTM_PROVIDER_ERRFN("Invalid public key. Please generate another key\n");
             return 0;
         }
         break;
@@ -809,7 +808,7 @@ static int trustm_object_load_pkey_ec(trustm_object_ctx_t *trustm_object_ctx, OS
     case OPTIGA_ECC_CURVE_BRAIN_POOL_P_384R1:
         if (memcmp((void *)read_data_buffer, (void *)eccheaderBrainPool384, sizeof(eccheaderBrainPool384)))
         {
-            printf("Invalid public key. Please generate another key\n");
+            TRUSTM_PROVIDER_ERRFN("Invalid public key. Please generate another key\n");
             return 0;
         }
         break;
@@ -817,7 +816,7 @@ static int trustm_object_load_pkey_ec(trustm_object_ctx_t *trustm_object_ctx, OS
     case OPTIGA_ECC_CURVE_BRAIN_POOL_P_512R1:
         if (memcmp((void *)read_data_buffer, (void *)eccheaderBrainPool512, sizeof(eccheaderBrainPool512)))
         {
-            printf("Invalid public key header. Please generate another key\n");
+            TRUSTM_PROVIDER_ERRFN("Invalid public key header. Please generate another key\n");
             return 0;
         }
         break;
@@ -841,7 +840,7 @@ static int trustm_object_load_pkey_ec(trustm_object_ctx_t *trustm_object_ctx, OS
 
     if (trustm_ecc_public_key_to_point(trustm_ec_key) == 0)
     {
-        printf("Error converting EC public key to points\n");
+        TRUSTM_PROVIDER_ERRFN("Error converting EC public key to points\n");
         return 0;
     }
 

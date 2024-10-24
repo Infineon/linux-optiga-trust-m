@@ -117,18 +117,13 @@ static int trustm_rsa_keymgmt_gen_set_params(void *ctx, const OSSL_PARAM params[
     // check if valid RSA OID provided
     if (trustm_rsa_gen_ctx->private_key_id < 0xE0FC || trustm_rsa_gen_ctx->private_key_id > 0xE0FD) 
     {
-        printf("Invalid RSA key OID %.4X\n", trustm_rsa_gen_ctx->private_key_id);
+        TRUSTM_PROVIDER_ERRFN("Invalid RSA key OID %.4X\n", trustm_rsa_gen_ctx->private_key_id);
         return 0;
     }
-
-    
-    //printf("RSA key OID %.4X\n", trustm_rsa_gen_ctx->private_key_id);
     
     p = OSSL_PARAM_locate_const(params, TRUSTM_KEY_USAGE);
     if (p != NULL && !OSSL_PARAM_get_int(p, (int *)&trustm_rsa_gen_ctx->key_usage))
         return 0;
-
-    //printf("RSA key usage %.2X\n", trustm_rsa_gen_ctx->key_usage);
 
     p = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_RSA_BITS);
     if (p != NULL)
@@ -145,7 +140,7 @@ static int trustm_rsa_keymgmt_gen_set_params(void *ctx, const OSSL_PARAM params[
 
         else 
         {
-            printf("Invalid RSA key length %d\n", bits);
+            TRUSTM_PROVIDER_ERRFN("Invalid RSA key length %d\n", bits);
             return 0;
         }
     }
@@ -252,7 +247,7 @@ static void *trustm_rsa_keymgmt_gen(void *ctx, OSSL_CALLBACK *cb, void *cbarg)
     
     if (OPTIGA_LIB_SUCCESS != return_status)
     {
-        printf("Error generating RSA key pair1\n");
+        TRUSTM_PROVIDER_ERRFN("Error in optiga_crypt_rsa_generate_keypair\n");
         OPENSSL_clear_free(trustm_rsa_key, sizeof(trustm_rsa_key_t));
         return NULL;
     }
@@ -264,7 +259,7 @@ static void *trustm_rsa_keymgmt_gen(void *ctx, OSSL_CALLBACK *cb, void *cbarg)
 
     if (return_status != OPTIGA_LIB_SUCCESS)
     {
-        printf("Error generating RSA key pair2. Return status: %d\n", return_status);
+        TRUSTM_PROVIDER_ERRFN("Error generating RSA key pair. Return status: %d\n", return_status);
         OPENSSL_clear_free(trustm_rsa_key, sizeof(trustm_rsa_key_t));
         return NULL;
     }

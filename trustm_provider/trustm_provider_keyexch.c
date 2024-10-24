@@ -146,13 +146,13 @@ static int trustm_keyexch_derive_kdf(trustm_keyexch_ctx_t *trustm_keyexch_ctx, u
 
     if (trustm_keyexch_ctx->kdf_outlen > outlen)
     {
-        printf("Error kdf_outlen : %d  larger than outlen : %d\n", trustm_keyexch_ctx->kdf_outlen, outlen);
+        TRUSTM_PROVIDER_ERRFN("Error kdf_outlen : %d  larger than outlen : %d\n", trustm_keyexch_ctx->kdf_outlen, outlen);
         return 0;
     }
 
     if (trustm_keyexch_ctx->peer_curve != trustm_keyexch_ctx->trustm_private_ec_key->key_curve)
     {
-        printf("Mismatching key curves\n");
+        TRUSTM_PROVIDER_ERRFN("Mismatching key curves\n");
         return 0;
     }
 
@@ -186,7 +186,7 @@ static int trustm_keyexch_derive_kdf(trustm_keyexch_ctx_t *trustm_keyexch_ctx, u
 
     if (OPTIGA_LIB_SUCCESS != return_status)
     {
-        printf("Error in trustm_keyexch_derive_kdf\nError code : 0x%.4X\n", return_status);
+        TRUSTM_PROVIDER_ERRFN("Error in optiga_crypt_ecdh\nError code : 0x%.4X\n", return_status);
         TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
         return 0;
     }
@@ -196,7 +196,7 @@ static int trustm_keyexch_derive_kdf(trustm_keyexch_ctx_t *trustm_keyexch_ctx, u
 
     if (return_status != OPTIGA_LIB_SUCCESS)
     {
-        printf("Error in trustm_keyexch_derive_kdf\nError code : 0x%.4X\n", return_status);
+        TRUSTM_PROVIDER_ERRFN("Error in trustm_keyexch_derive_kdf\nError code : 0x%.4X\n", return_status);
         TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
         return 0;
     }  
@@ -237,7 +237,7 @@ static int trustm_keyexch_derive_plain(trustm_keyexch_ctx_t *trustm_keyexch_ctx,
 
     if (trustm_keyexch_ctx->peer_curve != trustm_keyexch_ctx->trustm_private_ec_key->key_curve)
     {
-        printf("Error mismatching key curves\n");
+        TRUSTM_PROVIDER_ERRFN("Error mismatching key curves\n");
         return 0;
     }
 
@@ -271,7 +271,7 @@ static int trustm_keyexch_derive_plain(trustm_keyexch_ctx_t *trustm_keyexch_ctx,
 
     if (OPTIGA_LIB_SUCCESS != return_status)
     {
-        printf("Error in trustm_keyexch_derive_plain\nError code : 0x%.4X\n", return_status);
+        TRUSTM_PROVIDER_ERRFN("Error in optiga_crypt_ecdh\nError code : 0x%.4X\n", return_status);
         TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
         return 0;
     }
@@ -281,7 +281,7 @@ static int trustm_keyexch_derive_plain(trustm_keyexch_ctx_t *trustm_keyexch_ctx,
 
     if (return_status != OPTIGA_LIB_SUCCESS)
     {
-        printf("Error in trustm_keyexch_derive_plain\nError code : 0x%.4X\n", return_status);
+        TRUSTM_PROVIDER_ERRFN("Error in trustm_keyexch_derive_plain\nError code : 0x%.4X\n", return_status);
         TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
         return 0;
     }   
@@ -291,7 +291,7 @@ static int trustm_keyexch_derive_plain(trustm_keyexch_ctx_t *trustm_keyexch_ctx,
     {
         if (*secretlen > outlen)
         {
-            printf("Error secretlen  :  %d   larger than outlen  :  %d\n", *secretlen, outlen);
+            TRUSTM_PROVIDER_ERRFN("Error secretlen  :  %d   larger than outlen  :  %d\n", *secretlen, outlen);
             TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
             return 0;
         }

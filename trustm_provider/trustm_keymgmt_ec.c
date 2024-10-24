@@ -111,7 +111,7 @@ static int trustm_ec_keymgmt_gen_set_params(void *ctx, const OSSL_PARAM params[]
 
     if ((trustm_ec_gen_ctx->private_key_id < 0xE0F0) || (trustm_ec_gen_ctx->private_key_id > 0xE0F3))
     {
-        printf("Invalid EC Key OID %.4X\n", trustm_ec_gen_ctx->private_key_id);
+        TRUSTM_PROVIDER_ERRFN("Invalid EC Key OID %.4X\n", trustm_ec_gen_ctx->private_key_id);
         return 0;
     }
 
@@ -119,9 +119,6 @@ static int trustm_ec_keymgmt_gen_set_params(void *ctx, const OSSL_PARAM params[]
     p = OSSL_PARAM_locate_const(params, TRUSTM_KEY_USAGE);
     if (p != NULL && !OSSL_PARAM_get_int(p, (int *)&trustm_ec_gen_ctx->key_usage))
         return 0;
-    
-    //printf("EC Key Usage : %d\n", trustm_ec_gen_ctx->key_usage);
-
 
     p = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_GROUP_NAME);
     if (p != NULL)
@@ -149,12 +146,12 @@ static int trustm_ec_keymgmt_gen_set_params(void *ctx, const OSSL_PARAM params[]
         
         else 
         {
-            printf("Invalid EC key curve\n");
+            TRUSTM_PROVIDER_ERRFN("Invalid EC key curve\n");
             return 0;
         }
     }
 
-    //printf("Key curve : %.2X\n", trustm_ec_gen_ctx->key_curve);
+    TRUSTM_PROVIDER_DBG("Key curve : %.2X\n", trustm_ec_gen_ctx->key_curve);
 
     return 1;
 }
@@ -238,7 +235,7 @@ static void *trustm_ec_keymgmt_gen(void *ctx, OSSL_CALLBACK *cb, void *cbarg)
     trustm_ec_key->key_usage = trustm_ec_gen_ctx->key_usage;
     trustm_ec_key->public_key_length = sizeof(trustm_ec_key->public_key);
 
-    printf("Key OID : 0x%.4X\nKey curve 0x%.2X\nKey usage 0x%.2X\n", trustm_ec_key->private_key_id, trustm_ec_key->key_curve, trustm_ec_key->key_usage);
+    TRUSTM_PROVIDER_DBG("Key OID : 0x%.4X\nKey curve 0x%.2X\nKey usage 0x%.2X\n", trustm_ec_key->private_key_id, trustm_ec_key->key_curve, trustm_ec_key->key_usage);
 
     TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE
     trustm_ec_key->me_crypt = me_crypt;
@@ -306,7 +303,7 @@ static void *trustm_ec_keymgmt_gen(void *ctx, OSSL_CALLBACK *cb, void *cbarg)
 
     if (OPTIGA_LIB_SUCCESS != return_status)
     {
-        printf("Error in EC key generation1\nError code : 0x%.4X\n", return_status);
+        TRUSTM_PROVIDER_ERRFN("Error in optiga_crypt_ecc_generate_keypair\nError code : 0x%.4X\n", return_status);
         OPENSSL_clear_free(trustm_ec_key, sizeof(trustm_ec_key_t));
         TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
         return NULL;
@@ -317,7 +314,7 @@ static void *trustm_ec_keymgmt_gen(void *ctx, OSSL_CALLBACK *cb, void *cbarg)
 
     if (return_status != OPTIGA_LIB_SUCCESS)
     {
-        printf("Error in EC key generation\nError code : 0x%.4X\n", return_status);
+        TRUSTM_PROVIDER_ERRFN("Error in EC key generation\nError code : 0x%.4X\n", return_status);
         OPENSSL_clear_free(trustm_ec_key, sizeof(trustm_ec_key_t));
         TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
         return NULL;
@@ -338,7 +335,8 @@ static void *trustm_ec_keymgmt_gen(void *ctx, OSSL_CALLBACK *cb, void *cbarg)
 
     if (OPTIGA_LIB_SUCCESS != return_status)
     {
-        printf("Error in EC public key save\nError code : 0x%.4X\n", return_status);
+        TRUSTM_PROVIDER_ERRFN("Error in optiga_util_write_data\nError code : 0x%.4X\n", return_status);
+        return 0;
     }
     
     trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
@@ -346,7 +344,8 @@ static void *trustm_ec_keymgmt_gen(void *ctx, OSSL_CALLBACK *cb, void *cbarg)
 
     if (return_status != OPTIGA_LIB_SUCCESS)
     {
-        printf("Error in EC public key save\nError code : 0x%.4X\n", return_status);
+        TRUSTM_PROVIDER_ERRFN("Error in EC public key saving\nError code : 0x%.4X\n", return_status);
+        return 0;
     }                    
 
     // update public key length and public key header length
@@ -357,7 +356,7 @@ static void *trustm_ec_keymgmt_gen(void *ctx, OSSL_CALLBACK *cb, void *cbarg)
     if (trustm_ecc_public_key_to_point(trustm_ec_key) == 0)
     
     {
-        printf("Error in EC key converting to coordinate points\n");
+        TRUSTM_PROVIDER_ERRFN("Error in EC key converting to coordinate points\n");
         OPENSSL_clear_free(trustm_ec_key, sizeof(trustm_ec_key_t));
         TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
         return NULL;
@@ -616,7 +615,7 @@ static int trustm_ec_keymgmt_import(void *keydata, int selection, const OSSL_PAR
             trustm_ec_key->key_curve = trustm_nid_to_ecc_curve(nid);
             if (trustm_ec_key->key_curve == 0)
             {
-                printf("Unknown key curve from import\n");
+                TRUSTM_PROVIDER_ERRFN("Unknown key curve from import\n");
                 return 0;
             }          
         }
