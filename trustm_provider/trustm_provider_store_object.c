@@ -49,7 +49,7 @@ static void *trustm_object_open(void *provctx, const char *uri)
 
     // scanned key id
     uint32_t key_id;
-    
+    TRUSTM_PROVIDER_DBGFN(">");    
     trustm_object_ctx = OPENSSL_zalloc(sizeof(trustm_object_ctx_t));
     if (trustm_object_ctx == NULL)
         return NULL;
@@ -192,6 +192,7 @@ static void *trustm_object_open(void *provctx, const char *uri)
     }
 
     OPENSSL_free(baseuri);
+    TRUSTM_PROVIDER_DBGFN("<");
     return trustm_object_ctx;
 }
 
@@ -199,7 +200,7 @@ static void *trustm_object_attach(void *provctx, OSSL_CORE_BIO *cin)
 {
     trustm_ctx_t *trustm_ctx = provctx;
     trustm_object_ctx_t *trustm_object_ctx = OPENSSL_zalloc(sizeof(trustm_object_ctx_t));
-
+    TRUSTM_PROVIDER_DBGFN(">");
     if (trustm_object_ctx == NULL)
         return NULL;
 
@@ -213,7 +214,7 @@ static void *trustm_object_attach(void *provctx, OSSL_CORE_BIO *cin)
         OPENSSL_clear_free(trustm_object_ctx, sizeof(trustm_object_ctx_t));
         return NULL;
     }
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return trustm_object_ctx; 
 }
 
@@ -250,7 +251,7 @@ static int trustm_genpkey_rsa(trustm_object_ctx_t *trustm_object_ctx)
                                 0x06, 0x09, 
                                 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x01, 0x01,
                                 0x05, 0x00};
-
+    TRUSTM_PROVIDER_DBGFN(">");
     TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE
     trustm_object_ctx->me_crypt = me_crypt;
     trustm_object_ctx->me_util = me_util;
@@ -321,7 +322,7 @@ static int trustm_genpkey_rsa(trustm_object_ctx_t *trustm_object_ctx)
     }
     
     TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return 1;
 }
 
@@ -345,11 +346,10 @@ static int trustm_object_load_pkey_rsa(trustm_object_ctx_t *trustm_object_ctx, O
                                 0x05, 0x00};
 
     trustm_rsa_key_t *trustm_rsa_key = NULL;
-
+    TRUSTM_PROVIDER_DBGFN(">");    
     trustm_rsa_key = OPENSSL_zalloc(sizeof(trustm_rsa_key_t));
     if (trustm_rsa_key == NULL)
         return 0;
-
 
     trustm_rsa_key->core = trustm_object_ctx->core;
     trustm_rsa_key->me_util = trustm_object_ctx->me_util;
@@ -485,7 +485,7 @@ static int trustm_object_load_pkey_rsa(trustm_object_ctx_t *trustm_object_ctx, O
     params[3] = OSSL_PARAM_construct_end();
 
     ret = object_cb(params, object_cbarg);
-    
+    TRUSTM_PROVIDER_DBGFN("<");   
     return ret;
 }
 
@@ -542,6 +542,7 @@ static int trustm_genpkey_ec(trustm_object_ctx_t *trustm_object_ctx)
                                 0x06,0x09, // OID:1.3.36.3.3.2.8.1.1.13
                                 0x2B,0x24,0x03,0x03,0x02,0x08,0x01,0x01,0x0d}; 
 
+    TRUSTM_PROVIDER_DBGFN(">");
     TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE
     trustm_object_ctx->me_crypt = me_crypt;
     trustm_object_ctx->me_util = me_util;
@@ -649,7 +650,7 @@ static int trustm_genpkey_ec(trustm_object_ctx_t *trustm_object_ctx)
     }   
 
     TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return 1;
 }
 
@@ -705,6 +706,7 @@ static int trustm_object_load_pkey_ec(trustm_object_ctx_t *trustm_object_ctx, OS
                                 0x2B,0x24,0x03,0x03,0x02,0x08,0x01,0x01,0x0d}; 
 
     trustm_ec_key_t *trustm_ec_key = NULL;
+    TRUSTM_PROVIDER_DBGFN(">");
     trustm_ec_key = OPENSSL_zalloc(sizeof(trustm_ec_key_t));
     if (trustm_ec_key == NULL)
         return 0;
@@ -856,7 +858,7 @@ static int trustm_object_load_pkey_ec(trustm_object_ctx_t *trustm_object_ctx, OS
     params[3] = OSSL_PARAM_construct_end();
 
     ret = object_cb(params, object_cbarg);
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return ret;
 }
 
@@ -865,7 +867,7 @@ static int trustm_object_load(void *ctx, OSSL_CALLBACK *object_cb, void *object_
     trustm_object_ctx_t *trustm_object_ctx = ctx;
     int ret = 0;
 
-
+    TRUSTM_PROVIDER_DBGFN(">");
     // todo: implement load private key from file ig
     if (trustm_object_ctx->bio)
     {
@@ -891,6 +893,7 @@ static int trustm_object_load(void *ctx, OSSL_CALLBACK *object_cb, void *object_
     }
 
     trustm_object_ctx->load_done = 1;
+    TRUSTM_PROVIDER_DBGFN("<");
     return ret;
 }
 
@@ -906,13 +909,14 @@ static int trustm_object_close(void *ctx)
 {
     trustm_object_ctx_t *trustm_object_ctx = ctx;
 
-
+    TRUSTM_PROVIDER_DBGFN(">");
     if (trustm_object_ctx == NULL)
         return 0;
     
     BIO_free(trustm_object_ctx->bio);
 
     OPENSSL_clear_free(trustm_object_ctx, sizeof(trustm_object_ctx_t));
+    TRUSTM_PROVIDER_DBGFN("<");
     return 1;
 }
 

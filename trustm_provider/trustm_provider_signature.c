@@ -68,7 +68,7 @@ static void *trustm_signature_newctx(void *provctx, const char *proq)
 {
     trustm_ctx_t *trustm_ctx = provctx;
     trustm_signature_ctx_t *trustm_signature_ctx = OPENSSL_zalloc(sizeof(trustm_signature_ctx_t));
-
+    TRUSTM_PROVIDER_DBGFN(">");
     if (trustm_signature_ctx == NULL)
         return NULL;
     
@@ -90,7 +90,7 @@ static void *trustm_signature_newctx(void *provctx, const char *proq)
     (trustm_signature_ctx->digest_data->hash_context).context_buffer = trustm_signature_ctx->digest_data->hash_context_buffer;
     (trustm_signature_ctx->digest_data->hash_context).context_buffer_length = sizeof(trustm_signature_ctx->digest_data->hash_context_buffer);
     (trustm_signature_ctx->digest_data->hash_context).hash_algo = (uint8_t)OPTIGA_HASH_TYPE_SHA_256;
-    
+    TRUSTM_PROVIDER_DBGFN("<");    
     return trustm_signature_ctx;
 }
 
@@ -98,7 +98,7 @@ static void *trustm_signature_newctx(void *provctx, const char *proq)
 static void trustm_signature_freectx(void *ctx)
 {
     trustm_signature_ctx_t *trustm_signature_ctx = ctx;
-
+    TRUSTM_PROVIDER_DBGFN(">");
     if (trustm_signature_ctx == NULL)
         return;
 
@@ -106,6 +106,7 @@ static void trustm_signature_freectx(void *ctx)
         OPENSSL_clear_free(trustm_signature_ctx->digest_data, sizeof(trustm_digest_data_t));
 
     OPENSSL_clear_free(trustm_signature_ctx, sizeof(trustm_signature_ctx_t));
+    TRUSTM_PROVIDER_DBGFN("<");
 }
 
 
@@ -113,7 +114,7 @@ static void *trustm_signature_dupctx(void *ctx)
 {
     trustm_signature_ctx_t *src = ctx;
     trustm_signature_ctx_t *sctx = OPENSSL_zalloc(sizeof(trustm_signature_ctx_t));
-
+    TRUSTM_PROVIDER_DBGFN(">");
     if (sctx == NULL)
         return NULL;
 
@@ -138,7 +139,7 @@ static void *trustm_signature_dupctx(void *ctx)
     (sctx->digest_data->hash_context).context_buffer = sctx->digest_data->hash_context_buffer;
     (sctx->digest_data->hash_context).context_buffer_length = sizeof(sctx->digest_data->hash_context_buffer);
     (sctx->digest_data->hash_context).hash_algo = (uint8_t)OPTIGA_HASH_TYPE_SHA_256;
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return sctx;
 }
 
@@ -216,8 +217,7 @@ static int trustm_rsa_signature_sign(void *ctx, unsigned char *sig, size_t *sigl
     uint8_t temp_sig[500];
     uint16_t temp_siglen = sizeof(temp_sig);
 
-    TRUSTM_PROVIDER_DBG("sigsize : %d\n", sigsize);
-
+    TRUSTM_PROVIDER_DBGFN(">");
     TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE
     trustm_signature_ctx->me_crypt = me_crypt;
 
@@ -259,7 +259,7 @@ static int trustm_rsa_signature_sign(void *ctx, unsigned char *sig, size_t *sigl
 
     
     TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return 1;
 }
 
@@ -271,8 +271,7 @@ static int trustm_ecdsa_signature_sign(void *ctx, unsigned char *sig, size_t *si
 
     uint8_t temp_sig[500];
     uint16_t temp_siglen = sizeof(temp_sig);
-
-    TRUSTM_PROVIDER_DBG("sigsize : %d\n", sigsize);
+    TRUSTM_PROVIDER_DBGFN(">");
 
     int byte_string_offset = (trustm_signature_ctx->trustm_ec_key->key_curve == OPTIGA_ECC_CURVE_BRAIN_POOL_P_512R1
                             || trustm_signature_ctx->trustm_ec_key->key_curve == OPTIGA_ECC_CURVE_NIST_P_521) 
@@ -333,7 +332,7 @@ static int trustm_ecdsa_signature_sign(void *ctx, unsigned char *sig, size_t *si
 
     
     TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return 1;
 }
 
@@ -344,7 +343,7 @@ static int trustm_rsa_signature_digest_sign_init(void *ctx, const char *mdname, 
     trustm_signature_ctx->trustm_rsa_key = provkey;
     optiga_lib_status_t return_status;
 
-
+    TRUSTM_PROVIDER_DBGFN(">");
     TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE
     trustm_signature_ctx->me_crypt = me_crypt;
 
@@ -369,7 +368,7 @@ static int trustm_rsa_signature_digest_sign_init(void *ctx, const char *mdname, 
 
     TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
 
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return (trustm_rsa_signature_set_ctx_params(trustm_signature_ctx, params)
             && rsa_signature_scheme_init(trustm_signature_ctx, mdname));
 }
@@ -381,7 +380,7 @@ static int trustm_ecdsa_signature_digest_sign_init(void *ctx, const char *mdname
     trustm_signature_ctx->trustm_ec_key = provkey;
     optiga_lib_status_t return_status;
 
-
+    TRUSTM_PROVIDER_DBGFN(">");
     TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE
     trustm_signature_ctx->me_crypt = me_crypt;
 
@@ -406,7 +405,7 @@ static int trustm_ecdsa_signature_digest_sign_init(void *ctx, const char *mdname
 
     TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
 
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return (trustm_ecdsa_signature_set_ctx_params(trustm_signature_ctx, params)
             && ecdsa_signature_scheme_init(trustm_signature_ctx, mdname));
 }
@@ -419,7 +418,7 @@ static int trustm_rsa_signature_digest_sign_update(void *ctx, const unsigned cha
 
     trustm_signature_ctx->digest_data->hash_data_host.buffer = data;
     trustm_signature_ctx->digest_data->hash_data_host.length = datalen;
-
+    TRUSTM_PROVIDER_DBGFN(">");
     TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE
     trustm_signature_ctx->me_crypt = me_crypt;
 
@@ -466,7 +465,7 @@ static int trustm_rsa_signature_digest_sign_update(void *ctx, const unsigned cha
     }
     
     TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return 1;
 }
 
@@ -478,7 +477,7 @@ static int trustm_ecdsa_signature_digest_sign_update(void *ctx, const unsigned c
 
     trustm_signature_ctx->digest_data->hash_data_host.buffer = data;
     trustm_signature_ctx->digest_data->hash_data_host.length = datalen;
-
+    TRUSTM_PROVIDER_DBGFN(">");
     TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE
     trustm_signature_ctx->me_crypt = me_crypt;
 
@@ -526,7 +525,7 @@ static int trustm_ecdsa_signature_digest_sign_update(void *ctx, const unsigned c
     } 
     
     TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return 1;
 }
 
@@ -538,7 +537,7 @@ static int trustm_rsa_signature_digest_sign_final(void *ctx, unsigned char *sig,
 
     uint8_t temp_sig[500];
     uint16_t temp_siglen = sizeof(temp_sig);
-
+    TRUSTM_PROVIDER_DBGFN(">");
     TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE
     trustm_signature_ctx->me_crypt = me_crypt;
 
@@ -577,7 +576,7 @@ static int trustm_rsa_signature_digest_sign_final(void *ctx, unsigned char *sig,
     }
 
     TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return 1;
 }
 
@@ -589,7 +588,7 @@ static int trustm_ecdsa_signature_digest_sign_final(void *ctx, unsigned char *si
 
     uint8_t temp_sig[500];
     uint16_t temp_siglen = sizeof(temp_sig);
-
+    TRUSTM_PROVIDER_DBGFN(">");
     TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE
     trustm_signature_ctx->me_crypt = me_crypt;
 
@@ -642,7 +641,7 @@ static int trustm_ecdsa_signature_digest_sign_final(void *ctx, unsigned char *si
     }
 
     TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return 1;
 }
 
@@ -656,7 +655,7 @@ static int trustm_rsa_signature_digest_sign(void *ctx, unsigned char *sig, size_
 
     uint8_t temp_sig[500];
     uint16_t temp_siglen = sizeof(temp_sig);
-
+    TRUSTM_PROVIDER_DBGFN(">");
     if (sig == NULL)
     {
         // estimating(?) size of the signature
@@ -754,7 +753,7 @@ static int trustm_rsa_signature_digest_sign(void *ctx, unsigned char *sig, size_
     }
 
     TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return 1;
 }
 
@@ -768,7 +767,7 @@ static int trustm_ecdsa_signature_digest_sign(void *ctx, unsigned char *sig, siz
 
     uint8_t temp_sig[500];
     uint16_t temp_siglen = sizeof(temp_sig);
-
+    TRUSTM_PROVIDER_DBGFN(">");
     if (sig == NULL)
     {
         // estimating(?) size of the signature
@@ -880,7 +879,7 @@ static int trustm_ecdsa_signature_digest_sign(void *ctx, unsigned char *sig, siz
     }
 
     TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return 1;
 }
 
@@ -893,7 +892,7 @@ static int trustm_rsa_signature_digest_verify_final(void *ctx, const unsigned ch
     
     uint8_t public_key_buffer[500];
     uint16_t public_key_buffer_length = sizeof(public_key_buffer);
-
+    TRUSTM_PROVIDER_DBGFN(">");    
     TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE
     trustm_signature_ctx->me_crypt = me_crypt;
 
@@ -1045,7 +1044,7 @@ static int trustm_rsa_signature_digest_verify_final(void *ctx, const unsigned ch
     }
 
     TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return 1;
 }
 
@@ -1063,7 +1062,7 @@ static int trustm_ecdsa_signature_digest_verify_final(void *ctx, const unsigned 
 
     uint8_t input_sig[300];
     uint16_t input_sig_len = sizeof(input_sig);
-
+    TRUSTM_PROVIDER_DBGFN(">");
     TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE
     trustm_signature_ctx->me_crypt = me_crypt;
 
@@ -1145,7 +1144,7 @@ static int trustm_ecdsa_signature_digest_verify_final(void *ctx, const unsigned 
     }
 
     TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return 1;
 }
 
@@ -1153,7 +1152,7 @@ static int trustm_rsa_signature_set_ctx_params(void *ctx, const OSSL_PARAM param
 {
     trustm_signature_ctx_t *trustm_signature_ctx = ctx;
     const OSSL_PARAM *p;
-
+    TRUSTM_PROVIDER_DBGFN(">");
     if (params == NULL)
         return 1;
     
@@ -1181,14 +1180,14 @@ static int trustm_rsa_signature_set_ctx_params(void *ctx, const OSSL_PARAM param
             }
         }
     }
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return 1;
 }
 
 static int trustm_ecdsa_signature_set_ctx_params(void *ctx, const OSSL_PARAM params[])
 {
     const OSSL_PARAM *p;
-
+    TRUSTM_PROVIDER_DBGFN(">");
     if (params == NULL)
         return 1;
     
@@ -1210,7 +1209,7 @@ static int trustm_ecdsa_signature_set_ctx_params(void *ctx, const OSSL_PARAM par
             }
         }
     }
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return 1;
 }
 
@@ -1244,7 +1243,7 @@ static int trustm_signature_get_ctx_params(void *ctx, OSSL_PARAM params[])
     X509_ALGOR* x509_algor;
     ASN1_OBJECT *oid;
     OSSL_PARAM *p;
-
+    TRUSTM_PROVIDER_DBGFN(">");
     x509_algor = X509_ALGOR_new();
     if (x509_algor == NULL)
         return 0;
@@ -1293,7 +1292,7 @@ static int trustm_signature_get_ctx_params(void *ctx, OSSL_PARAM params[])
         return r;
     }
 
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return 1;
 }
 

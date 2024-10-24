@@ -47,7 +47,7 @@ static void *trustm_keyexch_newctx(void *provctx)
 {
     trustm_ctx_t *trustm_ctx = provctx;
     trustm_keyexch_ctx_t *trustm_keyexch_ctx = OPENSSL_zalloc(sizeof(trustm_keyexch_ctx_t));
-
+    TRUSTM_PROVIDER_DBGFN(">");
     if (trustm_keyexch_ctx == NULL)
         return NULL;
 
@@ -55,7 +55,7 @@ static void *trustm_keyexch_newctx(void *provctx)
     trustm_keyexch_ctx->libctx =trustm_ctx->libctx;
     trustm_keyexch_ctx->me_crypt = trustm_ctx->me_crypt;
     trustm_keyexch_ctx->me_util = trustm_ctx->me_util;
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return trustm_keyexch_ctx;
 }
 
@@ -93,7 +93,7 @@ static int trustm_keyexch_set_peer(void *ctx, void *provkey)
     uncompressed_peerkey_buffer_length = trustm_ec_point_to_uncompressed_buffer(peerkey, (void **)&uncompressed_peerkey_buffer);
 
     trustm_keyexch_ctx->peer_buffer[0] = 0x03;
-
+    TRUSTM_PROVIDER_DBGFN(">");
     if (peerkey->key_curve == OPTIGA_ECC_CURVE_NIST_P_521 
             || peerkey->key_curve == OPTIGA_ECC_CURVE_BRAIN_POOL_P_512R1)
     {
@@ -121,6 +121,7 @@ static int trustm_keyexch_set_peer(void *ctx, void *provkey)
     trustm_keyexch_ctx->peer_curve = peerkey->key_curve;
     
     OPENSSL_free(uncompressed_peerkey_buffer);
+    TRUSTM_PROVIDER_DBGFN("<");
     return 1;
 }
 
@@ -137,7 +138,7 @@ static int trustm_keyexch_derive_kdf(trustm_keyexch_ctx_t *trustm_keyexch_ctx, u
     OSSL_PARAM params[4];
     OSSL_PARAM *p = params;
     int res = 0;
-
+    TRUSTM_PROVIDER_DBGFN(">");
     if (secret == NULL)
     {
         *secretlen = trustm_keyexch_ctx->kdf_outlen;
@@ -224,6 +225,7 @@ static int trustm_keyexch_derive_kdf(trustm_keyexch_ctx_t *trustm_keyexch_ctx, u
 
     EVP_KDF_CTX_free(kctx);
     EVP_KDF_free(kdf);
+    TRUSTM_PROVIDER_DBGFN("<");
     return res;
 }
 
@@ -234,7 +236,7 @@ static int trustm_keyexch_derive_plain(trustm_keyexch_ctx_t *trustm_keyexch_ctx,
     uint8_t shared_secret[66];
     uint16_t shared_secret_length;
     public_key_from_host_t peer_public_key_details;
-
+    TRUSTM_PROVIDER_DBGFN(">");
     if (trustm_keyexch_ctx->peer_curve != trustm_keyexch_ctx->trustm_private_ec_key->key_curve)
     {
         TRUSTM_PROVIDER_ERRFN("Error mismatching key curves\n");
@@ -299,6 +301,7 @@ static int trustm_keyexch_derive_plain(trustm_keyexch_ctx_t *trustm_keyexch_ctx,
     }
 
     TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
+    TRUSTM_PROVIDER_DBGFN("<");
     return 1;
 }
 
@@ -317,7 +320,7 @@ static int trustm_keyexch_set_ctx_params(void *ctx, const OSSL_PARAM params[])
 {
     trustm_keyexch_ctx_t *trustm_keyexch_ctx = ctx;
     const OSSL_PARAM *p;
-
+    TRUSTM_PROVIDER_DBGFN(">");
     if (params == NULL)
         return 1;
 
@@ -360,7 +363,7 @@ static int trustm_keyexch_set_ctx_params(void *ctx, const OSSL_PARAM params[])
         if (!OSSL_PARAM_get_octet_string(p, &trustm_keyexch_ctx->kdf_ukmptr, 0, &trustm_keyexch_ctx->kdf_ukmlen))
             return 0;
     }
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return 1;
 }
 

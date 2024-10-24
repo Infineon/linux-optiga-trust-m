@@ -1464,7 +1464,7 @@ openssl pkey -provider trustm_provider -in 0xe0fd:*:NEW:0x42:0x13 -pubout -out e
 Usage : Sign and verify
 Example:
 
-Signing the message in the test_sign.txt file using the TrustM EC key and saving the generated signature in the test_sign.sig file.
+Signing the message in the test_sign.txt file using the TrustM RSA key and saving the generated signature in the test_sign.sig file.
 
 ```console 
 openssl pkeyutl -provider trustm_provider -inkey 0xe0fd:^  -sign -rawin -in test_sign.txt -out test_sign.sig

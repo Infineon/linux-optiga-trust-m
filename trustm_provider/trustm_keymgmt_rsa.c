@@ -55,7 +55,7 @@ static void *trustm_rsa_keymgmt_new(void *provctx)
 {
     trustm_ctx_t *trustm_ctx = provctx;
     trustm_rsa_key_t *trustm_rsa_key = OPENSSL_zalloc(sizeof(trustm_rsa_key_t));
-
+    TRUSTM_PROVIDER_DBGFN(">");
     if (trustm_rsa_key == NULL)
     {
         return NULL;
@@ -73,7 +73,7 @@ static void *trustm_rsa_keymgmt_new(void *provctx)
     trustm_rsa_key->public_key_length = 0;
     trustm_rsa_key->modulus_length = sizeof(trustm_rsa_key->modulus);
 
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return trustm_rsa_key;
 }
 
@@ -81,7 +81,7 @@ static void *trustm_rsa_keymgmt_gen_init(void *provctx, int selection, const OSS
 {
     trustm_ctx_t *trustm_ctx = provctx;
     trustm_rsa_gen_ctx_t *trustm_rsa_gen_ctx = OPENSSL_zalloc(sizeof(trustm_rsa_gen_ctx_t));
-
+    TRUSTM_PROVIDER_DBGFN(">");
     if (trustm_rsa_gen_ctx == NULL)
     {
         return NULL;
@@ -97,6 +97,7 @@ static void *trustm_rsa_keymgmt_gen_init(void *provctx, int selection, const OSS
         return trustm_rsa_gen_ctx;
 
     OPENSSL_clear_free(trustm_rsa_gen_ctx, sizeof(trustm_rsa_gen_ctx_t));
+    TRUSTM_PROVIDER_DBGFN("<");
     return NULL;
 }
 
@@ -106,7 +107,7 @@ static int trustm_rsa_keymgmt_gen_set_params(void *ctx, const OSSL_PARAM params[
     const OSSL_PARAM *p;
     size_t primes, bits;
     BIGNUM *e = NULL;
-
+    TRUSTM_PROVIDER_DBGFN(">");
     if (params == NULL)
         return 1;
 
@@ -158,7 +159,7 @@ static int trustm_rsa_keymgmt_gen_set_params(void *ctx, const OSSL_PARAM params[
         trustm_rsa_gen_ctx->exponent = BN_get_word(e);
         BN_free(e);
     }
-    
+    TRUSTM_PROVIDER_DBGFN("<");
     return 1;
 }
 
@@ -196,7 +197,7 @@ static void *trustm_rsa_keymgmt_gen(void *ctx, OSSL_CALLBACK *cb, void *cbarg)
                                 0x05, 0x00};
 
     trustm_rsa_key = OPENSSL_zalloc(sizeof(trustm_rsa_key_t));
-
+    TRUSTM_PROVIDER_DBGFN(">");
     if (trustm_rsa_key == NULL)
     {
         // add error raise here
@@ -326,35 +327,37 @@ static void *trustm_rsa_keymgmt_gen(void *ctx, OSSL_CALLBACK *cb, void *cbarg)
     BN_free(nbig);
 
     TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
-    
+    TRUSTM_PROVIDER_DBGFN("<");
     return trustm_rsa_key;
 }
 
 static void trustm_rsa_keymgmt_gen_cleanup(void *ctx)
 {
     trustm_rsa_gen_ctx_t *trustm_rsa_gen_ctx = ctx;
-
+    TRUSTM_PROVIDER_DBGFN(">");
     if (trustm_rsa_gen_ctx == NULL)
         return;
 
     OPENSSL_clear_free(trustm_rsa_gen_ctx, sizeof(trustm_rsa_gen_ctx_t));
+    TRUSTM_PROVIDER_DBGFN("<");
 }
 
 static void trustm_rsa_keymgmt_free(void *keydata)
 {
     trustm_rsa_key_t *trustm_rsa_key = keydata;
-
+    TRUSTM_PROVIDER_DBGFN(">");
     if (trustm_rsa_key == NULL)
         return;
 
     OPENSSL_clear_free(trustm_rsa_key, sizeof(trustm_rsa_key_t));
+    TRUSTM_PROVIDER_DBGFN("<");
 }
 
 static int trustm_rsa_keymgmt_get_params(void *keydata, OSSL_PARAM params[])
 {
     trustm_rsa_key_t *trustm_rsa_key = keydata;
     OSSL_PARAM *p;
-
+    TRUSTM_PROVIDER_DBGFN(">");
     if (params == NULL)
         return 1;
 
@@ -400,7 +403,7 @@ static int trustm_rsa_keymgmt_get_params(void *keydata, OSSL_PARAM params[])
         }
         BN_free(bignum);
     }
-    
+    TRUSTM_PROVIDER_DBGFN("<");
     return 1;
 }
 
@@ -430,7 +433,7 @@ static int trustm_rsa_keymgmt_has(const void *keydata, int selection)
 {
     const trustm_rsa_key_t *trustm_rsa_key = keydata;
     int res = 1;
-
+    TRUSTM_PROVIDER_DBGFN(">");
     if (trustm_rsa_key == NULL)
         return 0;
 
@@ -440,20 +443,20 @@ static int trustm_rsa_keymgmt_has(const void *keydata, int selection)
 
     if ((selection & OSSL_KEYMGMT_SELECT_PRIVATE_KEY) != 0 || ((selection & OSSL_KEYMGMT_SELECT_PUBLIC_KEY) != 0))
         res = res && (trustm_rsa_key->public_key_length > 0);
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return res; 
 }
 
 static void *trustm_rsa_keymgmt_load(const void *reference, size_t reference_sz)
 {
     trustm_rsa_key_t *trustm_rsa_key = NULL;
-
+    TRUSTM_PROVIDER_DBGFN(">");
     if (!reference || reference_sz != sizeof(trustm_rsa_key))
         return NULL;
     
     trustm_rsa_key = *(trustm_rsa_key_t **) reference;
     *(trustm_rsa_key_t **)reference = NULL;
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return trustm_rsa_key;
 }
 
@@ -461,7 +464,7 @@ static int trustm_rsa_keymgmt_match(const void *keydata1, const void *keydata2, 
 {
     trustm_rsa_key_t *rsa_key1 = (trustm_rsa_key_t *)keydata1;
     trustm_rsa_key_t *rsa_key2 = (trustm_rsa_key_t *)keydata2;
-
+    TRUSTM_PROVIDER_DBGFN(">");
     if ((selection & OSSL_KEYMGMT_SELECT_KEYPAIR) != 0)
     {
         if ((selection & OSSL_KEYMGMT_SELECT_PUBLIC_KEY) != 0)
@@ -478,7 +481,7 @@ static int trustm_rsa_keymgmt_match(const void *keydata1, const void *keydata2, 
         else 
             return 0;
     }
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return 1;
 }
 
@@ -490,7 +493,7 @@ int trustm_rsa_keymgmt_export(void *keydata, int selection, OSSL_CALLBACK *param
 
     OSSL_PARAM params[3];
     OSSL_PARAM *p = params;
-
+    TRUSTM_PROVIDER_DBGFN(">");
     if (trustm_rsa_key == NULL || (selection & OSSL_KEYMGMT_SELECT_PRIVATE_KEY))
         return 0;
 
@@ -505,7 +508,7 @@ int trustm_rsa_keymgmt_export(void *keydata, int selection, OSSL_CALLBACK *param
     *p = OSSL_PARAM_construct_end();
 
     ok = param_cb(params, cbarg);
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return ok;
 }
 
@@ -514,7 +517,7 @@ static int trustm_rsa_keymgmt_import(void *keydata, int selection, const OSSL_PA
     trustm_rsa_key_t *trustm_rsa_key = (trustm_rsa_key_t *)keydata;
     const OSSL_PARAM *p;
     size_t bits;
-
+    TRUSTM_PROVIDER_DBGFN(">");
     if (trustm_rsa_key == NULL)
         return 0;
 
@@ -547,7 +550,7 @@ static int trustm_rsa_keymgmt_import(void *keydata, int selection, const OSSL_PA
             trustm_rsa_key->modulus_length = tolen;
         }
     }
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return 1;
 }
 
@@ -558,10 +561,10 @@ static const OSSL_PARAM *trustm_rsa_keymgmt_eximport_types(int selection)
         OSSL_PARAM_BN(OSSL_PKEY_PARAM_RSA_E, NULL, 0),
         OSSL_PARAM_END
     };
-
+    TRUSTM_PROVIDER_DBGFN(">");
     if ((selection & OSSL_KEYMGMT_SELECT_PUBLIC_KEY) != 0)
         return rsa_public_key_types;
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return NULL;
 }
 

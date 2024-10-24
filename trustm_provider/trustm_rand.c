@@ -95,12 +95,10 @@ trustm_rand_generate(void *ctx, unsigned char *out, size_t outlen,
     int i,j,k;
     uint8_t tempbuf[MAX_RAND_INPUT];    
     int ret = TRUSTM_PROVIDER_FAIL;
-
-    TRUSTM_PROVIDER_DBGFN("> outlen : %d", outlen);
     
     i = outlen % MAX_RAND_INPUT; // max random number output, find the reminder
     j = (outlen - i)/MAX_RAND_INPUT; // Get the count 
-
+    TRUSTM_PROVIDER_DBGFN(">");
     TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE
     trustm_rand_ctx->me_crypt = me_crypt;
 
