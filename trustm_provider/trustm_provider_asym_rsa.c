@@ -42,7 +42,7 @@ static void *rsa_asymcipher_newctx(void *provctx)
 {
     trustm_ctx_t *trustm_ctx = provctx;
     trustm_rsa_asymcipher_ctx_t *trustm_rsa_asymcipher_ctx = OPENSSL_zalloc(sizeof(trustm_rsa_asymcipher_ctx_t));
-
+    TRUSTM_PROVIDER_DBGFN(">");
     if (trustm_rsa_asymcipher_ctx == NULL)
         return NULL;
 
@@ -53,7 +53,7 @@ static void *rsa_asymcipher_newctx(void *provctx)
     trustm_rsa_asymcipher_ctx->encryption_scheme = OPTIGA_RSAES_PKCS1_V15;
     trustm_rsa_asymcipher_ctx->encrypted_message_length = sizeof(trustm_rsa_asymcipher_ctx->encrypted_message);
     trustm_rsa_asymcipher_ctx->decrypted_message_length = sizeof(trustm_rsa_asymcipher_ctx->decrypted_message);
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return trustm_rsa_asymcipher_ctx;
 }
 
@@ -62,9 +62,10 @@ static int rsa_asymcipher_decrypt_init(void *ctx, void *provkey, const OSSL_PARA
 {
     trustm_rsa_asymcipher_ctx_t *trustm_rsa_asymcipher_ctx = ctx;
     trustm_rsa_asymcipher_ctx->me_crypt = me_crypt;
+    TRUSTM_PROVIDER_DBGFN(">");
     // assign key
     trustm_rsa_asymcipher_ctx->trustm_rsa_key = (trustm_rsa_key_t *) provkey;
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return rsa_asymcipher_set_ctx_params(trustm_rsa_asymcipher_ctx, params);
 }
 
@@ -76,7 +77,7 @@ static int rsa_asymcipher_encrypt(void *ctx, unsigned char *out, size_t *outlen,
     optiga_lib_status_t return_status;
     public_key_from_host_t public_key_from_host;
 
-
+    TRUSTM_PROVIDER_DBGFN(">");
     TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE
 
     public_key_from_host.public_key = (uint8_t *)(trustm_rsa_asymcipher_ctx->trustm_rsa_key->public_key +  
@@ -98,7 +99,7 @@ static int rsa_asymcipher_encrypt(void *ctx, unsigned char *out, size_t *outlen,
                                                     &trustm_rsa_asymcipher_ctx->encrypted_message_length);
     if (OPTIGA_LIB_SUCCESS != return_status)
     {
-        printf("Error encrypting message with RSA");
+        TRUSTM_PROVIDER_ERRFN("Error in optiga_crypt_rsa_encrypt_message");
         TRUSTM_PROVIDER_SSL_MUTEX_RELEASE;
         return 0;
     }
@@ -109,7 +110,7 @@ static int rsa_asymcipher_encrypt(void *ctx, unsigned char *out, size_t *outlen,
 
     if (return_status != OPTIGA_LIB_SUCCESS)
     {
-        printf("Error encrypting message with RSA");
+        TRUSTM_PROVIDER_ERRFN("Error encrypting message with RSA");
         TRUSTM_PROVIDER_SSL_MUTEX_RELEASE;
         return 0;
     }
@@ -120,7 +121,7 @@ static int rsa_asymcipher_encrypt(void *ctx, unsigned char *out, size_t *outlen,
     {
         if (*outlen > outsize)
         {
-            printf("Error outlen : %d is larger than outsize : %d\n", *outlen, outsize);
+            TRUSTM_PROVIDER_ERRFN("Error outlen : %d is larger than outsize : %d\n", *outlen, outsize);
             TRUSTM_PROVIDER_SSL_MUTEX_RELEASE;
             return 0;
         }
@@ -129,7 +130,7 @@ static int rsa_asymcipher_encrypt(void *ctx, unsigned char *out, size_t *outlen,
     }
 
     TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return 1;
 }
 
@@ -139,7 +140,7 @@ static int rsa_asymcipher_decrypt(void *ctx, unsigned char *out, size_t *outlen,
 {
     trustm_rsa_asymcipher_ctx_t *trustm_rsa_asymcipher_ctx = ctx;
     optiga_lib_status_t return_status;
-
+    TRUSTM_PROVIDER_DBGFN(">");
     TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE
 
     optiga_lib_status = OPTIGA_LIB_BUSY;
@@ -154,7 +155,7 @@ static int rsa_asymcipher_decrypt(void *ctx, unsigned char *out, size_t *outlen,
                                                         &(trustm_rsa_asymcipher_ctx->decrypted_message_length));
     if (OPTIGA_LIB_SUCCESS != return_status)
     {
-        printf("Error decrypting message with RSA.\nError code : %.4X\n", return_status);
+        TRUSTM_PROVIDER_ERRFN("Error in optiga_crypt_rsa_decrypt_and_export\nError code : %.4X\n", return_status);
         TRUSTM_PROVIDER_SSL_MUTEX_RELEASE;
         return 0;
     }
@@ -165,7 +166,7 @@ static int rsa_asymcipher_decrypt(void *ctx, unsigned char *out, size_t *outlen,
 
     if (return_status != OPTIGA_LIB_SUCCESS)
     {
-        printf("Error decrypting message with RSA.\nError code : %.4X\n", return_status);
+        TRUSTM_PROVIDER_ERRFN("Error decrypting message with RSA.\nError code : %.4X\n", return_status);
         TRUSTM_PROVIDER_SSL_MUTEX_RELEASE;
         return 0;
     }
@@ -176,7 +177,7 @@ static int rsa_asymcipher_decrypt(void *ctx, unsigned char *out, size_t *outlen,
     {
         if (*outlen > outsize)
         {
-            printf("Error outlen : %d is larger than outsize : %d\n", *outlen, outsize);
+            TRUSTM_PROVIDER_ERRFN("Error outlen : %d is larger than outsize : %d\n", *outlen, outsize);
             TRUSTM_PROVIDER_SSL_MUTEX_RELEASE;
             return 0;
         }
@@ -185,29 +186,29 @@ static int rsa_asymcipher_decrypt(void *ctx, unsigned char *out, size_t *outlen,
     }
 
     TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return 1;
 }
 
 static void rsa_asymcipher_freectx(void *ctx)
 {
     trustm_rsa_asymcipher_ctx_t *trustm_rsa_asymcipher_ctx = ctx;
-
+    TRUSTM_PROVIDER_DBGFN(">");
     if (trustm_rsa_asymcipher_ctx == NULL)
         return;
 
     OPENSSL_clear_free(trustm_rsa_asymcipher_ctx, sizeof(trustm_rsa_asymcipher_ctx_t));
+    TRUSTM_PROVIDER_DBGFN("<");
 }
 
 static int rsa_asymcipher_set_ctx_params(void *ctx, const OSSL_PARAM params[])
 {
     trustm_rsa_asymcipher_ctx_t *trustm_rsa_asymcipher_ctx = ctx;
     const OSSL_PARAM *p;
-
+    TRUSTM_PROVIDER_DBGFN(">");
     if (params == NULL)
         return 1;
     
-
     p = OSSL_PARAM_locate_const(params, OSSL_ASYM_CIPHER_PARAM_PAD_MODE);
     if (p != NULL)
     {
@@ -240,7 +241,7 @@ static int rsa_asymcipher_set_ctx_params(void *ctx, const OSSL_PARAM params[])
             return 0;
         }
     }
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return 1;
 }
 
