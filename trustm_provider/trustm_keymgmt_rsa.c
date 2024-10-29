@@ -248,7 +248,7 @@ static void *trustm_rsa_keymgmt_gen(void *ctx, OSSL_CALLBACK *cb, void *cbarg)
     
     if (OPTIGA_LIB_SUCCESS != return_status)
     {
-        TRUSTM_PROVIDER_ERRFN("Error in optiga_crypt_rsa_generate_keypair\n");
+        TRUSTM_PROVIDER_ERRFN("Error in optiga_crypt_rsa_generate_keypair\nError code : 0x%.4X\n", return_status);
         OPENSSL_clear_free(trustm_rsa_key, sizeof(trustm_rsa_key_t));
         return NULL;
     }
