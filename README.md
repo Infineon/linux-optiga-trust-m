@@ -32,6 +32,7 @@
     - [trustm\_symmetric\_dec](#trustm_symmetric_dec)
     - [trustm\_hkdf](#trustm_hkdf)
     - [trustm\_rng](#trustm_rng)
+    - [trustm\_hash](#trustm_hash)
     - [trustm\_hmac](#trustm_hmac)
     - [trustm\_hmac\_verify\_Auth](#trustm_hmac_verify_auth)
     - [trustm\_protected\_update](#trustm_protected_update)
@@ -1112,7 +1113,37 @@ Success
 ========================================================
 ```
 
+###  <a name="trustm_hash"></a>trustm_hash
 
+Hash input file using OPTIGA™ Trust M SHA256 function .
+
+```console
+./bin/trustm_hash -h
+
+Help menu: trustm_hash <option> ...<option>
+option:- 
+-o <filename> : Output to file 
+-i <filename> : Input Data file
+-H            : Hash with SHA256
+-X            : Bypass Shielded Communication 
+-h            : Print this help 
+
+```
+
+Example : To hash input file datain.txt using OPTIGA™ Trust M SHA256 function.
+
+```console
+./bin/trustm_hash -i datain.txt -o hash_sha256.bin -H -X
+
+Bypass Shielded Communication. 
+========================================================
+Output File Name : hash_sha256.bin 
+Input File Name  : datain.txt 
+OPTIGA execution time: 0.4596 sec.
+filesize: 2500
+Hash Success
+========================================================
+```
 
 ###  <a name="trustm_hmac"></a>trustm_hmac
 
