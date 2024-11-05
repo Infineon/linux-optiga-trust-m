@@ -1,6 +1,6 @@
-# Linux tools and examples</br> for OPTIGA™ Trust M1/M3 security solution
+# Linux tools and examples</br> for OPTIGA™ Trust V1/V3 security solution
 
-- [Linux tools and examples for OPTIGA™ Trust M1/M3 security solution](#linux-tools-and-examples-for-optiga-trust-m1m3-security-solution)
+- [Linux tools and examples for OPTIGA™ Trust V1/V3 security solution](#linux-tools-and-examples-for-optiga-trust-v1v3-security-solution)
   - [About](#about)
     - [Prerequisites](#prerequisites)
   - [Getting Started](#getting-started)
@@ -32,6 +32,7 @@
     - [trustm\_symmetric\_dec](#trustm_symmetric_dec)
     - [trustm\_hkdf](#trustm_hkdf)
     - [trustm\_rng](#trustm_rng)
+    - [trustm\_hash](#trustm_hash)
     - [trustm\_hmac](#trustm_hmac)
     - [trustm\_hmac\_verify\_Auth](#trustm_hmac_verify_auth)
     - [trustm\_protected\_update](#trustm_protected_update)
@@ -79,11 +80,10 @@
         - [Testing CURL Client with OPTIGA™ Trust M Key](#testing-curl-client-with-optiga-trust-m-key)
   - [Known observations](#known-observations)
     - [Secure communication bypass](#secure-communication-bypass)
-    - [OPTIGA™ Trust M Sporadic hang](#optiga-trust-m-sporadic-hang)
 
 ## <a name="about"></a>About
 
-This is a Linux Tools for OPTIGA Trust M1/M3 on Linux platform that consist of:
+This is a Linux Tools for OPTIGA Trust V1/V3 on Linux platform that consist of:
 
 - [Command Line Interface examples](#cli_usage)
 - [OpenSSL Engine](#engine_usage)
@@ -96,7 +96,7 @@ Following is the software component to build the tools :
 * GCC
 * OpenSSL development library (libssl-dev)
 * OpenSSL 1.1.1d
-* OPTIGA Trust M1/M3 library (source code)
+* OPTIGA Trust V1/V3 library (source code)
 * pthread
 * rt
 
@@ -138,7 +138,7 @@ Note:
 
 2)The patch applied inside trustm_installation_script.sh will change the reset type to use soft reset as follow in the header file at "linux-optiga-trust-m/trustm_lib/optiga/include/optiga/"
 
-- optiga_lib_config_m_v3.h for OPTIGA™ Trust M3 
+- optiga_lib_config_m_v3.h for OPTIGA™ Trust V3 
 
 
 ```console
@@ -1141,6 +1141,38 @@ Success
 ========================================================
 ```
 
+###  <a name="trustm_hash"></a>trustm_hash
+
+Hash input file using OPTIGA™ Trust M SHA256 function .
+
+```console
+./bin/trustm_hash -h
+
+Help menu: trustm_hash <option> ...<option>
+option:- 
+-o <filename> : Output to file 
+-i <filename> : Input Data file
+-H            : Hash with SHA256
+-X            : Bypass Shielded Communication 
+-h            : Print this help 
+
+```
+
+Example : To hash input file datain.txt using OPTIGA™ Trust M SHA256 function.
+
+```console
+./bin/trustm_hash -i datain.txt -o hash_sha256.bin -H -X
+
+Bypass Shielded Communication. 
+========================================================
+Output File Name : hash_sha256.bin 
+Input File Name  : datain.txt 
+OPTIGA execution time: 0.4596 sec.
+filesize: 2500
+Hash Success
+========================================================
+```
+
 ###  <a name="trustm_hmac"></a>trustm_hmac
 
 Simple demo to show the process to generate the MAC for the given input data using the secret installed in OPTIGA™ Trust M.
@@ -2098,8 +2130,4 @@ Additional examples:
 ### Secure communication bypass
 
 The I2C secure communication bypass option for CLI only works if the default reset protection level for OPTIGA CRYPT and UTIL APIs is set to OPTIGA_COMMS_NO_PROTECTION.
-
-### OPTIGA™ Trust M Sporadic hang
-
-Check the hardware reset pin if it is connected with an active reset GPIO as assigned n the OPTIGA™ Trust M library. Alternatively, you could configure the library to use software reset.
 
