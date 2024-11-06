@@ -76,7 +76,7 @@ static int rsa_asymcipher_encrypt(void *ctx, unsigned char *out, size_t *outlen,
     
     optiga_lib_status_t return_status;
     public_key_from_host_t public_key_from_host;
-
+    
     TRUSTM_PROVIDER_DBGFN(">");
     TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE
 
@@ -99,7 +99,7 @@ static int rsa_asymcipher_encrypt(void *ctx, unsigned char *out, size_t *outlen,
                                                     &trustm_rsa_asymcipher_ctx->encrypted_message_length);
     if (OPTIGA_LIB_SUCCESS != return_status)
     {
-        TRUSTM_PROVIDER_ERRFN("Error in optiga_crypt_rsa_encrypt_message");
+        TRUSTM_PROVIDER_ERRFN("Error in optiga_crypt_rsa_encrypt_message\nError code : 0x%.4X\n", return_status);
         TRUSTM_PROVIDER_SSL_MUTEX_RELEASE;
         return 0;
     }
