@@ -63,15 +63,17 @@ static void *trustm_object_open(void *provctx, const char *uri)
 
     if ((baseuri = OPENSSL_strdup(uri)) == NULL)
     {
-        OPENSSL_clear_free(trustm_object_ctx, sizeof(trustm_object_ctx_t));
-        return NULL;
+        goto error;
+        //OPENSSL_clear_free(trustm_object_ctx, sizeof(trustm_object_ctx_t));
+        //return NULL;
     }
 
     char *ptr = strstr(baseuri, needle);
     if (ptr == NULL)
     {
-        OPENSSL_clear_free(trustm_object_ctx, sizeof(trustm_object_ctx_t));
-        return NULL;
+        goto error;
+        //OPENSSL_clear_free(trustm_object_ctx, sizeof(trustm_object_ctx_t));
+        //return NULL;
     }
 
     // extract arguments
@@ -79,8 +81,9 @@ static void *trustm_object_open(void *provctx, const char *uri)
     if (opts[0] == NULL)
     {
         TRUSTM_PROVIDER_ERRFN("No OID input. Abortting...\n");
-        OPENSSL_clear_free(trustm_object_ctx, sizeof(trustm_object_ctx_t));
-        return NULL;
+        goto error;
+        //OPENSSL_clear_free(trustm_object_ctx, sizeof(trustm_object_ctx_t));
+        //return NULL;
     }
 
     while (opts[i] != NULL)
@@ -91,8 +94,9 @@ static void *trustm_object_open(void *provctx, const char *uri)
 
     if (i > 6)
     {
-        OPENSSL_clear_free(trustm_object_ctx, sizeof(trustm_object_ctx_t));
-        return NULL;
+        goto error;
+        //OPENSSL_clear_free(trustm_object_ctx, sizeof(trustm_object_ctx_t));
+        //return NULL;
     }
 
     // processing opts[0]
@@ -109,8 +113,9 @@ static void *trustm_object_open(void *provctx, const char *uri)
         ((key_id < 0xE0FC) || (key_id > 0xE0FD)))
     {
         TRUSTM_PROVIDER_ERRFN("Invalid key OID\n");
-        OPENSSL_clear_free(trustm_object_ctx, sizeof(trustm_object_ctx_t));
-        return NULL;
+        goto error;
+        //OPENSSL_clear_free(trustm_object_ctx, sizeof(trustm_object_ctx_t));
+        //return NULL;
     }
 
     // assign primary key object id
@@ -121,8 +126,9 @@ static void *trustm_object_open(void *provctx, const char *uri)
     if (opts[1] == NULL)
     {
         TRUSTM_PROVIDER_ERRFN("Specify public key input\n");
-        OPENSSL_clear_free(trustm_object_ctx, sizeof(trustm_object_ctx_t));
-        return NULL;
+        goto error;
+        //OPENSSL_clear_free(trustm_object_ctx, sizeof(trustm_object_ctx_t));
+        //return NULL;
     }
 
     // if just reading out the public key
@@ -155,16 +161,18 @@ static void *trustm_object_open(void *provctx, const char *uri)
                 if (opts[3] == NULL)
                 {
                     TRUSTM_PROVIDER_ERRFN("Specify key size\n");
-                    OPENSSL_clear_free(trustm_object_ctx, sizeof(trustm_object_ctx_t));
-                    return NULL;
+                    goto error;
+                    //OPENSSL_clear_free(trustm_object_ctx, sizeof(trustm_object_ctx_t));
+                    //return NULL;
                 }
                 sscanf(opts[3],"%x", &(trustm_object_ctx->key_size));
 
                 if (opts[4] == NULL)
                 {
                     TRUSTM_PROVIDER_ERRFN("Specify key usage\n");
-                    OPENSSL_clear_free(trustm_object_ctx, sizeof(trustm_object_ctx_t));
-                    return NULL;
+                    goto error;
+                    //OPENSSL_clear_free(trustm_object_ctx, sizeof(trustm_object_ctx_t));
+                    //return NULL;
                 }
                 sscanf(opts[4], "%x", &(trustm_object_ctx->key_usage));
             } 
@@ -175,16 +183,18 @@ static void *trustm_object_open(void *provctx, const char *uri)
                 if (opts[3] == NULL)
                 {
                     TRUSTM_PROVIDER_ERRFN("Specify key curve\n");
-                    OPENSSL_clear_free(trustm_object_ctx, sizeof(trustm_object_ctx_t));
-                    return NULL;
+                    goto error;
+                    //OPENSSL_clear_free(trustm_object_ctx, sizeof(trustm_object_ctx_t));
+                    //return NULL;
                 }
                 sscanf(opts[3],"%x", &(trustm_object_ctx->key_curve));
 
                 if (opts[4] == NULL)
                 {
                     TRUSTM_PROVIDER_ERRFN("Specify key usage\n");
-                    OPENSSL_clear_free(trustm_object_ctx, sizeof(trustm_object_ctx_t));
-                    return NULL;
+                    goto error;
+                    //OPENSSL_clear_free(trustm_object_ctx, sizeof(trustm_object_ctx_t));
+                    //return NULL;
                 }
                 sscanf(opts[4], "%x", &(trustm_object_ctx->key_usage));
             }
@@ -194,6 +204,9 @@ static void *trustm_object_open(void *provctx, const char *uri)
     OPENSSL_free(baseuri);
     TRUSTM_PROVIDER_DBGFN("<");
     return trustm_object_ctx;
+error:
+    OPENSSL_clear_free(trustm_object_ctx, sizeof(trustm_object_ctx_t));
+    return NULL;
 }
 
 static void *trustm_object_attach(void *provctx, OSSL_CORE_BIO *cin)
