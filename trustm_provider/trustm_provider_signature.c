@@ -39,8 +39,8 @@ static OSSL_FUNC_signature_gettable_ctx_params_fn trustm_signature_gettable_ctx_
 static OSSL_FUNC_signature_sign_init_fn trustm_rsa_signature_sign_init;
 static OSSL_FUNC_signature_sign_fn trustm_rsa_signature_sign;
 
-static OSSL_FUNC_signature_digest_sign_init_fn trustm_rsa_signature_digest_sign_init;
-static OSSL_FUNC_signature_digest_sign_update_fn trustm_rsa_signature_digest_sign_update;
+static OSSL_FUNC_signature_digest_sign_init_fn trustm_rsa_signature_digest_init;
+static OSSL_FUNC_signature_digest_sign_update_fn trustm_rsa_signature_digest_update;
 static OSSL_FUNC_signature_digest_sign_final_fn trustm_rsa_signature_digest_sign_final;
 static OSSL_FUNC_signature_digest_sign_fn trustm_rsa_signature_digest_sign;
 
@@ -53,8 +53,8 @@ static OSSL_FUNC_signature_settable_ctx_params_fn trustm_rsa_signature_settable_
 static OSSL_FUNC_signature_sign_init_fn trustm_ecdsa_signature_sign_init;
 static OSSL_FUNC_signature_sign_fn trustm_ecdsa_signature_sign;
 
-static OSSL_FUNC_signature_digest_sign_init_fn trustm_ecdsa_signature_digest_sign_init;
-static OSSL_FUNC_signature_digest_sign_update_fn trustm_ecdsa_signature_digest_sign_update;
+static OSSL_FUNC_signature_digest_sign_init_fn trustm_ecdsa_signature_digest_init;
+static OSSL_FUNC_signature_digest_sign_update_fn trustm_ecdsa_signature_digest_update;
 static OSSL_FUNC_signature_digest_sign_final_fn trustm_ecdsa_signature_digest_sign_final;
 static OSSL_FUNC_signature_digest_sign_fn trustm_ecdsa_signature_digest_sign;
 
@@ -337,7 +337,7 @@ static int trustm_ecdsa_signature_sign(void *ctx, unsigned char *sig, size_t *si
 }
 
 // basically digest sign, can be used for both sign and verify operations
-static int trustm_rsa_signature_digest_sign_init(void *ctx, const char *mdname, void *provkey, const OSSL_PARAM params[])
+static int trustm_rsa_signature_digest_init(void *ctx, const char *mdname, void *provkey, const OSSL_PARAM params[])
 {
     trustm_signature_ctx_t *trustm_signature_ctx = ctx;
     trustm_signature_ctx->trustm_rsa_key = provkey;
@@ -362,7 +362,7 @@ static int trustm_rsa_signature_digest_sign_init(void *ctx, const char *mdname, 
     return_status = optiga_lib_status;
     if (return_status != OPTIGA_LIB_SUCCESS)
     {
-        TRUSTM_PROVIDER_ERRFN("Error in trustm_rsa_signature_digest_sign_init\n");
+        TRUSTM_PROVIDER_ERRFN("Error in trustm_rsa_signature_digest_init\n");
         return 0;
     }
 
@@ -374,7 +374,7 @@ static int trustm_rsa_signature_digest_sign_init(void *ctx, const char *mdname, 
 }
 
 // basically digest sign, can be used for both sign and verify operations
-static int trustm_ecdsa_signature_digest_sign_init(void *ctx, const char *mdname, void *provkey, const OSSL_PARAM params[])
+static int trustm_ecdsa_signature_digest_init(void *ctx, const char *mdname, void *provkey, const OSSL_PARAM params[])
 {
     trustm_signature_ctx_t *trustm_signature_ctx = ctx;
     trustm_signature_ctx->trustm_ec_key = provkey;
@@ -399,7 +399,7 @@ static int trustm_ecdsa_signature_digest_sign_init(void *ctx, const char *mdname
     return_status = optiga_lib_status;
     if (return_status != OPTIGA_LIB_SUCCESS)
     {
-        TRUSTM_PROVIDER_ERRFN("Error in trustm_ecdsa_signature_digest_sign_init\n");
+        TRUSTM_PROVIDER_ERRFN("Error in trustm_ecdsa_signature_digest_init\n");
         return 0;
     }
 
@@ -411,7 +411,7 @@ static int trustm_ecdsa_signature_digest_sign_init(void *ctx, const char *mdname
 }
 
 // basically digest update, can be used for both sign and verify operations
-static int trustm_rsa_signature_digest_sign_update(void *ctx, const unsigned char *data, size_t datalen)
+static int trustm_rsa_signature_digest_update(void *ctx, const unsigned char *data, size_t datalen)
 {
     trustm_signature_ctx_t *trustm_signature_ctx = ctx;
     optiga_lib_status_t return_status;
@@ -440,7 +440,7 @@ static int trustm_rsa_signature_digest_sign_update(void *ctx, const unsigned cha
     return_status = optiga_lib_status;
     if (return_status != OPTIGA_LIB_SUCCESS)
     {
-        TRUSTM_PROVIDER_ERRFN("Error in trustm_ecdsa_signature_digest_sign_update\n");
+        TRUSTM_PROVIDER_ERRFN("Error in trustm_ecdsa_signature_digest_update\n");
         return 0;
     }
     optiga_lib_status = OPTIGA_LIB_BUSY;
@@ -460,7 +460,7 @@ static int trustm_rsa_signature_digest_sign_update(void *ctx, const unsigned cha
     return_status = optiga_lib_status;
     if (return_status != OPTIGA_LIB_SUCCESS)
     {
-        TRUSTM_PROVIDER_ERRFN("Error in trustm_ecdsa_signature_digest_sign_update\n");
+        TRUSTM_PROVIDER_ERRFN("Error in trustm_ecdsa_signature_digest_update\n");
         return 0;
     }
     
@@ -470,7 +470,7 @@ static int trustm_rsa_signature_digest_sign_update(void *ctx, const unsigned cha
 }
 
 // basically digest update, can be used for both sign and verify operations
-static int trustm_ecdsa_signature_digest_sign_update(void *ctx, const unsigned char *data, size_t datalen)
+static int trustm_ecdsa_signature_digest_update(void *ctx, const unsigned char *data, size_t datalen)
 {
     trustm_signature_ctx_t *trustm_signature_ctx = ctx;
     optiga_lib_status_t return_status;
@@ -895,7 +895,9 @@ static int trustm_rsa_signature_digest_verify_final(void *ctx, const unsigned ch
     TRUSTM_PROVIDER_DBGFN(">");    
     TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE
     trustm_signature_ctx->me_crypt = me_crypt;
-
+    printf("siglen : %d\n", siglen);
+    if (sig == NULL)
+        printf("sig is NULL");
     // convert public key to trustm's public key format
     public_key_buffer[0] = 0x03;
     if (trustm_signature_ctx->trustm_rsa_key->key_size == OPTIGA_RSA_KEY_2048_BIT_EXPONENTIAL)
@@ -1312,11 +1314,11 @@ const OSSL_DISPATCH trustm_rsa_signature_functions[] = {
     { OSSL_FUNC_SIGNATURE_DUPCTX, (void(*)(void))trustm_signature_dupctx },
     { OSSL_FUNC_SIGNATURE_SIGN_INIT, (void(*)(void))trustm_rsa_signature_sign_init },
     { OSSL_FUNC_SIGNATURE_SIGN, (void(*)(void))trustm_rsa_signature_sign },
-    { OSSL_FUNC_SIGNATURE_DIGEST_SIGN_INIT, (void(*)(void))trustm_rsa_signature_digest_sign_init },
-    { OSSL_FUNC_SIGNATURE_DIGEST_SIGN_UPDATE, (void(*)(void))trustm_rsa_signature_digest_sign_update },
+    { OSSL_FUNC_SIGNATURE_DIGEST_SIGN_INIT, (void(*)(void))trustm_rsa_signature_digest_init },
+    { OSSL_FUNC_SIGNATURE_DIGEST_SIGN_UPDATE, (void(*)(void))trustm_rsa_signature_digest_update },
     { OSSL_FUNC_SIGNATURE_DIGEST_SIGN_FINAL, (void(*)(void))trustm_rsa_signature_digest_sign_final },
-    { OSSL_FUNC_SIGNATURE_DIGEST_VERIFY_INIT, (void(*)(void))trustm_rsa_signature_digest_sign_init },
-    { OSSL_FUNC_SIGNATURE_DIGEST_VERIFY_UPDATE, (void(*)(void))trustm_rsa_signature_digest_sign_update },
+    { OSSL_FUNC_SIGNATURE_DIGEST_VERIFY_INIT, (void(*)(void))trustm_rsa_signature_digest_init },
+    { OSSL_FUNC_SIGNATURE_DIGEST_VERIFY_UPDATE, (void(*)(void))trustm_rsa_signature_digest_update },
     { OSSL_FUNC_SIGNATURE_DIGEST_VERIFY_FINAL, (void(*)(void))trustm_rsa_signature_digest_verify_final },
     { OSSL_FUNC_SIGNATURE_DIGEST_SIGN, (void(*)(void))trustm_rsa_signature_digest_sign },
     { OSSL_FUNC_SIGNATURE_GET_CTX_PARAMS, (void(*)(void))trustm_signature_get_ctx_params },
@@ -1333,11 +1335,11 @@ const OSSL_DISPATCH trustm_ecdsa_signature_functions[] = {
     { OSSL_FUNC_SIGNATURE_DUPCTX, (void(*)(void))trustm_signature_dupctx },
     { OSSL_FUNC_SIGNATURE_SIGN_INIT, (void(*)(void))trustm_ecdsa_signature_sign_init },
     { OSSL_FUNC_SIGNATURE_SIGN, (void(*)(void))trustm_ecdsa_signature_sign },
-    { OSSL_FUNC_SIGNATURE_DIGEST_SIGN_INIT, (void(*)(void))trustm_ecdsa_signature_digest_sign_init },
-    { OSSL_FUNC_SIGNATURE_DIGEST_SIGN_UPDATE, (void(*)(void))trustm_ecdsa_signature_digest_sign_update },
+    { OSSL_FUNC_SIGNATURE_DIGEST_SIGN_INIT, (void(*)(void))trustm_ecdsa_signature_digest_init },
+    { OSSL_FUNC_SIGNATURE_DIGEST_SIGN_UPDATE, (void(*)(void))trustm_ecdsa_signature_digest_update },
     { OSSL_FUNC_SIGNATURE_DIGEST_SIGN_FINAL, (void(*)(void))trustm_ecdsa_signature_digest_sign_final },
-    { OSSL_FUNC_SIGNATURE_DIGEST_VERIFY_INIT, (void(*)(void))trustm_ecdsa_signature_digest_sign_init },
-    { OSSL_FUNC_SIGNATURE_DIGEST_VERIFY_UPDATE, (void(*)(void))trustm_ecdsa_signature_digest_sign_update },
+    { OSSL_FUNC_SIGNATURE_DIGEST_VERIFY_INIT, (void(*)(void))trustm_ecdsa_signature_digest_init },
+    { OSSL_FUNC_SIGNATURE_DIGEST_VERIFY_UPDATE, (void(*)(void))trustm_ecdsa_signature_digest_update },
     { OSSL_FUNC_SIGNATURE_DIGEST_VERIFY_FINAL, (void(*)(void))trustm_ecdsa_signature_digest_verify_final },
     { OSSL_FUNC_SIGNATURE_DIGEST_SIGN, (void(*)(void))trustm_ecdsa_signature_digest_sign },
     { OSSL_FUNC_SIGNATURE_GET_CTX_PARAMS, (void(*)(void))trustm_signature_get_ctx_params },
