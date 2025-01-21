@@ -81,7 +81,7 @@ int main (int argc, char **argv)
 
     char    messagebuf[500];
 
-    uint16_t arrayOID[] = {0xE0C0,0xE0C1,0xE0C2,0xE0C3,0xE0C4,0xE0C5,0xE0C6,
+    uint16_t arrayOID[] = {0xE0C0,0xE0C1,0xE0C2,0xE0C3,0xE0C4,0xE0C5,0xE0C6,0xE0C9,
                             0xF1C0,0xF1C1,0xF1C2};
 
     int option = 0;                    // Command line option.
