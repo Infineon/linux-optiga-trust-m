@@ -115,7 +115,7 @@ git clone --recurse-submodules https://github.com/Infineon/linux-optiga-trust-m.
 Run the commands below in sequence to install the required dependencies and the OPTIGA™ Trust M provider. 
 
     cd linux-optiga-trust-m
-    ./provider_installation_script.sh
+    ./trustm_installation_script.sh
 
 Note: 
 
