@@ -13,4 +13,7 @@ source config.sh
 
 echo -n "abcde12345abcde12345abcde12345ab" > testdata
 echo "-----> Sign the data"
-openssl pkeyutl -provider trustm_provider -sign -inkey key.pem -in testdata -out testdata.sig
+openssl pkeyutl -provider trustm_provider -provider default -sign -inkey key.pem -in testdata -out testdata.sig
+
+echo "----> Verify"
+openssl pkeyutl -verify -pubin -inkey e0f1_pub.pem -in testdata -sigfile testdata.sig
