@@ -1,0 +1,19 @@
+
+openssl_conf = openssl_init
+
+[openssl_init]
+providers = provider_sect
+ssl_conf = ssl_sect
+
+[provider_sect]
+default = default_sect
+trustm_provider = trustm_provider_sect
+
+[default_sect]
+activate = 1
+
+[trustm_provider_sect]
+activate = 1
+module = /usr/lib/aarch64-linux-gnu/trustm_provider.so
+
+
