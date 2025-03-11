@@ -59,8 +59,6 @@ static void *trustm_ec_keymgmt_new(void *provctx)
     trustm_ec_key->point_x_buffer_length = 0;
     trustm_ec_key->point_y_buffer_length = 0;
 
-    trustm_ec_key->point_x_buffer_length = 0;
-    trustm_ec_key->point_y_buffer_length = 0;
     TRUSTM_PROVIDER_DBGFN("<");
     return trustm_ec_key;
 }
@@ -327,7 +325,7 @@ static void *trustm_ec_keymgmt_gen(void *ctx, OSSL_CALLBACK *cb, void *cbarg)
     printf("Saving public EC key to OID : 0x%.4X ...\n", public_id);
 
     optiga_lib_status = OPTIGA_LIB_BUSY;
-    return_status = optiga_util_write_data(trustm_ec_gen_ctx->me_util, 
+    return_status = optiga_util_write_data(trustm_ec_key->me_util, 
                                         public_id, 
                                         OPTIGA_UTIL_ERASE_AND_WRITE,
                                         0,
