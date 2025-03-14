@@ -17,11 +17,6 @@ echo "Client1:-----> Extract Public Key from CSR"
 openssl req -in client1_e0f1.csr -pubkey -noout -out client1_e0f1.pub
 openssl pkey -in client1_e0f1.pub -pubin -text
 
-echo "Extract the public component (65B long)"
-openssl ec -pubin -inform PEM -outform DER -in client1_e0f1.pub | tail -c 65 > public_component.bin
-echo "craft a NIST p256 EC keypair with a dummy 32B private component containing key identifier (e0fx….000)"
-openssl ec -inform DER -text -in <(echo "30770201010420""e0f1000000000000000000000000000000000000000000000000000000000000""a00a06082A8648CE3D030107a144034200"$(xxd -ps -c 100 public_component.bin) | xxd -r -p) -out key.pem -outform pem
-
 echo "Client1:-----> Generate Client cetificate by using CA"
 openssl x509 -req -in client1_e0f1.csr -CA $CERT_PATH/OPTIGA_Trust_M_Infineon_Test_CA.pem -CAkey $CERT_PATH/OPTIGA_Trust_M_Infineon_Test_CA_Key.pem -CAcreateserial -out client1_e0f1.crt -days 365 -sha256
 

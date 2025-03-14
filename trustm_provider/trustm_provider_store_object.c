@@ -642,6 +642,80 @@ static int trustm_genpkey_ec(trustm_object_ctx_t *trustm_object_ctx)
         return 0;
     }   
 
+	/* Generate PEM file with valid formatting ----
+     * Build a DER-encoded ECPrivateKey structure for NIST P-256 in the following layout:
+     *
+     * SEQUENCE (0x30) [length 0x77 = 119 bytes]
+     *   INTEGER (0x02): version = 1                  -> 02 01 01
+     *   OCTET STRING (0x04): 32-byte private key       -> 04 20 <32 bytes>
+     *   [0] EXPLICIT (0xA0): parameters (OID for prime256v1) -> A0 0A 06 08 <OID>
+     *   [1] EXPLICIT (0xA1): public key (BIT STRING)     -> A1 44 03 42 00 <65 bytes>
+     *
+     * Total DER length = 121 bytes.
+     */
+     
+	if (trustm_object_ctx->key_curve == OPTIGA_ECC_CURVE_NIST_P_256)
+    {
+        uint8_t dummy_priv[32] = {0};
+        /* Set first two bytes from the key identifier */
+        dummy_priv[0] = (trustm_object_ctx->key_id >> 8) & 0xFF;
+        dummy_priv[1] = trustm_object_ctx->key_id & 0xFF;
+
+        /* The raw public key (65 bytes, uncompressed) is stored after the header */
+        uint8_t *public_component = public_key + public_key_header_length+3;
+        int public_component_length = 65;
+
+        uint8_t der[200];  /* Sufficient size */
+        int der_len = 0;
+        der[der_len++] = 0x30;        // SEQUENCE
+        der[der_len++] = 0x77;        // Length = 0x77 (119 bytes)
+        der[der_len++] = 0x02; der[der_len++] = 0x01; der[der_len++] = 0x01;  // INTEGER version = 1
+        der[der_len++] = 0x04; der[der_len++] = 0x20;                        // OCTET STRING, length 32
+        memcpy(der + der_len, dummy_priv, 32); der_len += 32;
+        der[der_len++] = 0xA0; der[der_len++] = 0x0A;                        // [0] EXPLICIT, length 10
+        der[der_len++] = 0x06; der[der_len++] = 0x08;                        // OID, length 8
+        uint8_t oid_p256[8] = {0x2A, 0x86, 0x48, 0xCE, 0x3D, 0x03, 0x01, 0x07}; // prime256v1
+        memcpy(der + der_len, oid_p256, 8); der_len += 8;
+        der[der_len++] = 0xA1; der[der_len++] = 0x44;                        // [1] EXPLICIT, length 68 (0x44)
+        der[der_len++] = 0x03; der[der_len++] = 0x42;                        // BIT STRING, length 66 (0x42)
+        der[der_len++] = 0x00;                                              // 0 unused bits
+        memcpy(der + der_len, public_component, public_component_length);
+        der_len += public_component_length;
+        /* der_len should now be 121 bytes */
+
+        /* Convert DER to PEM.
+         * Set the base64 filter to not insert newlines.
+         */
+        BIO *bmem = BIO_new(BIO_s_mem());
+        BIO *b64  = BIO_new(BIO_f_base64());
+        BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
+        b64 = BIO_push(b64, bmem);
+        BIO_write(b64, der, der_len);
+        BIO_flush(b64);
+        BUF_MEM *bptr;
+        BIO_get_mem_ptr(b64, &bptr);
+        char *pem_data = malloc(bptr->length + 1);
+        memcpy(pem_data, bptr->data, bptr->length);
+        pem_data[bptr->length] = '\0';
+		char filename[50];
+		snprintf(filename, sizeof(filename), "key_%04x.pem", trustm_object_ctx->key_id);
+        FILE *fp = fopen(filename, "w");
+        if (fp)
+        {
+            fprintf(fp, "-----BEGIN EC PRIVATE KEY-----\n");
+            for (i = 0; i < (int)bptr->length; i += 64)
+            {
+                int len = ((int)bptr->length - i > 64) ? 64 : ((int)bptr->length - i);
+                fwrite(pem_data + i, 1, len, fp);
+                fprintf(fp, "\n");
+            }
+            fprintf(fp, "-----END EC PRIVATE KEY-----\n");
+            fclose(fp);
+        }
+        free(pem_data);
+        BIO_free_all(b64);
+    }
+
     TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
     TRUSTM_PROVIDER_DBGFN("<");
     return 1;
