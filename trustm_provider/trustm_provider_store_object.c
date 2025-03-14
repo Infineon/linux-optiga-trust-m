@@ -698,7 +698,7 @@ static int trustm_genpkey_ec(trustm_object_ctx_t *trustm_object_ctx)
         memcpy(pem_data, bptr->data, bptr->length);
         pem_data[bptr->length] = '\0';
 		char filename[50];
-		snprintf(filename, sizeof(filename), "key_%04X.pem", trustm_object_ctx->key_id);
+		snprintf(filename, sizeof(filename), "key_%04x.pem", trustm_object_ctx->key_id);
         FILE *fp = fopen(filename, "w");
         if (fp)
         {
