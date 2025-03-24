@@ -13,6 +13,10 @@ echo "Client1:-----> Creates new ECC 256 key length and Auth/Enc/Sign usage and 
 openssl req -provider trustm_provider -key 0xe0f1:*:NEW:0x03:0x13 -new -out client1_e0f1.csr -subj "/C=SG/CN=TrustM/O=Infineon"
 openssl req -in client1_e0f1.csr -text
 
+echo "Client1:-----> Creates customized key file"
+openssl pkey -provider trustm_provider -provider default -propquery provider=trustm -in 0xe0f1:^ -out key.pem
+openssl ec -in key.pem -text
+
 echo "Client1:-----> Extract Public Key from CSR"
 openssl req -in client1_e0f1.csr -pubkey -noout -out client1_e0f1.pub
 openssl pkey -in client1_e0f1.pub -pubin -text
