@@ -373,10 +373,10 @@ static const OSSL_ALGORITHM trustm_encoders[] = {
     { "EC", "provider=trustm,output=der,structure=SubjectPublicKeyInfo", trustm_ec_encoder_SubjectPublicKeyInfo_der_functions },
     { "EC", "provider=trustm,output=pem,structure=SubjectPublicKeyInfo", trustm_ec_encoder_SubjectPublicKeyInfo_pem_functions },
     // dummy private key encoders
-    { "RSA", "output=der,structure=SubjectPrivateKeyInfo", trustm_encoder_SubjectPrivateKeyInfo_der_functions },
-    { "RSA", "output=pem,structure=SubjectPrivateKeyInfo", trustm_encoder_SubjectPrivateKeyInfo_pem_functions },
-    { "EC", "output=der,structure=SubjectPrivateKeyInfo", trustm_encoder_SubjectPrivateKeyInfo_der_functions },
-    { "EC", "output=pem,structure=SubjectPrivateKeyInfo",  trustm_encoder_SubjectPrivateKeyInfo_pem_functions },
+    { "RSA", "provider=trustm,output=der,structure=SubjectPrivateKeyInfo", trustm_encoder_SubjectPrivateKeyInfo_der_functions },
+    { "RSA", "provider=trustm,output=pem,structure=SubjectPrivateKeyInfo", trustm_encoder_SubjectPrivateKeyInfo_pem_functions },
+    { "EC", "provider=trustm,output=der,structure=SubjectPrivateKeyInfo", trustm_encoder_SubjectPrivateKeyInfo_der_functions },
+    { "EC", "provider=trustm,output=pem,structure=SubjectPrivateKeyInfo",  trustm_encoder_SubjectPrivateKeyInfo_pem_functions },
     { NULL, NULL, NULL }
 };
 

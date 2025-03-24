@@ -640,24 +640,56 @@ int trustm_ec_keymgmt_export(void *keydata, int selection, OSSL_CALLBACK *param_
 
     void *pubbuff = NULL;
     size_t pubsize;
+    unsigned char privkey[66]               = {0}; /*max key bits 521 */
+    size_t private_key_len                  = sizeof(privkey);
     TRUSTM_PROVIDER_DBGFN(">");
-    if (trustm_ec_key == NULL || (selection & OSSL_KEYMGMT_SELECT_PRIVATE_KEY))
-        return 0;
+    TRUSTM_PROVIDER_DBGFN("selection: %d (0x%X)", selection, selection); 
 
     curve_nid = trustm_ecc_curve_to_nid(trustm_ec_key->key_curve);
-
+    if (curve_nid == NID_undef) {
+        TRUSTM_PROVIDER_DBGFN("Error: Invalid curve NID");
+        return 0;
+    }
     pubsize = trustm_ec_point_to_uncompressed_buffer(trustm_ec_key, &pubbuff);
     if (pubsize == 0)
         return 0;
 
-    OSSL_PARAM params[3];
+    OSSL_PARAM params[4];
     OSSL_PARAM *p = params;
+    switch (curve_nid) {
+        case NID_X9_62_prime256v1: /* P-256 */
+            private_key_len = 32;
+            break;
+        case NID_secp384r1: /* P-384 */
+            private_key_len = 48;
+            break;
+        case NID_secp521r1: /* P-521 */
+            private_key_len = 66;
+            break;
+        default:
+            TRUSTM_PROVIDER_DBGFN("Error: Unsupported curve");
+            OPENSSL_free(pubbuff);
+            return 0;
+    }    
+    if (curve_nid == NID_undef) {
+        TRUSTM_PROVIDER_DBGFN("Error: Invalid curve NID");
+        return 0;
+    }
 
     if (selection & OSSL_KEYMGMT_SELECT_ALL_PARAMETERS)
         *p++ = OSSL_PARAM_construct_utf8_string(OSSL_PKEY_PARAM_GROUP_NAME, (char *)OBJ_nid2sn(curve_nid), 0);
 
     if (selection & OSSL_KEYMGMT_SELECT_PUBLIC_KEY)
         *p++ = OSSL_PARAM_construct_octet_string(OSSL_PKEY_PARAM_PUB_KEY, pubbuff, pubsize);
+   
+    if (selection & OSSL_KEYMGMT_SELECT_PRIVATE_KEY) {
+            TRUSTM_PROVIDER_DBGFN("create reference key with keyID embedded:");
+            memset(privkey, 0x00, private_key_len);                     
+            privkey[private_key_len - 1] = (trustm_ec_key->private_key_id >> 8) & 0xFF; 
+            privkey[private_key_len - 2] = trustm_ec_key->private_key_id & 0xFF; 
+
+            *p++  = OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_PRIV_KEY, privkey, private_key_len);
+    }  
 
     *p = OSSL_PARAM_construct_end();
 
@@ -675,10 +707,17 @@ static const OSSL_PARAM *trustm_ec_keymgmt_eximport_types(int selection)
         OSSL_PARAM_END
     };
 
-    if ((selection & OSSL_KEYMGMT_SELECT_PRIVATE_KEY) == 0)
-        return ecc_public_key_types;
-    
-    return NULL;
+    static const OSSL_PARAM ecc_private_key_types[] = {
+        OSSL_PARAM_BN(OSSL_PKEY_PARAM_PRIV_KEY, NULL, 0),
+        OSSL_PARAM_BN(OSSL_PKEY_PARAM_EC_PUB_X, NULL, 0),
+        OSSL_PARAM_BN(OSSL_PKEY_PARAM_EC_PUB_Y, NULL, 0),
+        OSSL_PARAM_END
+    };
+
+    if (selection & OSSL_KEYMGMT_SELECT_PRIVATE_KEY)
+        return ecc_private_key_types;
+
+    return ecc_public_key_types;
 }
 
 const OSSL_DISPATCH trustm_ec_keymgmt_functions[] = {
