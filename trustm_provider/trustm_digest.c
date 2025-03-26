@@ -34,7 +34,7 @@ static void *trustm_digest_newctx(void *provctx)
 {
     trustm_ctx_t *trustm_ctx = provctx;
     trustm_digest_ctx_t *trustm_digest_ctx = OPENSSL_zalloc(sizeof(trustm_digest_ctx_t));
-
+    TRUSTM_PROVIDER_DBGFN(">");
     if (trustm_digest_ctx == NULL)
         return NULL;
 
@@ -52,7 +52,7 @@ static void *trustm_digest_newctx(void *provctx)
     (trustm_digest_ctx->data->hash_context).context_buffer = trustm_digest_ctx->data->hash_context_buffer;
     (trustm_digest_ctx->data->hash_context).context_buffer_length = sizeof(trustm_digest_ctx->data->hash_context_buffer);
     (trustm_digest_ctx->data->hash_context).hash_algo = (uint8_t)OPTIGA_HASH_TYPE_SHA_256;
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return trustm_digest_ctx;
 }
 
@@ -103,7 +103,7 @@ static int trustm_digest_init(void *ctx, const OSSL_PARAM params[])
 {
     trustm_digest_ctx_t *trustm_digest_ctx = ctx;
     optiga_lib_status_t return_status;
-
+    TRUSTM_PROVIDER_DBGFN(">");
     TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE
     trustm_digest_ctx->me_crypt = me_crypt;
 
@@ -112,22 +112,22 @@ static int trustm_digest_init(void *ctx, const OSSL_PARAM params[])
 
     if (OPTIGA_LIB_SUCCESS != return_status) 
     {
-        // add an error raise here
+        TRUSTM_PROVIDER_ERRFN("Error in optiga_crypt_hash_start\nError code : 0x%.4X\n", return_status);
         return 0;
     }
 
-    //Wait until the optiga_util_read_metadata operation is completed
+    //Wait until the optiga_crypt_hash_start operation is completed
     trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
     
     return_status = optiga_lib_status;
     if (return_status != OPTIGA_LIB_SUCCESS)
     {
-        // add an error raise here
+        TRUSTM_PROVIDER_ERRFN("Error in trustm_digest_init\nError code : 0x%.4X\n", return_status);
         return 0;
     }
 
     TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return 1;
 }
 
@@ -135,13 +135,28 @@ static int trustm_digest_update(void *ctx, const unsigned char *in, size_t inl)
 {
     trustm_digest_ctx_t *trustm_digest_ctx = ctx;
     optiga_lib_status_t return_status;
-
+    TRUSTM_PROVIDER_DBGFN(">");
     trustm_digest_ctx->data->hash_data_host.buffer = in;
     trustm_digest_ctx->data->hash_data_host.length = inl;
 
     TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE
     trustm_digest_ctx->me_crypt = me_crypt;
-
+    // Check if hash context needs reinitialization
+    if (trustm_digest_ctx->data->hash_context.context_buffer[0] == 0) {
+        TRUSTM_PROVIDER_DBGFN("Hash context reinitializing\n");
+        optiga_lib_status = OPTIGA_LIB_BUSY;
+        return_status = optiga_crypt_hash_start(trustm_digest_ctx->me_crypt, 
+                                               &(trustm_digest_ctx->data->hash_context));
+        if (return_status != OPTIGA_LIB_SUCCESS) {
+            TRUSTM_PROVIDER_ERRFN("Error in optiga_crypt_hash_start\nError code : 0x%.4X\n", return_status);
+            return 0;
+        }
+        trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
+        if (optiga_lib_status != OPTIGA_LIB_SUCCESS) {
+            TRUSTM_PROVIDER_ERRFN("Error in Hash context reinitializing\nError code : 0x%.4X\n", return_status);
+            return 0;
+        }
+    }
     optiga_lib_status = OPTIGA_LIB_BUSY;
     return_status = optiga_crypt_hash_update(trustm_digest_ctx->me_crypt,
                                             &(trustm_digest_ctx->data->hash_context),
@@ -150,22 +165,22 @@ static int trustm_digest_update(void *ctx, const unsigned char *in, size_t inl)
 
     if (OPTIGA_LIB_SUCCESS != return_status) 
     {
-        // add an error raise here
+        TRUSTM_PROVIDER_ERRFN("Error in optiga_crypt_hash_update\nError code : 0x%.4X\n", return_status);
         return 0;
     }
 
-    //Wait until the optiga_util_read_metadata operation is completed
+    //Wait until the optiga_crypt_hash_update operation is completed
     trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
     
     return_status = optiga_lib_status;
     if (return_status != OPTIGA_LIB_SUCCESS)
     {
-        // add an error raise here
+        TRUSTM_PROVIDER_ERRFN("Error in trustm_digest_update\nError code : 0x%.4X\n", return_status);
         return 0;
     }
 
     TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return 1;
 }
 
@@ -173,7 +188,7 @@ static int trustm_digest_final(void *ctx, unsigned char *out, size_t *outl, size
 {
     trustm_digest_ctx_t *trustm_digest_ctx = ctx;
     optiga_lib_status_t return_status;
-
+    TRUSTM_PROVIDER_DBGFN(">");
     TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE
     trustm_digest_ctx->me_crypt = me_crypt;
 
@@ -184,17 +199,17 @@ static int trustm_digest_final(void *ctx, unsigned char *out, size_t *outl, size
     
     if (OPTIGA_LIB_SUCCESS != return_status) 
     {
-        // add an error raise here
+        TRUSTM_PROVIDER_ERRFN("Error in optiga_crypt_hash_final\nError code : 0x%.4X\n", return_status);
         return 0;
     }
 
-    //Wait until the optiga_util_read_metadata operation is completed
+    //Wait until the optiga_crypt_hash_final operation is completed
     trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
     
     return_status = optiga_lib_status;
     if (return_status != OPTIGA_LIB_SUCCESS)
     {
-        // add an error raise here
+        TRUSTM_PROVIDER_ERRFN("Error in trustm_digest_final\nError code : 0x%.4X\n", return_status);
         return 0;
     }
 
@@ -209,7 +224,7 @@ static int trustm_digest_final(void *ctx, unsigned char *out, size_t *outl, size
     }
     
     TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return 1;
 }
 
