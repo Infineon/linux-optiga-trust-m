@@ -318,7 +318,7 @@ void trustmProvider_SSLMutex_Release(void)
 extern const OSSL_DISPATCH trustm_rand_functions[];
 
 static const OSSL_ALGORITHM trustm_rands[] = {
-    { "CTR-DRBG:0", "provider", trustm_rand_functions },
+    { "CTR-DRBG", "provider=trustm", trustm_rand_functions },
     { NULL, NULL, NULL }
 };
 

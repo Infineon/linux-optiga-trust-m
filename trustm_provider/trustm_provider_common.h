@@ -26,6 +26,7 @@
 #define _TRUSTM_PROVIDER_COMMON_H_
 
 #include <stdio.h>
+#include <stdbool.h>
 #include <pthread.h>
 #include <openssl/core.h>
 
@@ -65,13 +66,14 @@
 #define TRUSTM_PROVIDER_DBGFN(x, ...)    fprintf(stderr, "%d:%s:%d %s: " x "\n", getpid(),__FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
 #define TRUSTM_PROVIDER_ERRFN(x, ...)    fprintf(stderr, "%d:Error in %s:%d %s: " x "\n",getpid(), __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
 #define TRUSTM_PROVIDER_MSGFN(x, ...)    fprintf(stderr, "%d:Message:%s:%d %s: " x "\n",getpid(), __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
+#define TRACE_PARAMS(text, params) trustm_list_params((text), (params))
 #else
 
 #define TRUSTM_PROVIDER_DBG(x, ...)
 #define TRUSTM_PROVIDER_DBGFN(x, ...)
 #define TRUSTM_PROVIDER_ERRFN(x, ...)    fprintf(stderr, "Error in %s:%d %s: " x "\n", __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
 #define TRUSTM_PROVIDER_MSGFN(x, ...)    fprintf(stderr, "Message:%s:%d %s: " x "\n", __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
-
+#define TRACE_PARAMS(...) ((void) 0)
 #endif
 
 /*#define TRUSTM_PROVIDER_APP_OPEN         if (trustm_ctx.appOpen == 0) \
