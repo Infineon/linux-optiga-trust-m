@@ -41,9 +41,10 @@ static OSSL_FUNC_rand_get_ctx_params_fn trustm_rand_get_ctx_params;
 
 static void * trustm_rand_newctx(void *provctx, void *parent, const OSSL_DISPATCH *parent_calls) 
 {
+    TRUSTM_PROVIDER_DBGFN(">"); 
     trustm_ctx_t *trustm_ctx = provctx;
     trustm_rand_ctx_t *trustm_rand_ctx = OPENSSL_zalloc(sizeof(trustm_rand_ctx_t));
-
+    TRUSTM_PROVIDER_DBGFN("<"); 
     if (trustm_rand_ctx == NULL) {
         return NULL;
     }
@@ -57,13 +58,14 @@ static void * trustm_rand_newctx(void *provctx, void *parent, const OSSL_DISPATC
 static void trustm_rand_freectx(void *ctx) 
 {
     trustm_rand_ctx_t *trustm_rand_ctx = ctx;
-
+    TRUSTM_PROVIDER_DBGFN(">"); 
     if (trustm_rand_ctx == NULL) {
         return;
     }
         
     OPENSSL_clear_free(trustm_rand_ctx, sizeof(trustm_rand_ctx_t));
     CRYPTO_THREAD_lock_free(trustm_rand_ctx->lock);
+    TRUSTM_PROVIDER_DBGFN("<"); 
 }
 
 static int trustm_rand_instantiate(void *ctx, unsigned int strength,
@@ -182,9 +184,7 @@ static int
 trustm_rand_enable_locking(void *ctx)
 {
     trustm_rand_ctx_t *trustm_rand_ctx = ctx;
-
     trustm_rand_ctx->lock = CRYPTO_THREAD_lock_new();
-    
     return 1;
 }
 
@@ -214,6 +214,8 @@ static const OSSL_PARAM *
 trustm_rand_gettable_ctx_params(void *ctx, void *provctx)
 {
     static const OSSL_PARAM known_gettable_ctx_params[] = {
+        OSSL_PARAM_int(OSSL_RAND_PARAM_STATE, NULL),
+        OSSL_PARAM_uint(OSSL_RAND_PARAM_STRENGTH, NULL),
         OSSL_PARAM_size_t(OSSL_RAND_PARAM_MAX_REQUEST, NULL),
         OSSL_PARAM_END
     };
@@ -224,15 +226,22 @@ static int
 trustm_rand_get_ctx_params(void *ctx, OSSL_PARAM params[])
 {
     OSSL_PARAM *p;
-
+    TRUSTM_PROVIDER_DBGFN(">");
+    TRACE_PARAMS("RAND GET_CTX_PARAMS", params);
     if (params == NULL)
         return 1;
-
+    p = OSSL_PARAM_locate(params, OSSL_RAND_PARAM_STATE);
+    /* always ready */
+    if (p != NULL && !OSSL_PARAM_set_int(p, EVP_RAND_STATE_READY))
+        return 0;
+    p = OSSL_PARAM_locate(params, OSSL_RAND_PARAM_STRENGTH);
+    if (p != NULL && !OSSL_PARAM_set_int(p, 256))
+        return 0;    
     p = OSSL_PARAM_locate(params, OSSL_RAND_PARAM_MAX_REQUEST);
     
     if (p != NULL && !OSSL_PARAM_set_size_t(p, 256))
         return 0;
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return 1;
 }
 
