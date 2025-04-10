@@ -108,6 +108,7 @@ trustm_rand_generate(void *ctx, unsigned char *out, size_t outlen,
         k = 0;
         if(i > 0)  
         {
+            trustm_crypt_ShieldedConnection();
             optiga_lib_status = OPTIGA_LIB_BUSY;
             return_status = optiga_crypt_random(trustm_rand_ctx->me_crypt, 
                                 OPTIGA_RNG_TYPE_TRNG, 
@@ -132,6 +133,7 @@ trustm_rand_generate(void *ctx, unsigned char *out, size_t outlen,
 
         for(;j>0;j--)  
         {
+            trustm_crypt_ShieldedConnection();
             optiga_lib_status = OPTIGA_LIB_BUSY;
             return_status = optiga_crypt_random(trustm_rand_ctx->me_crypt, 
                                 OPTIGA_RNG_TYPE_TRNG, 

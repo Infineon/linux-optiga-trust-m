@@ -86,6 +86,7 @@ static int rsa_asymcipher_encrypt(void *ctx, unsigned char *out, size_t *outlen,
                                     (trustm_rsa_asymcipher_ctx->trustm_rsa_key->public_key_header_length);
     public_key_from_host.key_type = trustm_rsa_asymcipher_ctx->trustm_rsa_key->key_size;
 
+    trustm_crypt_ShieldedConnection();
     optiga_lib_status = OPTIGA_LIB_BUSY;
     return_status = optiga_crypt_rsa_encrypt_message(trustm_rsa_asymcipher_ctx->me_crypt, 
                                                     trustm_rsa_asymcipher_ctx->encryption_scheme,
@@ -104,7 +105,6 @@ static int rsa_asymcipher_encrypt(void *ctx, unsigned char *out, size_t *outlen,
         return 0;
     }
 
-    // wait until the optiga_util_read_metadata operation is completed
     trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
     return_status = optiga_lib_status;
 
@@ -143,6 +143,7 @@ static int rsa_asymcipher_decrypt(void *ctx, unsigned char *out, size_t *outlen,
     TRUSTM_PROVIDER_DBGFN(">");
     TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE
 
+    trustm_crypt_ShieldedConnection();
     optiga_lib_status = OPTIGA_LIB_BUSY;
     return_status = optiga_crypt_rsa_decrypt_and_export(trustm_rsa_asymcipher_ctx->me_crypt,
                                                         trustm_rsa_asymcipher_ctx->encryption_scheme,
@@ -160,7 +161,6 @@ static int rsa_asymcipher_decrypt(void *ctx, unsigned char *out, size_t *outlen,
         return 0;
     }
 
-    // wait until the optiga_util_read_metadata operation is completed
     trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
     return_status = optiga_lib_status;
 

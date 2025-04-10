@@ -291,6 +291,7 @@ static void *trustm_ec_keymgmt_gen(void *ctx, OSSL_CALLBACK *cb, void *cbarg)
         break;
     }
 
+    trustm_crypt_ShieldedConnection();
     optiga_lib_status = OPTIGA_LIB_BUSY;
     return_status = optiga_crypt_ecc_generate_keypair(trustm_ec_key->me_crypt,
                                                     trustm_ec_key->key_curve,
@@ -324,6 +325,7 @@ static void *trustm_ec_keymgmt_gen(void *ctx, OSSL_CALLBACK *cb, void *cbarg)
     
     printf("Saving public EC key to OID : 0x%.4X ...\n", public_id);
 
+    trustm_util_ShieldedConnection();
     optiga_lib_status = OPTIGA_LIB_BUSY;
     return_status = optiga_util_write_data(trustm_ec_key->me_util, 
                                         public_id, 

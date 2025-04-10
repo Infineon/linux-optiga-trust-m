@@ -237,6 +237,7 @@ static void *trustm_rsa_keymgmt_gen(void *ctx, OSSL_CALLBACK *cb, void *cbarg)
     }
 
 
+    trustm_util_ShieldedConnection();
     optiga_lib_status = OPTIGA_LIB_BUSY;
     return_status = optiga_crypt_rsa_generate_keypair(trustm_rsa_key->me_crypt, 
                                                         trustm_rsa_key->key_size,
@@ -253,7 +254,7 @@ static void *trustm_rsa_keymgmt_gen(void *ctx, OSSL_CALLBACK *cb, void *cbarg)
         return NULL;
     }
 
-    // wait until the optiga_util_read_metadata operation is completed
+    // wait until the optiga_crypt_rsa_generate_keypair operation is completed
     printf("Generating RSA keypair using TrustM....\n");
     trustmProvider_WaitForCompletion(MAX_RSA_KEY_GEN_TIME); // can take up to 60s
     return_status = optiga_lib_status;
@@ -267,6 +268,7 @@ static void *trustm_rsa_keymgmt_gen(void *ctx, OSSL_CALLBACK *cb, void *cbarg)
 
     // saving public key to private_key_id+0x10E4
     printf("Writing public key to OID 0x%.4X\n", (trustm_rsa_key->private_key_id)+0x10E4);
+    trustm_util_ShieldedConnection();
     optiga_lib_status = OPTIGA_LIB_BUSY;
     return_status = optiga_util_write_data(trustm_rsa_key->me_util,
                                             (trustm_rsa_key->private_key_id)+0x10E4,

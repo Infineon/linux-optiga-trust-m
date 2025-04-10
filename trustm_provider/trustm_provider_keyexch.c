@@ -178,6 +178,7 @@ static int trustm_keyexch_derive_kdf(trustm_keyexch_ctx_t *trustm_keyexch_ctx, u
     TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE
     trustm_keyexch_ctx->me_crypt = me_crypt;
 
+    trustm_crypt_ShieldedConnection();
     optiga_lib_status = OPTIGA_LIB_BUSY;
     return_status = optiga_crypt_ecdh(trustm_keyexch_ctx->me_crypt, 
                                     trustm_keyexch_ctx->trustm_private_ec_key->private_key_id,
@@ -264,6 +265,7 @@ static int trustm_keyexch_derive_plain(trustm_keyexch_ctx_t *trustm_keyexch_ctx,
     TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE
     trustm_keyexch_ctx->me_crypt = me_crypt;
 
+    trustm_crypt_ShieldedConnection();
     optiga_lib_status = OPTIGA_LIB_BUSY;
     return_status = optiga_crypt_ecdh(trustm_keyexch_ctx->me_crypt, 
                                     trustm_keyexch_ctx->trustm_private_ec_key->private_key_id,

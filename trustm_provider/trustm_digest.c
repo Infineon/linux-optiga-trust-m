@@ -107,6 +107,7 @@ static int trustm_digest_init(void *ctx, const OSSL_PARAM params[])
     TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE
     trustm_digest_ctx->me_crypt = me_crypt;
 
+    trustm_crypt_ShieldedConnection();
     optiga_lib_status = OPTIGA_LIB_BUSY;
     return_status = optiga_crypt_hash_start(trustm_digest_ctx->me_crypt, &(trustm_digest_ctx->data->hash_context));
 
@@ -144,6 +145,7 @@ static int trustm_digest_update(void *ctx, const unsigned char *in, size_t inl)
     // Check if hash context needs reinitialization
     if (trustm_digest_ctx->data->hash_context.context_buffer[0] == 0) {
         TRUSTM_PROVIDER_DBGFN("Hash context reinitializing\n");
+        trustm_crypt_ShieldedConnection();
         optiga_lib_status = OPTIGA_LIB_BUSY;
         return_status = optiga_crypt_hash_start(trustm_digest_ctx->me_crypt, 
                                                &(trustm_digest_ctx->data->hash_context));
@@ -157,6 +159,7 @@ static int trustm_digest_update(void *ctx, const unsigned char *in, size_t inl)
             return 0;
         }
     }
+    trustm_crypt_ShieldedConnection();
     optiga_lib_status = OPTIGA_LIB_BUSY;
     return_status = optiga_crypt_hash_update(trustm_digest_ctx->me_crypt,
                                             &(trustm_digest_ctx->data->hash_context),
@@ -192,6 +195,7 @@ static int trustm_digest_final(void *ctx, unsigned char *out, size_t *outl, size
     TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE
     trustm_digest_ctx->me_crypt = me_crypt;
 
+    trustm_crypt_ShieldedConnection();
     optiga_lib_status = OPTIGA_LIB_BUSY;
     return_status = optiga_crypt_hash_finalize(trustm_digest_ctx->me_crypt,
                                                &(trustm_digest_ctx->data->hash_context),

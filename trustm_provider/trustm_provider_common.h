@@ -47,6 +47,7 @@
 
 #define WORKAROUND 1
 #define TRUSTM_RAND_ENABLED 
+#define PROTECTION_LEVEL OPTIGA_COMMS_FULL_PROTECTION
 //~ #define TRUSTM_PROVIDER_DEBUG 
 //~ #define TRUST_ENG_CLOSE_APP_ENABLE
 
@@ -226,6 +227,8 @@ void trustmProvider_App_Release(void);
 
 void trustmProvider_SSLMutex_Acquire(void);
 void trustmProvider_SSLMutex_Release(void);
+void trustm_util_ShieldedConnection(void);
+void trustm_crypt_ShieldedConnection(void);
 
 
 
@@ -233,6 +236,7 @@ void trustmProvider_SSLMutex_Release(void);
 int init_core_func_from_dispatch(const OSSL_DISPATCH *fns);
 void trustm_new_error(const OSSL_CORE_HANDLE *handle, uint32_t reason, const char *fmt, ...);
 void trustm_set_error_debug(const OSSL_CORE_HANDLE *handle, const char *file, int line, const char *func);
+void trustm_list_params(const char *text, const OSSL_PARAM params[]);
 
 
 #define TRUSTM_ERROR_raise(core, reason) TRUSTM_ERROR_raise_text(core, reason, NULL)
