@@ -311,6 +311,24 @@ void trustmProvider_SSLMutex_Release(void)
     //TRUSTM_WORKAROUND_TIMER_DISARM;
     pal_shm_mutex_release(&ssl_mutex);
 }
+
+void trustm_util_ShieldedConnection(void)
+{
+#ifdef OPTIGA_COMMS_SHIELDED_CONNECTION
+    TRUSTM_PROVIDER_DBGFN("UTIL Shielded Connection: Full Protection Enabled\r\n");
+    OPTIGA_UTIL_SET_COMMS_PROTOCOL_VERSION(me_util,OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
+    OPTIGA_UTIL_SET_COMMS_PROTECTION_LEVEL(me_util, PROTECTION_LEVEL);
+#endif
+}
+
+void trustm_crypt_ShieldedConnection(void)
+{
+#ifdef OPTIGA_COMMS_SHIELDED_CONNECTION
+    TRUSTM_PROVIDER_DBGFN("CRYPT Shielded Connection: Full Protection Enabled\r\n");
+    OPTIGA_CRYPT_SET_COMMS_PROTOCOL_VERSION(me_crypt,OPTIGA_COMMS_PROTOCOL_VERSION_PRE_SHARED_SECRET);
+    OPTIGA_CRYPT_SET_COMMS_PROTECTION_LEVEL(me_crypt, PROTECTION_LEVEL);
+#endif
+}
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 #define TRUSTM_PROPS(op) ("provider=trustm,trustm." #op)
