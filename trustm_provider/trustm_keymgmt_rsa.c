@@ -509,9 +509,15 @@ int trustm_rsa_keymgmt_export(void *keydata, int selection, OSSL_CALLBACK *param
 
     if (selection & OSSL_KEYMGMT_SELECT_PUBLIC_KEY) 
     {
-        *p++ = OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_RSA_N,
-                                        trustm_rsa_key->modulus,
-                                        trustm_rsa_key->modulus_length);
+        unsigned char *reversed_modulus = malloc(trustm_rsa_key->modulus_length);
+        if (reversed_modulus) {
+            for (size_t i = 0; i < trustm_rsa_key->modulus_length; i++) {
+                reversed_modulus[i] = trustm_rsa_key->modulus[trustm_rsa_key->modulus_length - 1 - i];
+            }
+            *p++ = OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_RSA_N,
+                                   reversed_modulus,
+                                   trustm_rsa_key->modulus_length);
+         }                                                                                               
         exponent = 0x10001;
         *p++ = OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_RSA_E, (unsigned char*)&exponent, sizeof(exponent));
     }

@@ -460,7 +460,6 @@ static int trustm_rsa_signature_digest_update(void *ctx, const unsigned char *da
         return 0;
     }
 
-    //Wait until the optiga_util_read_metadata operation is completed
     trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
     
     return_status = optiga_lib_status;
