@@ -116,7 +116,6 @@ trustm_rand_generate(void *ctx, unsigned char *out, size_t outlen,
                                 MAX_RAND_INPUT);
             if (OPTIGA_LIB_SUCCESS != return_status)
                 break;			
-            //Wait until the optiga_util_read_metadata operation is completed
             trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
             return_status = optiga_lib_status;
             if (return_status != OPTIGA_LIB_SUCCESS)
@@ -144,7 +143,7 @@ trustm_rand_generate(void *ctx, unsigned char *out, size_t outlen,
                 TRUSTM_ERROR_raise(trustm_rand_ctx->core, TRUSTM_ERR_CANNOT_GET_RANDOM);
                 break;			
             }
-            //Wait until the optiga_util_read_metadata operation is completed
+            //Wait until the optiga_crypt_random operation is completed
             trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
             return_status = optiga_lib_status;
             if (return_status != OPTIGA_LIB_SUCCESS)

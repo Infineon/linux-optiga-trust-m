@@ -17,5 +17,5 @@ echo -n "abcde12345abcde12345abcde12345ab" > testdata.txt
 echo "-----> Sign the data"
 openssl pkeyutl -provider trustm_provider -provider default -sign -rawin -inkey rsakey.pem -in testdata.txt -out testdata.sig
 
-#~ echo "-----> Verify the Signature"
-#~ openssl pkeyutl -verify -pubin -inkey e0fc_pub.pem -rawin -in testdata.txt -sigfile testdata.sig
+echo "-----> Verify the Signature"
+openssl pkeyutl -verify -pubin -inkey e0fc_pub.pem -rawin -in testdata.txt -sigfile testdata.sig
