@@ -47,9 +47,12 @@
     - [req](#req)
     - [pkey](#pkey)
     - [pkeyutl](#pkeyutl)
+    - [Referencing keys in OPTIGA™ Trust M](#referencing-keys-in-optiga-trust-m)
     - [Testing TLS connection with ECC key](#testing-tls-connection-with-ecc-key)
       - [Scenario where Trust M is on the client ](#scenario-where-trust-m-is-on-the-client-)
       - [Scenario where Trust M is on the server ](#scenario-where-trust-m-is-on-the-server-)
+      - [Testing TLS connection with ECC Reference key in file format](#testing-tls-connection-with-ecc-reference-key-in-file-format)
+      - [Testing Curl connection using ECC Reference key in file format](#testing-curl-connection-with-ecc-reference-key-in-file-format)
     - [Testing TLS connection with RSA key](#test_tls_rsa)
       - [Scenario where Trust M is on the client ](#scenario-where-trust-m-is-on-the-client--1)
       - [Scenario where Trust M is on the server ](#scenario-where-trust-m-is-on-the-server--1)
@@ -1475,7 +1478,7 @@ openssl req -provider trustm_provider -key 0xe0f3:*:NEW:0x04:0x13 -new -out test
 *go through but verification will fail. Pubic key input only in PEM*
 
 ### <a name="pkey"></a>pkey
-Usage : Key tools / Key generation
+Usage : Key generation
 
 OPTIGA™ Trust M provider uses the -in parameter to pass input to the key generation/usage function.
 
@@ -1485,26 +1488,154 @@ Following is the input format:
 
 (see [req](#req) for input details)
 
-Example: 
+To Generate New ECC256 Key Example: 
 
 ```console 
-openssl pkey -provider trustm_provider -in 0xe0fd:*:NEW:0x42:0x13 -pubout -out e0fd_pub.pem
+openssl pkey -provider trustm_provider -provider default -propquery provider=trustm -in 0xe0f1:*:NEW:0x03:0x13 -out ecc256_key.pem
 ```
+
+The above command will generate the key in Trust M and the output (ecc256_key.pem) is the reference to the private key slot of Trust M. Refer to  [Referencing keys in Trust M](#refer_pem_file)  Section for more details.
+
+```console 
+openssl pkey -provider trustm_provider -in 0xe0f1:*:NEW:0x03:0x13 -pubout -out e0f1_pub.pem
+```
+
+The above command will generate the key in Trust M and the output (e0f1_pub.pem) is the public key and private key is stored inside Trust M. Refer to [Referencing keys in Trust M](#refer_pem_file)  Section for more details.
 
 ### <a name="pkeyutl"></a>pkeyutl
-Usage : Sign and verify
-Example:
 
-Signing the message in the test_sign.txt file using the TrustM RSA key and saving the generated signature in the test_sign.sig file.
+Usage : Sign and verify
+Example for Labels with key id. Example - 0xe0f1:
+
+Signing the message in the test_sign.txt file using the Trust M ECC key and saving the generated signature in the test_sign.sig file.
 
 ```console 
-openssl pkeyutl -provider trustm_provider -inkey 0xe0fd:^  -sign -rawin -in test_sign.txt -out test_sign.sig
+openssl pkeyutl -provider trustm_provider -inkey 0xe0f1:^  -sign -rawin -in test_sign.txt -out test_sign.sig
 ```
+Verifying the signature of the raw input data in test_sign.txt using the provided public key in eofd_pub.pem and the signature in test_sign.sig
+
+```console 
+openssl pkeyutl -verify -pubin -inkey e0f1_pub.pem -rawin -in test_sign.txt -sigfile test_sign.sig
+```
+
+For more details, please refer to  [ec_keygen_and_sign](./provider-scripts/ec_keygen_and_sign/).
+
+Example for Reference Keys in file format:
+
+Signing the message in the test_sign.txt file using the Trust M ECC key and saving the generated signature in the test_sign.sig file.
+
+```console 
+openssl pkeyutl -provider trustm_provider -provider default -sign -rawin -inkey ecc256_key.pem -in testdata.txt -out testdata.sig
+```
+
 Verifying the signature of the raw input data in test_sign.txt using the provided public key in eofd_pub.pem and the signature in test_sign.sig
 
 ```console 
 openssl pkeyutl -verify -pubin -inkey e0fd_pub.pem -rawin -in test_sign.txt -sigfile test_sign.sig
 ```
+
+For more details, please refer to  [ec_sign_verify_pem_files](./provider-scripts/ec_sign_verify_pem_files/).
+
+### <a name="refer_pem_file"></a>Referencing keys in Trust M
+
+The keys created inside Trust M can be referenced in 2 different ways
+
+1. Labels with key id. Example - 0xe0f1:
+2. Reference Keys in file format
+
+### 1. Labels with key id. Example - 0xe0f1:
+
+In this method, the 2 byte key id of the Key created / stored in secure element is passed as is in string format.
+
+Example - 0xe0f1:
+
+### 2. Reference Keys in file format
+
+The cryptographic functionality offered by the OpenSSL provider requires a reference to a key stored inside the secure element (exception is random generation).
+
+OpenSSL requires a key pair, consisting of a private and a public key, to be loaded before the cryptographic operations can be executed. This creates a challenge when OpenSSL is used in combination with a secure element as the private key cannot be extracted out from the secure element.
+
+The solution is to populate the OpenSSL Key data structure with only a reference to the private key inside the secure element instead of the actual private key. The public key as read from the secure element can still be inserted into the key structure.
+
+OpenSSL crypto APIs are then invoked with these data structure objects as parameters. When the crypto API is routed to the provider, the Trust M provider implementation decodes these key references and invokes the secure element APIs with correct key references for a cryptographic operation. If the input key is not a reference key, execution will roll back to OpenSSL software implementation.
+
+``NOTE: When using this method, the Trust M provider has to be loaded first. This will ensure that Trust M provider can decode the key id information present in the reference key.``
+
+
+#### EC Reference Key Format
+
+The following provides an example of an EC reference key. The value reserved
+for the private key has been used to contain:
+
+-  a 16 bit key identifier (in the example below ``0xe0f1``)
+
+```console
+Private-Key: (256 bit)
+priv:
+    e0:f1:00:00:00:00:00:00:00:00:00:00:00:00:00:
+    00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:
+    00:00
+pub:
+    04:68:ba:d2:d6:23:b5:0d:fa:41:4e:8a:73:f7:d6:
+    c5:08:13:92:49:28:b6:13:24:ff:2c:2e:02:4f:c5:
+    a1:57:46:6f:f6:9e:1c:62:77:a4:42:fd:ce:66:06:
+    d5:76:0d:95:0a:00:fe:7c:b0:ad:5c:91:73:61:c1:
+    38:33:cc:4a:03
+ASN1 OID: prime256v1
+NIST CURVE: P-256
+```
+
+- Ensure the value reserved for public key and ASN1 OID contain the values
+  matching the stored key.
+
+---
+
+#### RSA Reference Key Format
+
+The following provides an example of an RSA reference key.
+
+-  The value reserved for 'p' ('prime1') is used as a magic number and is
+   set to '1'
+-  The value reserved for 'q' ('prime2') is used to store the 16 bit key
+   identifier (in the example below 0xe0fc)
+
+```console
+Private-Key: (2047 bit, 2 primes)
+modulus:
+    47:ee:f4:a5:fc:63:d5:93:04:21:c0:86:eb:09:b0:
+    6d:9f:2b:28:1c:63:9a:2a:64:89:07:30:9e:2f:f3:
+    02:55:e3:6c:8c:87:91:29:27:ed:a3:76:ab:1d:7d:
+    f0:d8:e8:b2:b8:e2:83:af:6b:e3:e5:3b:0f:c8:3e:
+    cf:8b:7a:79:6d:1a:ab:f5:41:b6:94:70:ad:2b:33:
+    60:08:e0:4f:ab:9c:70:2a:a0:87:da:fd:4a:ef:f7:
+    b8:d2:03:d1:c6:d0:39:5a:e8:de:d3:80:af:5f:fe:
+    63:01:7a:24:9d:a5:2b:29:a4:7c:61:a4:74:dd:37:
+    96:05:7f:7a:b0:3b:5b:b8:a5:72:fa:1f:14:d5:72:
+    66:00:be:e6:cd:a4:9e:3e:70:23:88:fd:38:48:b0:
+    04:80:4e:73:77:dc:fc:75:a5:38:c2:b8:ce:82:8e:
+    d7:8e:33:f5:3f:63:e3:dd:4c:07:a0:70:f4:8a:a1:
+    ff:15:2a:9d:ba:af:9c:98:4c:b4:a2:21:a3:a0:22:
+    3f:67:66:4a:9d:6f:0c:6e:4a:49:97:d0:27:af:3f:
+    3f:40:7f:9b:7e:5d:0a:91:cc:95:1a:30:19:be:87:
+    c4:3f:c7:c9:a9:65:10:ad:d5:17:b6:af:78:e1:a5:
+    8c:07:50:8d:9b:9f:c7:3b:7f:9e:b1:2c:da:11:2b:
+    a1
+publicExponent: 65537 (0x10001)
+privateExponent: 0
+prime1: 1 (0x1)
+prime2: 57596 (0xe0fc)
+exponent1: 0
+exponent2: 0
+coefficient: 0
+```
+
+---
+- Ensure key length, the value reserved for (private key) modulus and
+  public exponent match the stored key.
+- Setting prime1 to '1' makes it impossible that a normal private key
+  matches a reference key.
+- The mathematical relation between the different key components is not
+  preserved for this reference key pem file.
 
 ### <a name="test_tls_ecc"></a>Testing TLS connection with ECC key
 
@@ -1683,6 +1814,14 @@ lxterminal -e openssl s_client \
 -CAfile scripts/certificates/OPTIGA_Trust_M_Infineon_Test_CA.pem
 
 ```
+
+#### Testing TLS connection with ECC Reference key in file format
+
+Please refer to  [ec_server_client_pem_file](./provider-scripts/ec_server_client_pem_file/) for detailed use cases.
+
+#### Testing Curl  connection using ECC Reference key in file format
+
+Please refer to  [trustm_curl_test](./provider-scripts/trustm_curl_test/) for detailed use cases.
 
 ### <a name="test_tls_rsa"></a>Testing TLS connection with RSA key
 
