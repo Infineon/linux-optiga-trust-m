@@ -49,13 +49,13 @@
     - [pkeyutl](#pkeyutl)
     - [Referencing keys in OPTIGA™ Trust M](#referencing-keys-in-optiga-trust-m)
     - [Testing TLS connection with ECC key](#testing-tls-connection-with-ecc-key)
-      - [Scenario where Trust M is on the client ](#scenario-where-trust-m-is-on-the-client-)
-      - [Scenario where Trust M is on the server ](#scenario-where-trust-m-is-on-the-server-)
+      - [Scenario where OPTIGA™ Trust M is on the client ](#scenario-where-trust-m-is-on-the-client-)
+      - [Scenario where OPTIGA™ Trust M is on the server ](#scenario-where-trust-m-is-on-the-server-)
       - [Testing TLS connection with ECC Reference key in file format](#testing-tls-connection-with-ecc-reference-key-in-file-format)
-      - [Testing Curl connection using ECC Reference key in file format](#testing-curl-connection-with-ecc-reference-key-in-file-format)
+      - [Testing Curl connection using ECC Reference key in file format](#testing-curl-connection-using-ecc-reference-key-in-file-format)
     - [Testing TLS connection with RSA key](#test_tls_rsa)
-      - [Scenario where Trust M is on the client ](#scenario-where-trust-m-is-on-the-client--1)
-      - [Scenario where Trust M is on the server ](#scenario-where-trust-m-is-on-the-server--1)
+      - [Scenario where OPTIGA™ Trust M is on the client ](#scenario-where-trust-m-is-on-the-client--1)
+      - [Scenario where OPTIGA™ Trust M is on the server ](#scenario-where-trust-m-is-on-the-server--1)
     - [Generating a Test Server Certificate](#test_server_cert)
     - [Using OPTIGA™ Trust M OpenSSL provider to sign and issue certificate](#using-optiga-trust-m-openssl-provider-to-sign-and-issue-certificate)
   - [Known observations](#known-observations)
@@ -1488,26 +1488,28 @@ Following is the input format:
 
 (see [req](#req) for input details)
 
-To Generate New ECC256 Key Example: 
+There are two ways to generate New ECC256 Key Pair, the first way is to generate reference keys in file format:
 
 ```console 
 openssl pkey -provider trustm_provider -provider default -propquery provider=trustm -in 0xe0f1:*:NEW:0x03:0x13 -out ecc256_key.pem
 ```
 
-The above command will generate the key in Trust M and the output (ecc256_key.pem) is the reference to the private key slot of Trust M. Refer to  [Referencing keys in Trust M](#refer_pem_file)  Section for more details.
+The above command will generate the keypair in OPTIGA™ Trust M and the output (ecc256_key.pem) is the reference to the private key slot of OPTIGA™ Trust M. Refer to  [Referencing keys in Trust M](#referencing-keys-in-optiga-trust-m)  Section for more details.
+
+The second way is to generate keypair with public key as output and private key stored inside Trust M:
 
 ```console 
 openssl pkey -provider trustm_provider -in 0xe0f1:*:NEW:0x03:0x13 -pubout -out e0f1_pub.pem
 ```
 
-The above command will generate the key in Trust M and the output (e0f1_pub.pem) is the public key and private key is stored inside Trust M. Refer to [Referencing keys in Trust M](#refer_pem_file)  Section for more details.
+The above command will generate the keypair in OPTIGA™ Trust M and the output (e0f1_pub.pem) is the public key and private key is stored inside Trust M. Refer to [Referencing keys in Trust M](#referencing-keys-in-optiga-trust-m)  Section for more details.
 
 ### <a name="pkeyutl"></a>pkeyutl
 
 Usage : Sign and verify
 Example for Labels with key id. Example - 0xe0f1:
 
-Signing the message in the test_sign.txt file using the Trust M ECC key and saving the generated signature in the test_sign.sig file.
+Signing the message in the test_sign.txt file using the OPTIGA™ Trust M ECC key and saving the generated signature in the test_sign.sig file.
 
 ```console 
 openssl pkeyutl -provider trustm_provider -inkey 0xe0f1:^  -sign -rawin -in test_sign.txt -out test_sign.sig
@@ -1522,7 +1524,7 @@ For more details, please refer to  [ec_keygen_and_sign](./provider-scripts/ec_ke
 
 Example for Reference Keys in file format:
 
-Signing the message in the test_sign.txt file using the Trust M ECC key and saving the generated signature in the test_sign.sig file.
+Signing the message in the test_sign.txt file using the OPTIGA™ Trust M ECC key and saving the generated signature in the test_sign.sig file.
 
 ```console 
 openssl pkeyutl -provider trustm_provider -provider default -sign -rawin -inkey ecc256_key.pem -in testdata.txt -out testdata.sig
@@ -1536,16 +1538,16 @@ openssl pkeyutl -verify -pubin -inkey e0fd_pub.pem -rawin -in test_sign.txt -sig
 
 For more details, please refer to  [ec_sign_verify_pem_files](./provider-scripts/ec_sign_verify_pem_files/).
 
-### <a name="refer_pem_file"></a>Referencing keys in Trust M
+### <a name="referencing-keys-in-optiga-trust-m"></a>Referencing keys in OPTIGA™ Trust M
 
-The keys created inside Trust M can be referenced in 2 different ways
+The keys created inside OPTIGA™ Trust M can be referenced in 2 different ways
 
 1. Labels with key id. Example - 0xe0f1:
 2. Reference Keys in file format
 
 ### 1. Labels with key id. Example - 0xe0f1:
 
-In this method, the 2 byte key id of the Key created / stored in secure element is passed as is in string format.
+In this method, the 2-byte key ID of the private key created / stored in OPTIGA™ Trust M is passed in string format.
 
 Example - 0xe0f1:
 
@@ -1639,7 +1641,7 @@ coefficient: 0
 
 ### <a name="test_tls_ecc"></a>Testing TLS connection with ECC key
 
-#### Scenario where Trust M is on the client :
+#### Scenario where OPTIGA™ Trust M is on the client :
 
 *Note : To generate a test server certificate refer to [Generating a Test Server Certificate](#test_Server_cert)*  or refer below
 
@@ -1729,7 +1731,7 @@ lxterminal -e openssl s_client \
 
 ```
 
-#### Scenario where Trust M is on the server :
+#### Scenario where OPTIGA™ Trust M is on the server :
 
 Create new ECC 256 key length and Auth/Enc/Sign usage and generate a certificate request for OPTIGA™ Trust M key 0xE0F2
 
@@ -1825,7 +1827,7 @@ Please refer to  [trustm_curl_test](./provider-scripts/trustm_curl_test/) for de
 
 ### <a name="test_tls_rsa"></a>Testing TLS connection with RSA key
 
-#### Scenario where Trust M is on the client :
+#### Scenario where OPTIGA™ Trust M is on the client :
 
 *Note : To generate a test server certificate refer to [Generating a Test Server Certificate](#test_server_cert)* 
 
@@ -1880,7 +1882,7 @@ openssl s_client -provider trustm_provider -provider default \
 -verify 1 
 ```
 
-#### Scenario where Trust M is on the server :
+#### Scenario where OPTIGA™ Trust M is on the server :
 
 Creates new RSA 2048 key length and Auth/Enc/Sign usage and generate a certificate  request for OPTIGA™ Trust M key 0xE0FD
 
