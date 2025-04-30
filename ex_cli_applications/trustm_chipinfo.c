@@ -98,6 +98,8 @@ int main (int argc, char **argv)
         printf("OPTIGA(TM) Trust M rev.1; Firmware Version: 1.30.809\n");
     else if ((UID.st.rgbESWBuild[0] == 0x24) && (UID.st.rgbESWBuild[1] == 0x40))
         printf("OPTIGA(TM) Trust M rev.3; Firmware Version: 3.00.2440\n");
+    else if ((UID.st.rgbESWBuild[0] == 0x25) && (UID.st.rgbESWBuild[1] == 0x64))
+        printf("OPTIGA(TM) Trust M rev.3; Firmware Version: 3.02.2564\n");
     else
         {printf("Unknown\n");}
         
