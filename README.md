@@ -53,13 +53,13 @@
       - [Sign using Reference Keys in file format ](#sign-using-reference-keys-in-file-format)
     - [Referencing keys in OPTIGA™ Trust M](#referencing-keys-in-optiga-trust-m)
     - [Testing TLS connection with ECC key](#testing-tls-connection-with-ecc-key)
-      - [Scenario where OPTIGA™ Trust M is on the client ](#scenario-where-trust-m-is-on-the-client-)
-      - [Scenario where OPTIGA™ Trust M is on the server ](#scenario-where-trust-m-is-on-the-server-)
-      - [Testing TLS connection with ECC Reference key in file format](#testing-tls-connection-with-ecc-reference-key-in-file-format)
-      - [Testing Curl connection using ECC Reference key in file format](#testing-curl-connection-using-ecc-reference-key-in-file-format)
+      - [Scenario where OPTIGA™ Trust M is on the client ](#test_tls_ecc_client)
+      - [Scenario where OPTIGA™ Trust M is on the server ](#test_tls_ecc_server)
+      - [Testing TLS connection with ECC Reference key in file format](#test_tls_ecc_file)
+      - [Testing Curl connection using ECC Reference key in file format](#test_curl_ecc_file)
     - [Testing TLS connection with RSA key](#test_tls_rsa)
-      - [Scenario where OPTIGA™ Trust M is on the client ](#scenario-where-trust-m-is-on-the-client--1)
-      - [Scenario where OPTIGA™ Trust M is on the server ](#scenario-where-trust-m-is-on-the-server--1)
+      - [Scenario where OPTIGA™ Trust M is on the client ](#test_tls_rsa_client)
+      - [Scenario where OPTIGA™ Trust M is on the server ](#test_tls_rsa_server)
     - [Generating a Test Server Certificate](#test_server_cert)
     - [Using OPTIGA™ Trust M OpenSSL provider to sign and issue certificate](#using-optiga-trust-m-openssl-provider-to-sign-and-issue-certificate)
   - [Known observations](#known-observations)
@@ -1656,7 +1656,7 @@ coefficient: 0
 
 ### <a name="test_tls_ecc"></a>Testing TLS connection with ECC key
 
-#### Scenario where OPTIGA™ Trust M is on the client :
+#### <a name="test_tls_ecc_client"></a>Scenario where OPTIGA™ Trust M is on the client :
 
 *Note : To generate a test server certificate refer to [Generating a Test Server Certificate](#test_Server_cert)*  or refer below
 
@@ -1746,7 +1746,7 @@ lxterminal -e openssl s_client \
 
 ```
 
-#### Scenario where OPTIGA™ Trust M is on the server :
+#### <a name="test_tls_ecc_server"></a>Scenario where OPTIGA™ Trust M is on the server :
 
 Create new ECC 256 key length and Auth/Enc/Sign usage and generate a certificate request for OPTIGA™ Trust M key 0xE0F2
 
@@ -1832,17 +1832,17 @@ lxterminal -e openssl s_client \
 
 ```
 
-#### Testing TLS connection with ECC Reference key in file format
+#### <a name="test_tls_ecc_file"></a>Testing TLS connection with ECC Reference key in file format
 
 Please refer to  [ec_server_client_pem_file](./provider-scripts/ec_server_client_pem_file/) for detailed use cases.
 
-#### Testing Curl  connection using ECC Reference key in file format
+#### <a name="test_curl_ecc_file"></a>Testing Curl  connection using ECC Reference key in file format
 
 Please refer to  [trustm_curl_test](./provider-scripts/trustm_curl_test/) for detailed use cases.
 
 ### <a name="test_tls_rsa"></a>Testing TLS connection with RSA key
 
-#### Scenario where OPTIGA™ Trust M is on the client :
+#### <a name="test_tls_rsa_client"></a>Scenario where OPTIGA™ Trust M is on the client :
 
 *Note : To generate a test server certificate refer to [Generating a Test Server Certificate](#test_server_cert)* 
 
@@ -1897,7 +1897,7 @@ openssl s_client -provider trustm_provider -provider default \
 -verify 1 
 ```
 
-#### Scenario where OPTIGA™ Trust M is on the server :
+#### <a name="test_tls_rsa_server"></a>Scenario where OPTIGA™ Trust M is on the server :
 
 Creates new RSA 2048 key length and Auth/Enc/Sign usage and generate a certificate  request for OPTIGA™ Trust M key 0xE0FD
 
