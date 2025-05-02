@@ -47,6 +47,8 @@
     - [req](#req)
     - [pkey](#pkey)
     - [pkeyutl](#pkeyutl)
+      - [Sign using Labels with key id](#sign-using-labels-with-key-id)
+      - [Sign using pem file ](#sign-using-pem-file)
     - [Referencing keys in OPTIGA™ Trust M](#referencing-keys-in-optiga-trust-m)
     - [Testing TLS connection with ECC key](#testing-tls-connection-with-ecc-key)
       - [Scenario where OPTIGA™ Trust M is on the client ](#scenario-where-trust-m-is-on-the-client-)
@@ -1507,7 +1509,10 @@ The above command will generate the keypair in OPTIGA™ Trust M and the output 
 ### <a name="pkeyutl"></a>pkeyutl
 
 Usage : Sign and verify
-Example for Labels with key id. Example - 0xe0f1:
+
+#### Sign using Labels with key id
+
+Example for signing using Labels with key id.
 
 Signing the message in the test_sign.txt file using the OPTIGA™ Trust M ECC key and saving the generated signature in the test_sign.sig file.
 
@@ -1522,7 +1527,9 @@ openssl pkeyutl -verify -pubin -inkey e0f1_pub.pem -rawin -in test_sign.txt -sig
 
 For more details, please refer to  [ec_keygen_and_sign](./provider-scripts/ec_keygen_and_sign/).
 
-Example for Reference Keys in file format:
+#### Sign using pem file
+
+Example for Signing using Reference Keys in file format:
 
 Signing the message in the test_sign.txt file using the OPTIGA™ Trust M ECC key and saving the generated signature in the test_sign.sig file.
 
@@ -1545,7 +1552,7 @@ The keys created inside OPTIGA™ Trust M can be referenced in 2 different ways
 1. Labels with key id. Example - 0xe0f1:
 2. Reference Keys in file format
 
-### 1. Labels with key id. Example - 0xe0f1:
+### 1. Labels with key id
 
 In this method, the 2-byte key ID of the private key created / stored in OPTIGA™ Trust M is passed in string format.
 
