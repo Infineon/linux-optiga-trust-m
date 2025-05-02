@@ -77,10 +77,10 @@ commonName                      = Common Name
 emailAddress                    = Email Address
 
 # Optionally, specify some defaults.
-countryName_default             = GB
-stateOrProvinceName_default     = England
+countryName_default             = SG
+stateOrProvinceName_default     = Singapore
 localityName_default            =
-0.organizationName_default      = Alice Ltd
+0.organizationName_default      = ABC Ltd
 organizationalUnitName_default  =
 emailAddress_default            =
 

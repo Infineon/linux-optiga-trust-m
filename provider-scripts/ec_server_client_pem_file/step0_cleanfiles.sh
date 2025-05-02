@@ -2,9 +2,11 @@
 source config.sh
 
 
-rm temp*.*
+rm *.pub
 rm *.bin
-rm key.pem
+rm *.pem
+rm *.csr
+rm *.crt
 set -e
 
 
