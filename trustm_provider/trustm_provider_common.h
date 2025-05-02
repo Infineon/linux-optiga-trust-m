@@ -26,6 +26,7 @@
 #define _TRUSTM_PROVIDER_COMMON_H_
 
 #include <stdio.h>
+#include <stdbool.h>
 #include <pthread.h>
 #include <openssl/core.h>
 
@@ -46,6 +47,7 @@
 
 #define WORKAROUND 1
 #define TRUSTM_RAND_ENABLED 
+#define PROTECTION_LEVEL OPTIGA_COMMS_FULL_PROTECTION
 //~ #define TRUSTM_PROVIDER_DEBUG 
 //~ #define TRUST_ENG_CLOSE_APP_ENABLE
 
@@ -65,13 +67,14 @@
 #define TRUSTM_PROVIDER_DBGFN(x, ...)    fprintf(stderr, "%d:%s:%d %s: " x "\n", getpid(),__FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
 #define TRUSTM_PROVIDER_ERRFN(x, ...)    fprintf(stderr, "%d:Error in %s:%d %s: " x "\n",getpid(), __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
 #define TRUSTM_PROVIDER_MSGFN(x, ...)    fprintf(stderr, "%d:Message:%s:%d %s: " x "\n",getpid(), __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
+#define TRACE_PARAMS(text, params) trustm_list_params((text), (params))
 #else
 
 #define TRUSTM_PROVIDER_DBG(x, ...)
 #define TRUSTM_PROVIDER_DBGFN(x, ...)
 #define TRUSTM_PROVIDER_ERRFN(x, ...)    fprintf(stderr, "Error in %s:%d %s: " x "\n", __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
 #define TRUSTM_PROVIDER_MSGFN(x, ...)    fprintf(stderr, "Message:%s:%d %s: " x "\n", __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
-
+#define TRACE_PARAMS(...) ((void) 0)
 #endif
 
 /*#define TRUSTM_PROVIDER_APP_OPEN         if (trustm_ctx.appOpen == 0) \
@@ -224,6 +227,8 @@ void trustmProvider_App_Release(void);
 
 void trustmProvider_SSLMutex_Acquire(void);
 void trustmProvider_SSLMutex_Release(void);
+void trustm_util_ShieldedConnection(void);
+void trustm_crypt_ShieldedConnection(void);
 
 
 
@@ -231,6 +236,7 @@ void trustmProvider_SSLMutex_Release(void);
 int init_core_func_from_dispatch(const OSSL_DISPATCH *fns);
 void trustm_new_error(const OSSL_CORE_HANDLE *handle, uint32_t reason, const char *fmt, ...);
 void trustm_set_error_debug(const OSSL_CORE_HANDLE *handle, const char *file, int line, const char *func);
+void trustm_list_params(const char *text, const OSSL_PARAM params[]);
 
 
 #define TRUSTM_ERROR_raise(core, reason) TRUSTM_ERROR_raise_text(core, reason, NULL)

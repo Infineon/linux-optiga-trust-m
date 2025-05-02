@@ -221,6 +221,7 @@ static int trustm_rsa_signature_sign(void *ctx, unsigned char *sig, size_t *sigl
     TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE
     trustm_signature_ctx->me_crypt = me_crypt;
 
+    trustm_crypt_ShieldedConnection();
     optiga_lib_status = OPTIGA_LIB_BUSY;
     return_status = optiga_crypt_rsa_sign(trustm_signature_ctx->me_crypt,
                                         trustm_signature_ctx->rsa_sign_scheme,
@@ -234,7 +235,7 @@ static int trustm_rsa_signature_sign(void *ctx, unsigned char *sig, size_t *sigl
     {
         return 0;
     }
-    // Wait until the optiga_util_read_metadata operation is completed
+    // Wait until the optiga_crypt_rsa_sign operation is completed
     trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
     return_status = optiga_lib_status;
 
@@ -280,6 +281,7 @@ static int trustm_ecdsa_signature_sign(void *ctx, unsigned char *sig, size_t *si
     TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE
     trustm_signature_ctx->me_crypt = me_crypt;
 
+    trustm_crypt_ShieldedConnection();
     optiga_lib_status = OPTIGA_LIB_BUSY;
     return_status = optiga_crypt_ecdsa_sign(trustm_signature_ctx->me_crypt,
                                             tbs,
@@ -293,7 +295,7 @@ static int trustm_ecdsa_signature_sign(void *ctx, unsigned char *sig, size_t *si
         TRUSTM_PROVIDER_ERRFN("Error signing in optiga_crypt_ecdsa_sign\nError code : 0x%.4X\n", return_status);
         return 0;
     }
-    // Wait until the optiga_util_read_metadata operation is completed
+    // Wait until the optiga_crypt_ecdsa_sign operation is completed
     trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
     return_status = optiga_lib_status;
 
@@ -347,6 +349,7 @@ static int trustm_rsa_signature_digest_init(void *ctx, const char *mdname, void 
     TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE
     trustm_signature_ctx->me_crypt = me_crypt;
 
+    trustm_crypt_ShieldedConnection();
     optiga_lib_status = OPTIGA_LIB_BUSY;
     return_status = optiga_crypt_hash_start(trustm_signature_ctx->me_crypt, &(trustm_signature_ctx->digest_data->hash_context));
 
@@ -356,7 +359,7 @@ static int trustm_rsa_signature_digest_init(void *ctx, const char *mdname, void 
         return 0;
     }
 
-    //Wait until the optiga_util_read_metadata operation is completed
+    //Wait until the optiga_crypt_hash_start operation is completed
     trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
     
     return_status = optiga_lib_status;
@@ -384,6 +387,7 @@ static int trustm_ecdsa_signature_digest_init(void *ctx, const char *mdname, voi
     TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE
     trustm_signature_ctx->me_crypt = me_crypt;
 
+    trustm_crypt_ShieldedConnection();
     optiga_lib_status = OPTIGA_LIB_BUSY;
     return_status = optiga_crypt_hash_start(trustm_signature_ctx->me_crypt, &(trustm_signature_ctx->digest_data->hash_context));
 
@@ -393,7 +397,7 @@ static int trustm_ecdsa_signature_digest_init(void *ctx, const char *mdname, voi
         return 0;
     }
 
-    //Wait until the optiga_util_read_metadata operation is completed
+    //Wait until the optiga_crypt_hash_start operation is completed
     trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
     
     return_status = optiga_lib_status;
@@ -422,6 +426,7 @@ static int trustm_rsa_signature_digest_update(void *ctx, const unsigned char *da
     TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE
     trustm_signature_ctx->me_crypt = me_crypt;
 
+    trustm_crypt_ShieldedConnection();
     optiga_lib_status = OPTIGA_LIB_BUSY;
     return_status = optiga_crypt_hash_update(trustm_signature_ctx->me_crypt,
                                             &(trustm_signature_ctx->digest_data->hash_context),
@@ -434,7 +439,7 @@ static int trustm_rsa_signature_digest_update(void *ctx, const unsigned char *da
         return 0;
     }
 
-    //Wait until the optiga_util_read_metadata operation is completed
+    //Wait until the optiga_crypt_hash_update operation is completed
     trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
     
     return_status = optiga_lib_status;
@@ -443,6 +448,7 @@ static int trustm_rsa_signature_digest_update(void *ctx, const unsigned char *da
         TRUSTM_PROVIDER_ERRFN("Error in trustm_ecdsa_signature_digest_update\n");
         return 0;
     }
+    trustm_crypt_ShieldedConnection();
     optiga_lib_status = OPTIGA_LIB_BUSY;
     return_status = optiga_crypt_hash_finalize(trustm_signature_ctx->me_crypt,
                                                &(trustm_signature_ctx->digest_data->hash_context),
@@ -454,7 +460,6 @@ static int trustm_rsa_signature_digest_update(void *ctx, const unsigned char *da
         return 0;
     }
 
-    //Wait until the optiga_util_read_metadata operation is completed
     trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
     
     return_status = optiga_lib_status;
@@ -481,6 +486,7 @@ static int trustm_ecdsa_signature_digest_update(void *ctx, const unsigned char *
     TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE
     trustm_signature_ctx->me_crypt = me_crypt;
 
+    trustm_crypt_ShieldedConnection();
     optiga_lib_status = OPTIGA_LIB_BUSY;
     return_status = optiga_crypt_hash_update(trustm_signature_ctx->me_crypt,
                                             &(trustm_signature_ctx->digest_data->hash_context),
@@ -493,7 +499,7 @@ static int trustm_ecdsa_signature_digest_update(void *ctx, const unsigned char *
         return 0;
     }
 
-    //Wait until the optiga_util_read_metadata operation is completed
+    //Wait until the optiga_crypt_hash_update operation is completed
     trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
     
     return_status = optiga_lib_status;
@@ -503,6 +509,7 @@ static int trustm_ecdsa_signature_digest_update(void *ctx, const unsigned char *
         return 0;
     }
     
+    trustm_crypt_ShieldedConnection();
     optiga_lib_status = OPTIGA_LIB_BUSY;
     return_status = optiga_crypt_hash_finalize(trustm_signature_ctx->me_crypt,
                                                &(trustm_signature_ctx->digest_data->hash_context),
@@ -514,7 +521,7 @@ static int trustm_ecdsa_signature_digest_update(void *ctx, const unsigned char *
         return 0;
     }
 
-    //Wait until the optiga_util_read_metadata operation is completed
+    //Wait until the optiga_crypt_hash_finalize operation is completed
     trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
     
     return_status = optiga_lib_status;
@@ -543,6 +550,7 @@ static int trustm_rsa_signature_digest_sign_final(void *ctx, unsigned char *sig,
 
     digest_size = DIGEST_SIZE;
 
+    trustm_crypt_ShieldedConnection();
     optiga_lib_status = OPTIGA_LIB_BUSY;
     return_status = optiga_crypt_rsa_sign(trustm_signature_ctx->me_crypt,
                                         trustm_signature_ctx->rsa_sign_scheme,
@@ -557,7 +565,7 @@ static int trustm_rsa_signature_digest_sign_final(void *ctx, unsigned char *sig,
         TRUSTM_PROVIDER_ERRFN("Error in optiga_crypt_rsa_sign\nError code : 0x%.4X\n", return_status);
         return 0;
     }
-    // Wait until the optiga_util_read_metadata operation is completed
+    // Wait until the optiga_crypt_rsa_sign operation is completed
     trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
     return_status = optiga_lib_status;
 
@@ -597,6 +605,7 @@ static int trustm_ecdsa_signature_digest_sign_final(void *ctx, unsigned char *si
                             || trustm_signature_ctx->trustm_ec_key->key_curve == OPTIGA_ECC_CURVE_NIST_P_521)
                             ? 3 : 2;
 
+    trustm_crypt_ShieldedConnection();
     optiga_lib_status = OPTIGA_LIB_BUSY;
     return_status = optiga_crypt_ecdsa_sign(trustm_signature_ctx->me_crypt,
                                         trustm_signature_ctx->digest_data->digest,
@@ -609,7 +618,7 @@ static int trustm_ecdsa_signature_digest_sign_final(void *ctx, unsigned char *si
         TRUSTM_PROVIDER_ERRFN("Error in optiga_crypt_ecdsa_sign\nError code : 0x%.4X\n", return_status);
         return 0;
     }
-    // Wait until the optiga_util_read_metadata operation is completed
+    // Wait until the optiga_crypt_ecdsa_sign operation is completed
     trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
     return_status = optiga_lib_status;
 
@@ -669,6 +678,7 @@ static int trustm_rsa_signature_digest_sign(void *ctx, unsigned char *sig, size_
     TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE
     trustm_signature_ctx->me_crypt = me_crypt;
 
+    trustm_crypt_ShieldedConnection();
     optiga_lib_status = OPTIGA_LIB_BUSY;
     return_status = optiga_crypt_hash_update(trustm_signature_ctx->me_crypt,
                                             &(trustm_signature_ctx->digest_data->hash_context),
@@ -681,7 +691,7 @@ static int trustm_rsa_signature_digest_sign(void *ctx, unsigned char *sig, size_
         return 0;
     }
 
-    //Wait until the optiga_util_read_metadata operation is completed
+    //Wait until the optiga_crypt_hash_update operation is completed
     trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
     
     return_status = optiga_lib_status;
@@ -691,6 +701,7 @@ static int trustm_rsa_signature_digest_sign(void *ctx, unsigned char *sig, size_
         return 0;
     }
 
+    trustm_crypt_ShieldedConnection();
     optiga_lib_status = OPTIGA_LIB_BUSY;
     return_status = optiga_crypt_hash_finalize(trustm_signature_ctx->me_crypt,
                                                &(trustm_signature_ctx->digest_data->hash_context),
@@ -702,7 +713,7 @@ static int trustm_rsa_signature_digest_sign(void *ctx, unsigned char *sig, size_
         return 0;
     }
 
-    //Wait until the optiga_util_read_metadata operation is completed
+    //Wait until the optiga_crypt_hash_finalize operation is completed
     trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
     
     return_status = optiga_lib_status;
@@ -712,6 +723,7 @@ static int trustm_rsa_signature_digest_sign(void *ctx, unsigned char *sig, size_
         return 0;
     }
 
+    trustm_crypt_ShieldedConnection();
     digest_size = DIGEST_SIZE;
 
     optiga_lib_status = OPTIGA_LIB_BUSY;
@@ -728,7 +740,7 @@ static int trustm_rsa_signature_digest_sign(void *ctx, unsigned char *sig, size_
         TRUSTM_PROVIDER_ERRFN("Error in optiga_crypt_rsa_sign\n");
         return 0;
     }
-    // Wait until the optiga_util_read_metadata operation is completed
+    // Wait until the optiga_crypt_rsa_sign operation is completed
     trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
     return_status = optiga_lib_status;
 
@@ -781,6 +793,7 @@ static int trustm_ecdsa_signature_digest_sign(void *ctx, unsigned char *sig, siz
     TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE
     trustm_signature_ctx->me_crypt = me_crypt;
 
+    trustm_crypt_ShieldedConnection();
     optiga_lib_status = OPTIGA_LIB_BUSY;
     return_status = optiga_crypt_hash_update(trustm_signature_ctx->me_crypt,
                                             &(trustm_signature_ctx->digest_data->hash_context),
@@ -793,7 +806,7 @@ static int trustm_ecdsa_signature_digest_sign(void *ctx, unsigned char *sig, siz
         return 0;
     }
 
-    //Wait until the optiga_util_read_metadata operation is completed
+    //Wait until the optiga_crypt_hash_update operation is completed
     trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
     
     return_status = optiga_lib_status;
@@ -803,6 +816,7 @@ static int trustm_ecdsa_signature_digest_sign(void *ctx, unsigned char *sig, siz
         return 0;
     }
 
+    trustm_crypt_ShieldedConnection();
     optiga_lib_status = OPTIGA_LIB_BUSY;
     return_status = optiga_crypt_hash_finalize(trustm_signature_ctx->me_crypt,
                                                &(trustm_signature_ctx->digest_data->hash_context),
@@ -814,7 +828,7 @@ static int trustm_ecdsa_signature_digest_sign(void *ctx, unsigned char *sig, siz
         return 0;
     }
 
-    //Wait until the optiga_util_read_metadata operation is completed
+    //Wait until the optiga_crypt_hash_finalize operation is completed
     trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
     
     return_status = optiga_lib_status;
@@ -824,6 +838,7 @@ static int trustm_ecdsa_signature_digest_sign(void *ctx, unsigned char *sig, siz
         return 0;
     }
 
+    trustm_crypt_ShieldedConnection();
     digest_size = DIGEST_SIZE;
     int byte_string_offset = (trustm_signature_ctx->trustm_ec_key->key_curve == OPTIGA_ECC_CURVE_BRAIN_POOL_P_512R1
                             || trustm_signature_ctx->trustm_ec_key->key_curve == OPTIGA_ECC_CURVE_NIST_P_521)
@@ -841,7 +856,7 @@ static int trustm_ecdsa_signature_digest_sign(void *ctx, unsigned char *sig, siz
         TRUSTM_PROVIDER_ERRFN("Error in optiga_crypt_ecdsa_sign\nError code : 0x%.4X\n", return_status);
         return 0;
     }
-    // Wait until the optiga_util_read_metadata operation is completed
+    // Wait until the optiga_crypt_ecdsa_sign operation is completed
     trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
     return_status = optiga_lib_status;
 
@@ -1018,6 +1033,7 @@ static int trustm_rsa_signature_digest_verify_final(void *ctx, const unsigned ch
     public_key_details.length = public_key_buffer_length;
     public_key_details.key_type = (uint8_t)trustm_signature_ctx->trustm_rsa_key->key_size;
 
+    trustm_crypt_ShieldedConnection();
     optiga_lib_status = OPTIGA_LIB_BUSY;
     return_status = optiga_crypt_rsa_verify(trustm_signature_ctx->me_crypt,
                                             trustm_signature_ctx->rsa_sign_scheme,
@@ -1034,7 +1050,7 @@ static int trustm_rsa_signature_digest_verify_final(void *ctx, const unsigned ch
         TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
         return 0;
     }
-    // Wait until the optiga_util_read_metadata operation is completed
+    // Wait until the optiga_crypt_rsa_verify operation is completed
     trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
     return_status = optiga_lib_status;
 
@@ -1119,7 +1135,7 @@ static int trustm_ecdsa_signature_digest_verify_final(void *ctx, const unsigned 
     public_key_details.public_key = pubkey_buffer;
     public_key_details.length = pubkey_buffer_length;
     public_key_details.key_type = (uint8_t)trustm_signature_ctx->trustm_ec_key->key_curve;
-
+    trustm_crypt_ShieldedConnection();
     optiga_lib_status = OPTIGA_LIB_BUSY;
     return_status = optiga_crypt_ecdsa_verify(trustm_signature_ctx->me_crypt,
                                             trustm_signature_ctx->digest_data->digest,
@@ -1134,7 +1150,7 @@ static int trustm_ecdsa_signature_digest_verify_final(void *ctx, const unsigned 
         TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
         return 0;
     }
-    // Wait until the optiga_util_read_metadata operation is completed
+    // Wait until the optiga_crypt_ecdsa_verify operation is completed
     trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
     return_status = optiga_lib_status;
 

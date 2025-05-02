@@ -237,6 +237,7 @@ static void *trustm_rsa_keymgmt_gen(void *ctx, OSSL_CALLBACK *cb, void *cbarg)
     }
 
 
+    trustm_util_ShieldedConnection();
     optiga_lib_status = OPTIGA_LIB_BUSY;
     return_status = optiga_crypt_rsa_generate_keypair(trustm_rsa_key->me_crypt, 
                                                         trustm_rsa_key->key_size,
@@ -253,7 +254,7 @@ static void *trustm_rsa_keymgmt_gen(void *ctx, OSSL_CALLBACK *cb, void *cbarg)
         return NULL;
     }
 
-    // wait until the optiga_util_read_metadata operation is completed
+    // wait until the optiga_crypt_rsa_generate_keypair operation is completed
     printf("Generating RSA keypair using TrustM....\n");
     trustmProvider_WaitForCompletion(MAX_RSA_KEY_GEN_TIME); // can take up to 60s
     return_status = optiga_lib_status;
@@ -267,6 +268,7 @@ static void *trustm_rsa_keymgmt_gen(void *ctx, OSSL_CALLBACK *cb, void *cbarg)
 
     // saving public key to private_key_id+0x10E4
     printf("Writing public key to OID 0x%.4X\n", (trustm_rsa_key->private_key_id)+0x10E4);
+    trustm_util_ShieldedConnection();
     optiga_lib_status = OPTIGA_LIB_BUSY;
     return_status = optiga_util_write_data(trustm_rsa_key->me_util,
                                             (trustm_rsa_key->private_key_id)+0x10E4,
@@ -358,6 +360,7 @@ static int trustm_rsa_keymgmt_get_params(void *keydata, OSSL_PARAM params[])
     trustm_rsa_key_t *trustm_rsa_key = keydata;
     OSSL_PARAM *p;
     TRUSTM_PROVIDER_DBGFN(">");
+    TRACE_PARAMS("Trust M rsa keymgmt get_params", params);
     if (params == NULL)
         return 1;
 
@@ -491,19 +494,44 @@ int trustm_rsa_keymgmt_export(void *keydata, int selection, OSSL_CALLBACK *param
     uint32_t exponent;
     int ok = 1;
 
-    OSSL_PARAM params[3];
+    OSSL_PARAM params[10];
     OSSL_PARAM *p = params;
+    uint8_t priv_exponent[1] = {0x00};         
+    uint8_t prime1[1]        = {0x01};         
+    uint8_t prime2[4]        = {0x00, 0x00, 0x00, 0x00};  // Dummy q (embed keyID here)
+    uint8_t exponent1[1]     = {0x00};         
+    uint8_t exponent2[1]     = {0x00};         
+    uint8_t coefficient[4]   = {0x00, 0x00, 0x00, 0x00};  
+    
     TRUSTM_PROVIDER_DBGFN(">");
-    if (trustm_rsa_key == NULL || (selection & OSSL_KEYMGMT_SELECT_PRIVATE_KEY))
+    if (trustm_rsa_key == NULL)
         return 0;
 
     if (selection & OSSL_KEYMGMT_SELECT_PUBLIC_KEY) 
     {
-        *p++ = OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_RSA_N,
-                                        trustm_rsa_key->modulus,
-                                        trustm_rsa_key->modulus_length);
+        unsigned char *reversed_modulus = malloc(trustm_rsa_key->modulus_length);
+        if (reversed_modulus) {
+            for (size_t i = 0; i < trustm_rsa_key->modulus_length; i++) {
+                reversed_modulus[i] = trustm_rsa_key->modulus[trustm_rsa_key->modulus_length - 1 - i];
+            }
+            *p++ = OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_RSA_N,
+                                   reversed_modulus,
+                                   trustm_rsa_key->modulus_length);
+         }                                                                                               
         exponent = 0x10001;
         *p++ = OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_RSA_E, (unsigned char*)&exponent, sizeof(exponent));
+    }
+    if (selection & OSSL_KEYMGMT_SELECT_PRIVATE_KEY) {
+        TRUSTM_PROVIDER_DBGFN("Exporting dummy private key components with keyID embedded:");
+        *p++ = OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_RSA_D, priv_exponent, sizeof(priv_exponent));
+        *p++ = OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_RSA_FACTOR1, prime1, sizeof(prime1));
+
+        memcpy(prime2, &trustm_rsa_key->private_key_id, sizeof(trustm_rsa_key->private_key_id));
+        *p++ = OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_RSA_FACTOR2, prime2, sizeof(prime2));
+        *p++ = OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_RSA_EXPONENT1, exponent1, sizeof(exponent1));
+        *p++ = OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_RSA_EXPONENT2, exponent2, sizeof(exponent2));
+        *p++ = OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_RSA_COEFFICIENT1, coefficient, sizeof(coefficient));
+
     }
     *p = OSSL_PARAM_construct_end();
 
@@ -518,6 +546,7 @@ static int trustm_rsa_keymgmt_import(void *keydata, int selection, const OSSL_PA
     const OSSL_PARAM *p;
     size_t bits;
     TRUSTM_PROVIDER_DBGFN(">");
+    TRUSTM_PROVIDER_DBGFN("selection: %d (0x%X)", selection, selection); 
     if (trustm_rsa_key == NULL)
         return 0;
 
@@ -549,6 +578,32 @@ static int trustm_rsa_keymgmt_import(void *keydata, int selection, const OSSL_PA
 
             trustm_rsa_key->modulus_length = tolen;
         }
+    }
+    if (selection & OSSL_KEYMGMT_SELECT_PRIVATE_KEY) 
+    {
+        p = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_RSA_FACTOR2);
+        if (p != NULL) 
+        {
+            BIGNUM *bignum = NULL;
+            uint8_t prime2[4] = {0};  
+            int tolen;
+
+            if (!OSSL_PARAM_get_BN(p, &bignum)) {
+                TRUSTM_PROVIDER_DBGFN("Error: Failed to get prime2 from params");
+                return 0;
+            }
+
+            tolen = BN_bn2bin(bignum, prime2);
+            BN_free(bignum);
+
+            if (tolen <= 0 || tolen > sizeof(prime2)) {
+                TRUSTM_PROVIDER_DBGFN("Error: Invalid prime2 length (%d)", tolen);
+                return 0;
+            }
+            // Extract private_key_id 
+            trustm_rsa_key->private_key_id = (prime2[0] << 8) | prime2[1];
+            TRUSTM_PROVIDER_DBGFN("Imported private_key_id: 0x%04x", trustm_rsa_key->private_key_id);
+        } 
     }
     TRUSTM_PROVIDER_DBGFN("<");
     return 1;

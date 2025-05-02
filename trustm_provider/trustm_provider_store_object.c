@@ -265,6 +265,7 @@ static int trustm_genpkey_rsa(trustm_object_ctx_t *trustm_object_ctx)
             public_key[i] = rsaheader1024[i];
     }
 
+    trustm_crypt_ShieldedConnection();
     optiga_lib_status = OPTIGA_LIB_BUSY;
     return_status = optiga_crypt_rsa_generate_keypair(trustm_object_ctx->me_crypt, 
                                                         trustm_object_ctx->key_size,
@@ -280,7 +281,7 @@ static int trustm_genpkey_rsa(trustm_object_ctx_t *trustm_object_ctx)
         return 0;
     }
 
-    // wait until the optiga_util_read_metadata operation is completed
+    // wait until the optiga_crypt_rsa_generate_keypair operation is completed
     printf("Generating RSA keypair using TrustM....\n");
     trustmProvider_WaitForCompletion(MAX_RSA_KEY_GEN_TIME); // can take up to 60s
     return_status = optiga_lib_status;
@@ -293,6 +294,7 @@ static int trustm_genpkey_rsa(trustm_object_ctx_t *trustm_object_ctx)
 
     // saving public key to private_key_id+0x10E4
     printf("Writing public key to OID 0x%.4X\n", (trustm_object_ctx->key_id)+0x10E4);
+    trustm_util_ShieldedConnection();
     optiga_lib_status = OPTIGA_LIB_BUSY;
     return_status = optiga_util_write_data(trustm_object_ctx->me_util,
                                             (trustm_object_ctx->key_id)+0x10E4,
@@ -368,6 +370,7 @@ static int trustm_object_load_pkey_rsa(trustm_object_ctx_t *trustm_object_ctx, O
     trustm_rsa_key->key_size = oidMetadata.E0_algo;
     trustm_rsa_key->key_usage = oidMetadata.E1_keyUsage;
 
+    trustm_util_ShieldedConnection();
     // reading out contents in oid
     bytes_to_read = sizeof(read_data_buffer);
     optiga_lib_status = OPTIGA_LIB_BUSY;
@@ -591,6 +594,7 @@ static int trustm_genpkey_ec(trustm_object_ctx_t *trustm_object_ctx)
         break;
     }
 
+    trustm_crypt_ShieldedConnection();
     optiga_lib_status = OPTIGA_LIB_BUSY;
     return_status = optiga_crypt_ecc_generate_keypair(trustm_object_ctx->me_crypt,
                                                     trustm_object_ctx->key_curve,
@@ -620,6 +624,7 @@ static int trustm_genpkey_ec(trustm_object_ctx_t *trustm_object_ctx)
     
     printf("Saving public EC key to OID : 0x%.4X ...\n", public_id);
 
+    trustm_util_ShieldedConnection();
     optiga_lib_status = OPTIGA_LIB_BUSY;
     return_status = optiga_util_write_data(trustm_object_ctx->me_util, 
                                         public_id, 
@@ -641,7 +646,6 @@ static int trustm_genpkey_ec(trustm_object_ctx_t *trustm_object_ctx)
         TRUSTM_PROVIDER_ERRFN("Error in EC public key saving\nError code : 0x%.4X\n", return_status);
         return 0;
     }   
-
     TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
     TRUSTM_PROVIDER_DBGFN("<");
     return 1;
@@ -736,6 +740,7 @@ static int trustm_object_load_pkey_ec(trustm_object_ctx_t *trustm_object_ctx, OS
     else 
         public_key_offset = 0x10E0;
 
+    trustm_util_ShieldedConnection();
         // reading out contents in oid
     bytes_to_read = sizeof(read_data_buffer);
     optiga_lib_status = OPTIGA_LIB_BUSY;

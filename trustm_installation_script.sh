@@ -2,7 +2,7 @@
 
 
 sudo apt update 
-sudo apt -y install git gcc libssl-dev gpiod libgpiod-dev
+sudo apt -y install git gcc libssl-dev gpiod libgpiod-dev curl
 
 
 set -e

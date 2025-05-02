@@ -41,9 +41,10 @@ static OSSL_FUNC_rand_get_ctx_params_fn trustm_rand_get_ctx_params;
 
 static void * trustm_rand_newctx(void *provctx, void *parent, const OSSL_DISPATCH *parent_calls) 
 {
+    TRUSTM_PROVIDER_DBGFN(">"); 
     trustm_ctx_t *trustm_ctx = provctx;
     trustm_rand_ctx_t *trustm_rand_ctx = OPENSSL_zalloc(sizeof(trustm_rand_ctx_t));
-
+    TRUSTM_PROVIDER_DBGFN("<"); 
     if (trustm_rand_ctx == NULL) {
         return NULL;
     }
@@ -57,13 +58,14 @@ static void * trustm_rand_newctx(void *provctx, void *parent, const OSSL_DISPATC
 static void trustm_rand_freectx(void *ctx) 
 {
     trustm_rand_ctx_t *trustm_rand_ctx = ctx;
-
+    TRUSTM_PROVIDER_DBGFN(">"); 
     if (trustm_rand_ctx == NULL) {
         return;
     }
         
     OPENSSL_clear_free(trustm_rand_ctx, sizeof(trustm_rand_ctx_t));
     CRYPTO_THREAD_lock_free(trustm_rand_ctx->lock);
+    TRUSTM_PROVIDER_DBGFN("<"); 
 }
 
 static int trustm_rand_instantiate(void *ctx, unsigned int strength,
@@ -106,6 +108,7 @@ trustm_rand_generate(void *ctx, unsigned char *out, size_t outlen,
         k = 0;
         if(i > 0)  
         {
+            trustm_crypt_ShieldedConnection();
             optiga_lib_status = OPTIGA_LIB_BUSY;
             return_status = optiga_crypt_random(trustm_rand_ctx->me_crypt, 
                                 OPTIGA_RNG_TYPE_TRNG, 
@@ -113,7 +116,6 @@ trustm_rand_generate(void *ctx, unsigned char *out, size_t outlen,
                                 MAX_RAND_INPUT);
             if (OPTIGA_LIB_SUCCESS != return_status)
                 break;			
-            //Wait until the optiga_util_read_metadata operation is completed
             trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
             return_status = optiga_lib_status;
             if (return_status != OPTIGA_LIB_SUCCESS)
@@ -130,6 +132,7 @@ trustm_rand_generate(void *ctx, unsigned char *out, size_t outlen,
 
         for(;j>0;j--)  
         {
+            trustm_crypt_ShieldedConnection();
             optiga_lib_status = OPTIGA_LIB_BUSY;
             return_status = optiga_crypt_random(trustm_rand_ctx->me_crypt, 
                                 OPTIGA_RNG_TYPE_TRNG, 
@@ -140,7 +143,7 @@ trustm_rand_generate(void *ctx, unsigned char *out, size_t outlen,
                 TRUSTM_ERROR_raise(trustm_rand_ctx->core, TRUSTM_ERR_CANNOT_GET_RANDOM);
                 break;			
             }
-            //Wait until the optiga_util_read_metadata operation is completed
+            //Wait until the optiga_crypt_random operation is completed
             trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
             return_status = optiga_lib_status;
             if (return_status != OPTIGA_LIB_SUCCESS)
@@ -182,9 +185,7 @@ static int
 trustm_rand_enable_locking(void *ctx)
 {
     trustm_rand_ctx_t *trustm_rand_ctx = ctx;
-
     trustm_rand_ctx->lock = CRYPTO_THREAD_lock_new();
-    
     return 1;
 }
 
@@ -214,6 +215,8 @@ static const OSSL_PARAM *
 trustm_rand_gettable_ctx_params(void *ctx, void *provctx)
 {
     static const OSSL_PARAM known_gettable_ctx_params[] = {
+        OSSL_PARAM_int(OSSL_RAND_PARAM_STATE, NULL),
+        OSSL_PARAM_uint(OSSL_RAND_PARAM_STRENGTH, NULL),
         OSSL_PARAM_size_t(OSSL_RAND_PARAM_MAX_REQUEST, NULL),
         OSSL_PARAM_END
     };
@@ -224,15 +227,22 @@ static int
 trustm_rand_get_ctx_params(void *ctx, OSSL_PARAM params[])
 {
     OSSL_PARAM *p;
-
+    TRUSTM_PROVIDER_DBGFN(">");
+    TRACE_PARAMS("RAND GET_CTX_PARAMS", params);
     if (params == NULL)
         return 1;
-
+    p = OSSL_PARAM_locate(params, OSSL_RAND_PARAM_STATE);
+    /* always ready */
+    if (p != NULL && !OSSL_PARAM_set_int(p, EVP_RAND_STATE_READY))
+        return 0;
+    p = OSSL_PARAM_locate(params, OSSL_RAND_PARAM_STRENGTH);
+    if (p != NULL && !OSSL_PARAM_set_int(p, 256))
+        return 0;    
     p = OSSL_PARAM_locate(params, OSSL_RAND_PARAM_MAX_REQUEST);
     
     if (p != NULL && !OSSL_PARAM_set_size_t(p, 256))
         return 0;
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return 1;
 }
 

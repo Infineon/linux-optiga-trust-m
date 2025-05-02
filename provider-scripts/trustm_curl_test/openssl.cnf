@@ -1,0 +1,14 @@
+[ cert_ext ]
+subjectKeyIdentifier=hash
+keyUsage=critical,digitalSignature,keyEncipherment
+extendedKeyUsage=clientAuth,serverAuth
+
+[ cert_ext1 ]
+subjectKeyIdentifier=hash
+keyUsage=digitalSignature,keyEncipherment
+extendedKeyUsage=clientAuth
+
+
+[ cert_ext2 ]
+subjectKeyIdentifier=hash
+keyUsage=keyCertSign, cRLSign, digitalSignature

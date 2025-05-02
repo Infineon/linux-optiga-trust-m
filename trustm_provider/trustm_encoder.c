@@ -46,7 +46,7 @@ static TRUSTM_RSA_PUBKEY *trustm_get_rsa_pubkey(const trustm_rsa_key_t *pkey)
     uint32_t exponent;
     uint8_t modulus_buffer[300];
     uint16_t modulus_length;
-
+    TRUSTM_PROVIDER_DBGFN(">");
     rsa_pubkey = TRUSTM_RSA_PUBKEY_new();
     if (rsa_pubkey == NULL)
         return NULL;
@@ -85,7 +85,7 @@ static TRUSTM_RSA_PUBKEY *trustm_get_rsa_pubkey(const trustm_rsa_key_t *pkey)
         TRUSTM_RSA_PUBKEY_free(rsa_pubkey);
         return NULL;
     }
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return rsa_pubkey;
 }
 
@@ -94,7 +94,7 @@ int trustm_get_rsa_pubkey_der(const trustm_rsa_key_t *pkey, unsigned char **penc
 {
     TRUSTM_RSA_PUBKEY *rsa_pubkey;
     int penclen;
-
+    TRUSTM_PROVIDER_DBGFN(">");
     rsa_pubkey = trustm_get_rsa_pubkey(pkey);
     if (rsa_pubkey == NULL)
         return -1;
@@ -102,7 +102,7 @@ int trustm_get_rsa_pubkey_der(const trustm_rsa_key_t *pkey, unsigned char **penc
     /* export as DER */
     penclen = i2d_TRUSTM_RSA_PUBKEY(rsa_pubkey, penc);
     TRUSTM_RSA_PUBKEY_free(rsa_pubkey);
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return penclen;
 }
 
@@ -112,7 +112,7 @@ static X509_PUBKEY * trustm_get_x509_rsa_pubkey(const trustm_rsa_key_t *pkey)
     unsigned char *penc = NULL;
     int penclen;
     X509_PUBKEY *pubkey;
-
+    TRUSTM_PROVIDER_DBGFN(">");
     penclen = trustm_get_rsa_pubkey_der(pkey, &penc);
     if (penclen < 0)
         return NULL;
@@ -126,7 +126,7 @@ static X509_PUBKEY * trustm_get_x509_rsa_pubkey(const trustm_rsa_key_t *pkey)
 
     /* per RFC3279 the parameters must be NULL */
     X509_PUBKEY_set0_param(pubkey, OBJ_nid2obj(NID_rsaEncryption), V_ASN1_NULL, NULL, penc, penclen);
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return pubkey;
 }
 
@@ -141,13 +141,13 @@ static void *trustm_encoder_newctx(void *provctx)
 {
     trustm_ctx_t *trustm_ctx = provctx;
     trustm_encoder_ctx_t *trustm_encoder_ctx = OPENSSL_zalloc(sizeof(trustm_encoder_ctx_t));
-
+    TRUSTM_PROVIDER_DBGFN(">");
     if (trustm_encoder_ctx == NULL)
         return NULL;
 
     trustm_encoder_ctx->core = trustm_ctx->core;
     trustm_encoder_ctx->libctx = trustm_ctx->libctx;
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return trustm_encoder_ctx;
 }
 
@@ -174,7 +174,7 @@ static int trustm_rsa_encoder_encode_text(void *ctx, OSSL_CORE_BIO *cout, const 
     const trustm_rsa_key_t *trustm_rsa_key = key;
     BIO *bout;
     int i;
-
+    TRUSTM_PROVIDER_DBGFN(">");
     bout = BIO_new_from_core_bio(trustm_encoder_ctx->libctx, cout);
     if (bout == NULL)
         return 0;
@@ -194,6 +194,7 @@ static int trustm_rsa_encoder_encode_text(void *ctx, OSSL_CORE_BIO *cout, const 
 
     BIO_printf(bout, "\n");
     BIO_free(bout);
+    TRUSTM_PROVIDER_DBGFN("<");
     return 1;
 }
 
@@ -209,13 +210,14 @@ static int trustm_rsa_encode_public_SubjectPublicKeyInfo_pem(trustm_encoder_ctx_
 {
     X509_PUBKEY *pubkey;
     int ret;
-
+    TRUSTM_PROVIDER_DBGFN(">");
     if ((pubkey = trustm_get_x509_rsa_pubkey(trustm_rsa_key)) == NULL)
         return 0;
 
     ret = PEM_write_bio_X509_PUBKEY(bout, pubkey);
     X509_PUBKEY_free(pubkey);
     return ret;
+    TRUSTM_PROVIDER_DBGFN("<");
 }
 
 static OSSL_FUNC_encoder_encode_fn trustm_rsa_encoder_encode_SubjectPublicKeyInfo_pem;
@@ -227,7 +229,7 @@ static int trustm_rsa_encoder_encode_SubjectPublicKeyInfo_pem(void *ctx, OSSL_CO
     trustm_rsa_key_t *trustm_rsa_key = (trustm_rsa_key_t *) key;
     BIO *bout;
     int ret = 0;
-
+    TRUSTM_PROVIDER_DBGFN(">");
     bout = BIO_new_from_core_bio(trustm_encoder_ctx->libctx, cout);
     if (bout == NULL)
         return 0;
@@ -239,6 +241,7 @@ static int trustm_rsa_encoder_encode_SubjectPublicKeyInfo_pem(void *ctx, OSSL_CO
         ret = trustm_rsa_encode_public_SubjectPublicKeyInfo_pem(trustm_encoder_ctx, bout, trustm_rsa_key);
 
     BIO_free(bout);
+    TRUSTM_PROVIDER_DBGFN("<");
     return ret;
 }
 
@@ -268,12 +271,13 @@ static int trustm_rsa_encode_public_SubjectPublicKeyInfo_der(trustm_encoder_ctx_
     X509_PUBKEY *pubkey;
     int ret;
 
-
+    TRUSTM_PROVIDER_DBGFN(">");
     if ((pubkey = trustm_get_x509_rsa_pubkey(trustm_rsa_key)) == NULL)
         return 0;
     
     ret = i2d_X509_PUBKEY_bio(bout, pubkey);
     X509_PUBKEY_free(pubkey);
+    TRUSTM_PROVIDER_DBGFN("<");
     return ret;
 }
 
@@ -286,7 +290,7 @@ static int trustm_rsa_encoder_encode_SubjectPublicKeyInfo_der(void *ctx, OSSL_CO
     trustm_rsa_key_t *trustm_rsa_key = (trustm_rsa_key_t *) key;
     BIO *bout;
     int ret = 0;
-
+    TRUSTM_PROVIDER_DBGFN(">");
     bout = BIO_new_from_core_bio(trustm_encoder_ctx->libctx, cout);
     if (bout == NULL)
         return 0;
@@ -298,6 +302,7 @@ static int trustm_rsa_encoder_encode_SubjectPublicKeyInfo_der(void *ctx, OSSL_CO
         ret = trustm_rsa_encode_public_SubjectPublicKeyInfo_der(trustm_encoder_ctx, bout, trustm_rsa_key);
 
     BIO_free(bout);
+    TRUSTM_PROVIDER_DBGFN("<");
     return ret;
 }
 
@@ -324,13 +329,14 @@ static int trustm_rsa_encode_public_pkcs1_pem(trustm_encoder_ctx_t *trustm_encod
 {
     TRUSTM_RSA_PUBKEY *tpk;
     int ret;
-
+    TRUSTM_PROVIDER_DBGFN(">");
     if ((tpk = trustm_get_rsa_pubkey(trustm_rsa_key)) == NULL)
         return 0;
 
     ret = PEM_write_bio_TRUSTM_RSA_PUBKEY(bout, tpk);
 
     TRUSTM_RSA_PUBKEY_free(tpk);
+    TRUSTM_PROVIDER_DBGFN("<");
     return ret;
 }
 
@@ -343,7 +349,7 @@ static int trustm_rsa_encoder_encode_pkcs1_pem(void *ctx, OSSL_CORE_BIO *cout, c
     trustm_rsa_key_t *trustm_rsa_key = (trustm_rsa_key_t *) key;
     BIO *bout;
     int ret = 0;
-
+    TRUSTM_PROVIDER_DBGFN(">");
     bout = BIO_new_from_core_bio(trustm_encoder_ctx->libctx, cout);
     if (bout == NULL)
         return 0;
@@ -353,6 +359,7 @@ static int trustm_rsa_encoder_encode_pkcs1_pem(void *ctx, OSSL_CORE_BIO *cout, c
 
 
     BIO_free(bout);
+    TRUSTM_PROVIDER_DBGFN("<");
     return ret;
 }
 
@@ -381,13 +388,14 @@ static int trustm_rsa_encode_public_pkcs1_der(trustm_encoder_ctx_t *trustm_encod
 {
     TRUSTM_RSA_PUBKEY *tpk;
     int ret;
-
+    TRUSTM_PROVIDER_DBGFN(">");
     if ((tpk = trustm_get_rsa_pubkey(trustm_rsa_key)) == NULL)
         return 0;
 
     ret = ASN1_item_i2d_bio(ASN1_ITEM_rptr(TRUSTM_RSA_PUBKEY), bout, tpk);
 
     TRUSTM_RSA_PUBKEY_free(tpk);
+    TRUSTM_PROVIDER_DBGFN("<");
     return ret;
 }
 
@@ -401,7 +409,7 @@ static int trustm_rsa_encoder_encode_pkcs1_der(void *ctx, OSSL_CORE_BIO *cout, c
     trustm_rsa_key_t *trustm_rsa_key = (trustm_rsa_key_t *) key;
     BIO *bout;
     int ret = 0;
-
+    TRUSTM_PROVIDER_DBGFN(">");
     bout = BIO_new_from_core_bio(trustm_encoder_ctx->libctx, cout);
     if (bout == NULL)
         return 0;
@@ -411,6 +419,7 @@ static int trustm_rsa_encoder_encode_pkcs1_der(void *ctx, OSSL_CORE_BIO *cout, c
 
 
     BIO_free(bout);
+    TRUSTM_PROVIDER_DBGFN("<");
     return ret;
 }
 
@@ -439,7 +448,7 @@ static X509_PUBKEY *trustm_get_x509_ec_pubkey(trustm_ec_key_t *pkey)
     X509_PUBKEY *pubkey;
     unsigned char *penc = NULL;
     int penclen;
-
+    TRUSTM_PROVIDER_DBGFN(">");
     if ((pubkey = X509_PUBKEY_new()) == NULL)
         return NULL;
 
@@ -457,7 +466,7 @@ static X509_PUBKEY *trustm_get_x509_ec_pubkey(trustm_ec_key_t *pkey)
         OPENSSL_free(penc);
         return NULL;
     }
-
+    TRUSTM_PROVIDER_DBGFN("<");
     return pubkey;
 }
 
@@ -466,12 +475,13 @@ static int trustm_ec_encode_public_SubjectPublicKeyInfo_pem(trustm_encoder_ctx_t
 {
     X509_PUBKEY *pubkey;
     int ret;
-
+    TRUSTM_PROVIDER_DBGFN(">");
     if ((pubkey = trustm_get_x509_ec_pubkey(trustm_ec_key)) == NULL)
         return 0;
 
     ret = PEM_write_bio_X509_PUBKEY(bout, pubkey);
     X509_PUBKEY_free(pubkey);
+    TRUSTM_PROVIDER_DBGFN("<");
     return ret;
 }
 
@@ -484,7 +494,7 @@ static int trustm_ec_encoder_encode_SubjectPublicKeyInfo_pem(void *ctx, OSSL_COR
     trustm_ec_key_t *trustm_ec_key = (trustm_ec_key_t *) key;
     BIO *bout;
     int ret = 0;
-
+    TRUSTM_PROVIDER_DBGFN(">");
     bout = BIO_new_from_core_bio(trustm_encoder_ctx->libctx, cout);
     if (bout == NULL)
         return 0;
@@ -496,6 +506,7 @@ static int trustm_ec_encoder_encode_SubjectPublicKeyInfo_pem(void *ctx, OSSL_COR
         ret = trustm_ec_encode_public_SubjectPublicKeyInfo_pem(trustm_encoder_ctx, bout, trustm_ec_key);
 
     BIO_free(bout);
+    TRUSTM_PROVIDER_DBGFN("<");
     return ret;
 }
 
@@ -503,9 +514,10 @@ static int trustm_ec_encoder_encode_SubjectPublicKeyInfo_pem(void *ctx, OSSL_COR
 static OSSL_FUNC_encoder_does_selection_fn trustm_ec_encoder_SubjectPublicKeyInfo_pem_does_selection;
 static int trustm_ec_encoder_SubjectPublicKeyInfo_pem_does_selection(void *ctx, int selection)
 {
+    TRUSTM_PROVIDER_DBGFN(">");
     if ((selection & OSSL_KEYMGMT_SELECT_PUBLIC_KEY) || (selection & OSSL_KEYMGMT_SELECT_PRIVATE_KEY))
         return 1;
-    
+    TRUSTM_PROVIDER_DBGFN("<");
     return 0;
 }
 
@@ -525,13 +537,15 @@ static int trustm_ec_encode_public_SubjectPublicKeyInfo_der(trustm_encoder_ctx_t
 {
     X509_PUBKEY *pubkey;
     int ret;
-
+    TRUSTM_PROVIDER_DBGFN(">");
 
     if ((pubkey = trustm_get_x509_ec_pubkey(trustm_ec_key)) == NULL)
         return 0;
     
     ret = i2d_X509_PUBKEY_bio(bout, pubkey);
     X509_PUBKEY_free(pubkey);
+    TRUSTM_PROVIDER_DBGFN("<");
+    
     return ret;
 }
 
@@ -544,6 +558,7 @@ static int trustm_ec_encoder_encode_SubjectPublicKeyInfo_der(void *ctx, OSSL_COR
     trustm_ec_key_t *trustm_ec_key = (trustm_ec_key_t *) key;
     BIO *bout;
     int ret = 0;
+    TRUSTM_PROVIDER_DBGFN(">");
 
     bout = BIO_new_from_core_bio(trustm_encoder_ctx->libctx, cout);
     if (bout == NULL)
@@ -557,6 +572,7 @@ static int trustm_ec_encoder_encode_SubjectPublicKeyInfo_der(void *ctx, OSSL_COR
 
 
     BIO_free(bout);
+    TRUSTM_PROVIDER_DBGFN("<");
     return ret;
 }
 
@@ -564,9 +580,10 @@ static int trustm_ec_encoder_encode_SubjectPublicKeyInfo_der(void *ctx, OSSL_COR
 static OSSL_FUNC_encoder_does_selection_fn trustm_ec_encoder_SubjectPublicKeyInfo_der_does_selection;
 static int trustm_ec_encoder_SubjectPublicKeyInfo_der_does_selection(void *ctx, int selection)
 {
+    TRUSTM_PROVIDER_DBGFN(">");
     if ((selection & OSSL_KEYMGMT_SELECT_PUBLIC_KEY) || (selection & OSSL_KEYMGMT_SELECT_PRIVATE_KEY))
         return 1;
-    
+    TRUSTM_PROVIDER_DBGFN("<");
     return 0;
 }
 
@@ -591,7 +608,7 @@ static int trustm_ec_encoder_encode_text(void *ctx, OSSL_CORE_BIO *cout, const v
     void *buffer;
     uint8_t *pubkey_buffer;
     int i;
-
+    TRUSTM_PROVIDER_DBGFN(">");
     bout = BIO_new_from_core_bio(ectx->libctx, cout);
     if (bout == NULL)
         return 0;
