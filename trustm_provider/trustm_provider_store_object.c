@@ -277,7 +277,7 @@ static int trustm_genpkey_rsa(trustm_object_ctx_t *trustm_object_ctx)
     
     if (OPTIGA_LIB_SUCCESS != return_status)
     {
-        TRUSTM_PROVIDER_ERRFN("Error generating RSA key pair\n");
+        TRUSTM_PROVIDER_ERRFN("Error in optiga_crypt_rsa_generate_keypair\nError code : 0x%.4X\n", return_status);
         return 0;
     }
 
@@ -606,7 +606,7 @@ static int trustm_genpkey_ec(trustm_object_ctx_t *trustm_object_ctx)
 
     if (OPTIGA_LIB_SUCCESS != return_status)
     {
-        TRUSTM_PROVIDER_ERRFN("Error in EC key generation1\nError code : 0x%.4X\n", return_status);      
+        TRUSTM_PROVIDER_ERRFN("Error in optiga_crypt_ecc_generate_keypair\nError code : 0x%.4X\n", return_status);      
         return 0;
     }
     

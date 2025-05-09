@@ -1492,27 +1492,27 @@ Following is the input format:
 
 (see [req](#req) for input details)
 
-There are two ways to generate New ECC256 Key Pair. 
+There are two ways to generate New ECC/RSA Key Pair. 
 
 #### KeyGen with public key as output 
 
-Example: To generate keypair with public key as output and private key stored inside Trust M:
+Example: To generate keypair with public key as output and private key stored inside OPTIGA™ Trust M:
 
 ```console 
 openssl pkey -provider trustm_provider -in 0xe0f1:*:NEW:0x03:0x13 -pubout -out e0f1_pub.pem
 ```
 
-The above command will generate the keypair in OPTIGA™ Trust M and the output (e0f1_pub.pem) is the public key and private key is stored inside Trust M. Refer to [Referencing keys in Trust M](#referencing-keys-in-optiga-trust-m)  Section for more details.
+The above command will generate the ECC256 keypair in OPTIGA™ Trust M. The output (e0f1_pub.pem) is the public key and the private key is stored inside Trust M. Refer to [Referencing keys in OPTIGA™ Trust M](#referencing-keys-in-optiga-trust-m)  Section for more details.
 
 #### KeyGen with Reference Keys in file format as output
 
-Example: To generate reference keys in file format:
+Example: To generate reference keys in file format for ECC256:
 
 ```console 
 openssl pkey -provider trustm_provider -provider default -propquery provider=trustm -in 0xe0f1:*:NEW:0x03:0x13 -out ecc256_key.pem
 ```
 
-The above command will generate the keypair in OPTIGA™ Trust M and the output (ecc256_key.pem) is the reference to the private key slot of OPTIGA™ Trust M with public key. Refer to  [Referencing keys in Trust M](#referencing-keys-in-optiga-trust-m)  Section for more details.
+The above command will generate the ECC256 keypair in OPTIGA™ Trust M. The private key id and  public key of OPTIGA™ Trust M are stored inside the output file (ecc256_key.pem).  Refer to  [Referencing keys in  OPTIGA™ Trust M](#referencing-keys-in-optiga-trust-m)  Section for more details.
 
 ### <a name="pkeyutl"></a>pkeyutl
 
@@ -1537,18 +1537,18 @@ For more details, please refer to  [ec_keygen_and_sign](./provider-scripts/ec_ke
 
 #### Sign using Reference Keys in file format
 
-Example for Signing using Reference Keys in file format:
+Example for Signing using Reference Keys in file format.
 
 Signing the message in the test_sign.txt file using the OPTIGA™ Trust M ECC key and saving the generated signature in the test_sign.sig file.
 
 ```console 
-openssl pkeyutl -provider trustm_provider -provider default -sign -rawin -inkey ecc256_key.pem -in testdata.txt -out testdata.sig
+openssl pkeyutl -provider trustm_provider -provider default -sign -rawin -inkey ecc256_key.pem -in test_sign.txt -out test_sign.sig
 ```
 
 Verifying the signature of the raw input data in test_sign.txt using the provided public key in eofd_pub.pem and the signature in test_sign.sig
 
 ```console 
-openssl pkeyutl -verify -pubin -inkey e0fd_pub.pem -rawin -in test_sign.txt -sigfile test_sign.sig
+openssl pkeyutl -verify -pubin -inkey e0f1_pub.pem -rawin -in test_sign.txt -sigfile test_sign.sig
 ```
 
 For more details, please refer to  [ec_sign_verify_pem_files](./provider-scripts/ec_sign_verify_pem_files/).

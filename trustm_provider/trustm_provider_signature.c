@@ -445,7 +445,7 @@ static int trustm_rsa_signature_digest_update(void *ctx, const unsigned char *da
     return_status = optiga_lib_status;
     if (return_status != OPTIGA_LIB_SUCCESS)
     {
-        TRUSTM_PROVIDER_ERRFN("Error in trustm_ecdsa_signature_digest_update\n");
+        TRUSTM_PROVIDER_ERRFN("Error in trustm_rsa_signature_digest_update\n");
         return 0;
     }
     trustm_crypt_ShieldedConnection();
@@ -465,7 +465,7 @@ static int trustm_rsa_signature_digest_update(void *ctx, const unsigned char *da
     return_status = optiga_lib_status;
     if (return_status != OPTIGA_LIB_SUCCESS)
     {
-        TRUSTM_PROVIDER_ERRFN("Error in trustm_ecdsa_signature_digest_update\n");
+        TRUSTM_PROVIDER_ERRFN("Error in trustm_rsa_signature_digest_update\n");
         return 0;
     }
     
@@ -495,7 +495,7 @@ static int trustm_ecdsa_signature_digest_update(void *ctx, const unsigned char *
 
     if (OPTIGA_LIB_SUCCESS != return_status) 
     {
-        // add an error raise here
+        TRUSTM_PROVIDER_ERRFN("Error in optiga_crypt_hash_update\nError code : 0x%.4X\n", return_status);
         return 0;
     }
 
@@ -505,7 +505,7 @@ static int trustm_ecdsa_signature_digest_update(void *ctx, const unsigned char *
     return_status = optiga_lib_status;
     if (return_status != OPTIGA_LIB_SUCCESS)
     {
-        // add an error raise here
+        TRUSTM_PROVIDER_ERRFN("Error in trustm_ecdsa_signature_digest_update\n");
         return 0;
     }
     
@@ -517,7 +517,7 @@ static int trustm_ecdsa_signature_digest_update(void *ctx, const unsigned char *
     
     if (OPTIGA_LIB_SUCCESS != return_status) 
     {
-        // add an error raise here
+        TRUSTM_PROVIDER_ERRFN("Error in optiga_crypt_hash_finalize\nError code : 0x%.4X\n", return_status);
         return 0;
     }
 
@@ -527,7 +527,7 @@ static int trustm_ecdsa_signature_digest_update(void *ctx, const unsigned char *
     return_status = optiga_lib_status;
     if (return_status != OPTIGA_LIB_SUCCESS)
     {
-        // add an error raise here
+        TRUSTM_PROVIDER_ERRFN("Error in trustm_ecdsa_signature_digest_update\n");
         return 0;
     } 
     
@@ -571,7 +571,7 @@ static int trustm_rsa_signature_digest_sign_final(void *ctx, unsigned char *sig,
 
     if (return_status != OPTIGA_LIB_SUCCESS)
     {
-        TRUSTM_PROVIDER_ERRFN("Error signing in trustm_rsa_signature_sign\n");
+        TRUSTM_PROVIDER_ERRFN("Error signing in trustm_rsa_signature_digest_sign_final\n");
         return 0;
     }
     
@@ -624,7 +624,7 @@ static int trustm_ecdsa_signature_digest_sign_final(void *ctx, unsigned char *si
 
     if (return_status != OPTIGA_LIB_SUCCESS)
     {
-        TRUSTM_PROVIDER_ERRFN("Error signing in trustm_ecdsa_signature_sign\n");
+        TRUSTM_PROVIDER_ERRFN("Error signing in trustm_ecdsa_signature_digest_sign_final\n");
         return 0;
     }
     
@@ -687,7 +687,7 @@ static int trustm_rsa_signature_digest_sign(void *ctx, unsigned char *sig, size_
 
     if (OPTIGA_LIB_SUCCESS != return_status) 
     {
-        // add an error raise here
+        TRUSTM_PROVIDER_ERRFN("Error in optiga_crypt_hash_update\nError code : 0x%.4X\n", return_status);
         return 0;
     }
 
@@ -697,7 +697,7 @@ static int trustm_rsa_signature_digest_sign(void *ctx, unsigned char *sig, size_
     return_status = optiga_lib_status;
     if (return_status != OPTIGA_LIB_SUCCESS)
     {
-        // add an error raise here
+        TRUSTM_PROVIDER_ERRFN("Error trustm_rsa_signature_digest_sign\n");
         return 0;
     }
 
@@ -709,7 +709,7 @@ static int trustm_rsa_signature_digest_sign(void *ctx, unsigned char *sig, size_
     
     if (OPTIGA_LIB_SUCCESS != return_status) 
     {
-        // add an error raise here
+        TRUSTM_PROVIDER_ERRFN("Error in optiga_crypt_hash_finalize\nError code : 0x%.4X\n", return_status);
         return 0;
     }
 
@@ -719,7 +719,7 @@ static int trustm_rsa_signature_digest_sign(void *ctx, unsigned char *sig, size_
     return_status = optiga_lib_status;
     if (return_status != OPTIGA_LIB_SUCCESS)
     {
-        // add an error raise here
+        TRUSTM_PROVIDER_ERRFN("Error signing in trustm_rsa_signature_digest_sign\n");
         return 0;
     }
 
@@ -746,7 +746,7 @@ static int trustm_rsa_signature_digest_sign(void *ctx, unsigned char *sig, size_
 
     if (return_status != OPTIGA_LIB_SUCCESS)
     {
-        TRUSTM_PROVIDER_ERRFN("Error signing in trustm_rsa_signature_sign\n");
+        TRUSTM_PROVIDER_ERRFN("Error signing in trustm_rsa_signature_digest_sign\n");
         return 0;
     }
 
@@ -802,7 +802,7 @@ static int trustm_ecdsa_signature_digest_sign(void *ctx, unsigned char *sig, siz
 
     if (OPTIGA_LIB_SUCCESS != return_status) 
     {
-        // add an error raise here
+        TRUSTM_PROVIDER_ERRFN("Error in optiga_crypt_hash_update\nError code : 0x%.4X\n", return_status);
         return 0;
     }
 
@@ -812,7 +812,7 @@ static int trustm_ecdsa_signature_digest_sign(void *ctx, unsigned char *sig, siz
     return_status = optiga_lib_status;
     if (return_status != OPTIGA_LIB_SUCCESS)
     {
-        // add an error raise here
+        TRUSTM_PROVIDER_ERRFN("Error signing in trustm_ecdsa_signature_digest_sign\n");
         return 0;
     }
 
@@ -824,7 +824,7 @@ static int trustm_ecdsa_signature_digest_sign(void *ctx, unsigned char *sig, siz
     
     if (OPTIGA_LIB_SUCCESS != return_status) 
     {
-        // add an error raise here
+        TRUSTM_PROVIDER_ERRFN("Error in optiga_crypt_hash_finalize\nError code : 0x%.4X\n", return_status);
         return 0;
     }
 
@@ -834,7 +834,7 @@ static int trustm_ecdsa_signature_digest_sign(void *ctx, unsigned char *sig, siz
     return_status = optiga_lib_status;
     if (return_status != OPTIGA_LIB_SUCCESS)
     {
-        // add an error raise here
+        TRUSTM_PROVIDER_ERRFN("Error signing in trustm_ecdsa_signature_digest_sign\n");
         return 0;
     }
 
