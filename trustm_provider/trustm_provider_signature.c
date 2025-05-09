@@ -719,7 +719,7 @@ static int trustm_rsa_signature_digest_sign(void *ctx, unsigned char *sig, size_
     return_status = optiga_lib_status;
     if (return_status != OPTIGA_LIB_SUCCESS)
     {
-        /TRUSTM_PROVIDER_ERRFN("Error signing in trustm_rsa_signature_digest_sign\n");
+        TRUSTM_PROVIDER_ERRFN("Error signing in trustm_rsa_signature_digest_sign\n");
         return 0;
     }
 
