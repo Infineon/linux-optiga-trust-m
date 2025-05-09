@@ -237,7 +237,7 @@ static void *trustm_rsa_keymgmt_gen(void *ctx, OSSL_CALLBACK *cb, void *cbarg)
     }
 
 
-    trustm_util_ShieldedConnection();
+    trustm_crypt_ShieldedConnection();
     optiga_lib_status = OPTIGA_LIB_BUSY;
     return_status = optiga_crypt_rsa_generate_keypair(trustm_rsa_key->me_crypt, 
                                                         trustm_rsa_key->key_size,
