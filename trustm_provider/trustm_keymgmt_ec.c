@@ -597,6 +597,8 @@ static int trustm_ec_keymgmt_import(void *keydata, int selection, const OSSL_PAR
     uint8_t *private_key_data = NULL;
     size_t private_key_data_len = 0;
     BIGNUM *bn_private_key = NULL;
+    char *curve_name = NULL;
+    char curve_name_buf[64] = {0};
     
     
     TRUSTM_PROVIDER_DBGFN(">");
@@ -605,7 +607,6 @@ static int trustm_ec_keymgmt_import(void *keydata, int selection, const OSSL_PAR
 
     if (selection & OSSL_KEYMGMT_SELECT_KEYPAIR)
     {
-		TRUSTM_PROVIDER_DBGFN(" > In");
         p = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_PRIV_KEY);
         if (p != NULL) 
         {
@@ -618,17 +619,41 @@ static int trustm_ec_keymgmt_import(void *keydata, int selection, const OSSL_PAR
 			trustm_ec_key->private_key_id = (private_key_data[0] << 8) | private_key_data[1];
 			TRUSTM_PROVIDER_DBGFN(" Private key %04X ", trustm_ec_key->private_key_id );
         }
-
+        p = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_GROUP_NAME);
+        if (p != NULL && OSSL_PARAM_get_utf8_string(p, &curve_name,sizeof(curve_name_buf))) 
+        {
+            if (strcmp(curve_name, "secp384r1") == 0) {
+                trustm_ec_key->key_curve = OPTIGA_ECC_CURVE_NIST_P_384;
+                TRUSTM_PROVIDER_DBGFN("Curve name: %s, Curve: NIST P-384 (secp384r1)", curve_name_buf);
+            } else if (strcmp(curve_name, "prime256v1") == 0 || strcmp(curve_name, "secp256r1") == 0) {
+                trustm_ec_key->key_curve = OPTIGA_ECC_CURVE_NIST_P_256;
+                TRUSTM_PROVIDER_DBGFN("Curve name: %s, Curve: NIST P-256 (secp256r1)", curve_name_buf);
+            } else if (strcmp(curve_name, "secp521r1") == 0) {
+                trustm_ec_key->key_curve = OPTIGA_ECC_CURVE_NIST_P_521;
+                TRUSTM_PROVIDER_DBGFN("Curve name: %s, Curve: NIST P-521 (secp521r1)", curve_name_buf);
+            } else if (strcmp(curve_name, "brainpoolP256r1") == 0) {
+                trustm_ec_key->key_curve = OPTIGA_ECC_CURVE_BRAIN_POOL_P_256R1;
+                TRUSTM_PROVIDER_DBGFN("Curve name: %s, Curve: Brainpool P-256r1", curve_name_buf);
+            } else if (strcmp(curve_name, "brainpoolP384r1") == 0) {
+                trustm_ec_key->key_curve = OPTIGA_ECC_CURVE_BRAIN_POOL_P_384R1;
+                TRUSTM_PROVIDER_DBGFN("Curve name: %s, Curve: Brainpool P-384r1", curve_name_buf);
+            } else if (strcmp(curve_name, "brainpoolP512r1") == 0) {
+                trustm_ec_key->key_curve = OPTIGA_ECC_CURVE_BRAIN_POOL_P_512R1;
+                TRUSTM_PROVIDER_DBGFN("Curve name: %s, Curve: Brainpool P-512r1", curve_name_buf);
+            } else {
+                TRUSTM_PROVIDER_DBGFN("Unsupported curve name: %s", curve_name_buf);
+            }
+        }
         p = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_PUB_KEY);
         if (p != NULL)
         {
-			if (trustm_buffer_to_ecc_point(trustm_ec_key, p->data, p->data_size) == 0)
-                return 0;
-		}
+            if (trustm_buffer_to_ecc_point(trustm_ec_key, p->data, p->data_size) == 0)
+             return 0;
+        }
     }
     
-        OPENSSL_free(private_key_data);
-        BN_free(bn_private_key);
+    OPENSSL_free(private_key_data);
+    BN_free(bn_private_key);
 
     TRUSTM_PROVIDER_DBGFN("<");
     return 1;
@@ -661,13 +686,22 @@ int trustm_ec_keymgmt_export(void *keydata, int selection, OSSL_CALLBACK *param_
     switch (curve_nid) {
         case NID_X9_62_prime256v1: /* P-256 */
             private_key_len = 32;
-            break;
+            break;            
         case NID_secp384r1: /* P-384 */
             private_key_len = 48;
             break;
         case NID_secp521r1: /* P-521 */
             private_key_len = 66;
             break;
+        case NID_brainpoolP256r1: /* Brainpool 256 */
+            private_key_len = 32;
+            break;
+        case NID_brainpoolP384r1: /* Brainpool 384 */
+            private_key_len = 48;
+            break;
+        case NID_brainpoolP512r1: /* Brainpool 512 */
+            private_key_len = 64;
+            break;            
         default:
             TRUSTM_PROVIDER_DBGFN("Error: Unsupported curve");
             OPENSSL_free(pubbuff);
