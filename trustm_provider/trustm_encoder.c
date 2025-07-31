@@ -13,6 +13,11 @@
 #include <openssl/asn1t.h>
 #include <openssl/bio.h>
 
+#include <openssl/param_build.h>
+#include <openssl/evp.h>
+#include <openssl/pem.h>
+#include <openssl/ec.h>
+
 #include "trustm_helper.h"
 #include "trustm_provider_common.h"
 #include "trustm_ec_key_helper.h"
@@ -645,23 +650,138 @@ const OSSL_DISPATCH trustm_ec_encoder_text_functions[] = {
     { 0, NULL }
 };
 
-// since we are not exporting private keys, the dummy encoders below are used
-// to surpress OpenSSL error
+
+//~ static int trustm_key_write(trustm_encoder_ctx_t *ctx, BIO *bout, trustm_ec_key_t *trustm_ec_key) 
+//~ {
+   //~ //To do: Generate key.pem using OpenSSL 3.0 API  
+//~ }
+
+//Generate Key.pem using deprecated openssl 1.1 API for testing purpose at this moment
+static int trustm_key_write(trustm_encoder_ctx_t *ctx, BIO *bout, trustm_ec_key_t *trustm_ec_key) 
+{
+    int curve_nid;
+    EVP_PKEY *pkey = NULL;
+    EC_KEY *ec_key = NULL;
+    BIGNUM *priv_bn = NULL;
+    BIGNUM *x = NULL, *y = NULL;
+    unsigned char *privkey = NULL;
+    size_t private_key_len                  = sizeof(privkey);
+    int ret = 0;
+    
+    TRUSTM_PROVIDER_DBGFN(">");
+    if (!ctx || !bout || !trustm_ec_key) {
+        TRUSTM_PROVIDER_DBGFN("Error: Invalid inputs");
+        goto err;
+    }
+    curve_nid = trustm_ecc_curve_to_nid(trustm_ec_key->key_curve);
+    if (curve_nid == NID_undef) {
+        TRUSTM_PROVIDER_DBGFN("Error: Invalid curve NID");
+        return 0;
+    }
+    switch (curve_nid) {
+        case NID_X9_62_prime256v1: /* P-256 */
+            private_key_len = 32;
+            break;            
+        case NID_secp384r1: /* P-384 */
+            private_key_len = 48;
+            break;
+        case NID_secp521r1: /* P-521 */
+            private_key_len = 66;
+            break;
+        case NID_brainpoolP256r1: /* Brainpool 256 */
+            private_key_len = 32;
+            break;
+        case NID_brainpoolP384r1: /* Brainpool 384 */
+            private_key_len = 48;
+            break;
+        case NID_brainpoolP512r1: /* Brainpool 512 */
+            private_key_len = 64;
+            break;            
+        default:
+            TRUSTM_PROVIDER_DBGFN("Error: Unsupported curve");
+            return 0;
+    }   
+    ec_key = EC_KEY_new_by_curve_name(curve_nid); 
+    if (!ec_key) {
+        TRUSTM_PROVIDER_DBGFN("Error: Failed to create EC_KEY");
+        goto err;
+    }
+    x = BN_bin2bn(trustm_ec_key->x, trustm_ec_key->point_x_buffer_length, NULL);
+    y = BN_bin2bn(trustm_ec_key->y, trustm_ec_key->point_y_buffer_length, NULL);
+    if (!x || !y) {
+        TRUSTM_PROVIDER_DBGFN("Error: Failed to create BIGNUMs for x, y coordinates");
+        goto err;
+    }
+    if (!EC_KEY_set_public_key_affine_coordinates(ec_key, x, y)) {
+        TRUSTM_PROVIDER_DBGFN("Error: Failed to set public key coordinates");
+        goto err;
+    }
+     privkey = OPENSSL_zalloc(private_key_len);
+     uint16_t key_id = (uint16_t)trustm_ec_key->private_key_id;
+     privkey[0] = (key_id >> 8) & 0xFF; // High byte
+     privkey[1] = key_id & 0xFF;        // Low byte
+     
+    priv_bn = BN_bin2bn(privkey, private_key_len, NULL);
+    if (!priv_bn) {
+        TRUSTM_PROVIDER_DBGFN("Error: Failed to create BIGNUM for private key");
+        goto err;
+    }
+    if (!EC_KEY_set_private_key(ec_key, priv_bn)) {
+        TRUSTM_PROVIDER_DBGFN("Error: Failed to set private key");
+        goto err;
+    }
+    pkey = EVP_PKEY_new();
+    if (!pkey) {
+        TRUSTM_PROVIDER_DBGFN("Error: Failed to create EVP_PKEY");
+        goto err;
+    }
+    if (!EVP_PKEY_assign_EC_KEY(pkey, ec_key)) {
+        TRUSTM_PROVIDER_DBGFN("Error: Failed to assign EC_KEY to EVP_PKEY");
+        EVP_PKEY_free(pkey);
+        goto err;
+    }
+    ec_key = NULL; 
+    if (!PEM_write_bio_PrivateKey(bout, pkey, NULL, NULL, 0, NULL, NULL)) {
+        goto err;
+    }
+    ret = 1;
+
+err:
+    BN_free(priv_bn);
+    OPENSSL_free(privkey);
+    EVP_PKEY_free(pkey);
+    return ret;
+}
+
+// exporting private key ID into key.pem
 //////////////////////////////////////////////////////////////////////////////////
 static OSSL_FUNC_encoder_encode_fn trustm_encode_SubjectPrivateKeyInfo_pem;
 static int trustm_encode_SubjectPrivateKeyInfo_pem(void *ctx, OSSL_CORE_BIO *cout, const void *key, 
                                             const OSSL_PARAM key_abstract[], int selection, 
                                             OSSL_PASSPHRASE_CALLBACK *cb, void *cbarg)
 {
-    return 1;
+    trustm_encoder_ctx_t *trustm_encoder_ctx = ctx;
+    trustm_ec_key_t *trustm_ec_key = (trustm_ec_key_t *) key;
+    BIO *bout;
+    int ret = 0;
+    TRUSTM_PROVIDER_DBGFN(">");
+
+    bout = BIO_new_from_core_bio(trustm_encoder_ctx->libctx, cout);
+    if (bout == NULL)
+        return 0;
+    ret = trustm_key_write(trustm_encoder_ctx, bout, trustm_ec_key);
+    BIO_free(bout);
+    TRUSTM_PROVIDER_DBGFN("<");
+    return ret;
 }
 
 static OSSL_FUNC_encoder_does_selection_fn trustm_encoder_SubjectPrivateKeyInfo_pem_does_selection;
 static int trustm_encoder_SubjectPrivateKeyInfo_pem_does_selection(void *ctx, int selection)
 {
+    TRUSTM_PROVIDER_DBGFN(">");
     if (selection & OSSL_KEYMGMT_SELECT_PRIVATE_KEY)
         return 1;
-    
+    TRUSTM_PROVIDER_DBGFN("<");
     return 0;
 }
 

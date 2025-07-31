@@ -7,6 +7,7 @@
 #include "trustm_provider_common.h"
 #include "trustm_helper.h"
 #include "trustm_ec_key_helper.h"
+#define DEFAULT_EC_KEY_ID 0xE0F1
 
 typedef struct trustm_ec_gen_ctx_str {
     const OSSL_CORE_HANDLE *core;
@@ -90,6 +91,7 @@ static int trustm_ec_keymgmt_gen_set_template(void *ctx, void *temp1)
     trustm_ec_key_t *pkey = temp1;
     TRUSTM_PROVIDER_DBGFN(">");
     gen->key_curve = pkey->key_curve;
+    gen->private_key_id = pkey->private_key_id;
 
     TRUSTM_PROVIDER_DBGFN("<");
     return 1;
@@ -101,56 +103,87 @@ static int trustm_ec_keymgmt_gen_set_params(void *ctx, const OSSL_PARAM params[]
     trustm_ec_gen_ctx_t *trustm_ec_gen_ctx = ctx;
     const OSSL_PARAM *p;
     TRUSTM_PROVIDER_DBGFN(">");
+    char grp_name[32] = {0}; 
+    char *grp_name_tmp = grp_name;
+    char *keyId_str     = NULL;
     if (params == NULL)
         return 1;
-
-    p = OSSL_PARAM_locate_const(params, TRUSTM_PRIVATE_EC_KEY_OID);
-    if (p != NULL && !OSSL_PARAM_get_uint32(p, &(trustm_ec_gen_ctx->private_key_id)))
-        return 0;
-
-    if ((trustm_ec_gen_ctx->private_key_id < 0xE0F0) || (trustm_ec_gen_ctx->private_key_id > 0xE0F3))
-    {
-        TRUSTM_PROVIDER_ERRFN("Invalid EC Key OID %.4X\n", trustm_ec_gen_ctx->private_key_id);
-        return 0;
+    const OSSL_PARAM *param_dbg = params;
+    TRUSTM_PROVIDER_DBGFN("Received parameters:");
+    while (param_dbg != NULL && param_dbg->key != NULL) {
+        TRUSTM_PROVIDER_DBG("Param: %s", param_dbg->key);
+        param_dbg++;
     }
+    //~ p = OSSL_PARAM_locate_const(params, TRUSTM_PRIVATE_EC_KEY_OID);
+    //~ if (p != NULL && !OSSL_PARAM_get_uint32(p, &(trustm_ec_gen_ctx->private_key_id)))
+        //~ return 0;
 
-
-    p = OSSL_PARAM_locate_const(params, TRUSTM_KEY_USAGE);
-    if (p != NULL && !OSSL_PARAM_get_int(p, (int *)&trustm_ec_gen_ctx->key_usage))
-        return 0;
+    //~ if ((trustm_ec_gen_ctx->private_key_id < 0xE0F0) || (trustm_ec_gen_ctx->private_key_id > 0xE0F3))
+    //~ {
+        //~ TRUSTM_PROVIDER_ERRFN("Invalid EC Key OID %.4X\n", trustm_ec_gen_ctx->private_key_id);
+        //~ return 0;
+    //~ }
+    //~ p = OSSL_PARAM_locate_const(params, TRUSTM_KEY_USAGE);
+    //~ if (p != NULL && !OSSL_PARAM_get_int(p, (int *)&trustm_ec_gen_ctx->key_usage))
+        //~ return 0;
 
     p = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_GROUP_NAME);
     if (p != NULL)
     {
         if (p->data_type != OSSL_PARAM_UTF8_STRING)
             return 0;
-
-        if (strcasecmp("P-256", p->data) == 0)
+        TRUSTM_PROVIDER_DBG("Key Curve Param: %s", (char *)p->data);
+        strncpy(grp_name, p->data, sizeof(grp_name) - 1);
+        grp_name_tmp = strtok(grp_name, ":");  
+        keyId_str = strtok(NULL, ":");  
+        if (strcasecmp("prime256v1", grp_name_tmp) == 0)
             trustm_ec_gen_ctx->key_curve = OPTIGA_ECC_CURVE_NIST_P_256;
-        
-        else if (strcasecmp("P-384", p->data) == 0)
+        else if (strcasecmp("secp384r1", grp_name_tmp) == 0)
             trustm_ec_gen_ctx->key_curve = OPTIGA_ECC_CURVE_NIST_P_384;
-
-        else if (strcasecmp("P-521", p->data) == 0)
+        else if (strcasecmp("secp521r1", grp_name_tmp) == 0)
             trustm_ec_gen_ctx->key_curve = OPTIGA_ECC_CURVE_NIST_P_521;
-        
-        else if (strcasecmp("brainpoolP256r1", p->data) == 0)
+        else if (strcasecmp("brainpoolP256r1", grp_name_tmp) == 0)
             trustm_ec_gen_ctx->key_curve = OPTIGA_ECC_CURVE_BRAIN_POOL_P_256R1;
-
-        else if (strcasecmp("brainpoolP384r1", p->data) == 0)
+        else if (strcasecmp("brainpoolP384r1", grp_name_tmp) == 0)
             trustm_ec_gen_ctx->key_curve = OPTIGA_ECC_CURVE_BRAIN_POOL_P_384R1;
-
-        else if (strcasecmp("brainpoolP512r1", p->data) == 0)
+        else if (strcasecmp("brainpoolP512r1", grp_name_tmp) == 0)
             trustm_ec_gen_ctx->key_curve = OPTIGA_ECC_CURVE_BRAIN_POOL_P_512R1;
-        
-        else 
-        {
-            TRUSTM_PROVIDER_ERRFN("Invalid EC key curve\n");
+        else {
+            TRUSTM_PROVIDER_ERRFN("Invalid EC key curve: %s\n", grp_name_tmp);
             return 0;
         }
-    }
 
+    }
     TRUSTM_PROVIDER_DBG("Key curve : %.2X\n", trustm_ec_gen_ctx->key_curve);
+    TRUSTM_PROVIDER_DBG("Extracted Key ID String: %s\n", keyId_str ? keyId_str : "NULL");
+
+    if (keyId_str == NULL) {
+        TRUSTM_PROVIDER_MSGFN( "No key id found. Default id will be used \n");
+        trustm_ec_gen_ctx->private_key_id = DEFAULT_EC_KEY_ID;
+    }
+    else {
+        char *hex_start = keyId_str;
+        errno = 0;
+        uint32_t key_id;
+        const char needle[3] = "0x";
+        if (strncmp(keyId_str, needle, 2) == 0) {
+        hex_start += 2; // Skip "0x"
+        } else {
+        TRUSTM_PROVIDER_ERRFN("Key ID does not start with '0x': %s\n", keyId_str);
+        return 0; 
+        }
+        sscanf(hex_start, "%x", &key_id);
+        trustm_ec_gen_ctx->private_key_id = key_id;
+        if ((trustm_ec_gen_ctx->private_key_id < 0xE0F0) || (trustm_ec_gen_ctx->private_key_id > 0xE0F3))
+        {
+        TRUSTM_PROVIDER_ERRFN("Invalid EC Key OID: %.4X\n", trustm_ec_gen_ctx->private_key_id);
+        return 0;
+        }
+        else {
+        TRUSTM_PROVIDER_ERRFN("EC Key OID %.4X\n", trustm_ec_gen_ctx->private_key_id);
+        return 1;
+        }
+    }
     TRUSTM_PROVIDER_DBGFN("<");
     return 1;
 }
@@ -231,7 +264,8 @@ static void *trustm_ec_keymgmt_gen(void *ctx, OSSL_CALLBACK *cb, void *cbarg)
     // transfer ec key parameters
     trustm_ec_key->private_key_id = trustm_ec_gen_ctx->private_key_id;
     trustm_ec_key->key_curve = trustm_ec_gen_ctx->key_curve;
-    trustm_ec_key->key_usage = trustm_ec_gen_ctx->key_usage;
+    //trustm_ec_key->key_usage = trustm_ec_gen_ctx->key_usage;
+    trustm_ec_key->key_usage = 0x13;
     trustm_ec_key->public_key_length = sizeof(trustm_ec_key->public_key);
 
     TRUSTM_PROVIDER_DBG("Key OID : 0x%.4X\nKey curve 0x%.2X\nKey usage 0x%.2X\n", trustm_ec_key->private_key_id, trustm_ec_key->key_curve, trustm_ec_key->key_usage);
@@ -670,8 +704,6 @@ int trustm_ec_keymgmt_export(void *keydata, int selection, OSSL_CALLBACK *param_
     unsigned char privkey[66]               = {0}; /*max key bits 521 */
     size_t private_key_len                  = sizeof(privkey);
     TRUSTM_PROVIDER_DBGFN(">");
-    TRUSTM_PROVIDER_DBGFN("selection: %d (0x%X)", selection, selection); 
-
     curve_nid = trustm_ecc_curve_to_nid(trustm_ec_key->key_curve);
     if (curve_nid == NID_undef) {
         TRUSTM_PROVIDER_DBGFN("Error: Invalid curve NID");
