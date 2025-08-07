@@ -180,7 +180,7 @@ static int trustm_ec_keymgmt_gen_set_params(void *ctx, const OSSL_PARAM params[]
         return 0;
         }
         else {
-        TRUSTM_PROVIDER_ERRFN("EC Key OID %.4X\n", trustm_ec_gen_ctx->private_key_id);
+        TRUSTM_PROVIDER_DBG("EC Key OID %.4X\n", trustm_ec_gen_ctx->private_key_id);
         return 1;
         }
     }
@@ -634,8 +634,8 @@ static int trustm_ec_keymgmt_import(void *keydata, int selection, const OSSL_PAR
     char *curve_name = NULL;
     char curve_name_buf[64] = {0};
     
-    
     TRUSTM_PROVIDER_DBGFN(">");
+    TRUSTM_PROVIDER_DBGFN("selection: %d (0x%X)", selection, selection); 
     if (trustm_ec_key == NULL)
         return 0;
 
@@ -701,9 +701,12 @@ int trustm_ec_keymgmt_export(void *keydata, int selection, OSSL_CALLBACK *param_
 
     void *pubbuff = NULL;
     size_t pubsize;
-    unsigned char privkey[66]               = {0}; /*max key bits 521 */
-    size_t private_key_len                  = sizeof(privkey);
     TRUSTM_PROVIDER_DBGFN(">");
+    TRUSTM_PROVIDER_DBGFN("selection: %d (0x%X)", selection, selection); 
+    if (trustm_ec_key == NULL || (selection & OSSL_KEYMGMT_SELECT_PRIVATE_KEY)){
+        TRUSTM_PROVIDER_DBGFN("<");
+        return 0;
+    }
     curve_nid = trustm_ecc_curve_to_nid(trustm_ec_key->key_curve);
     if (curve_nid == NID_undef) {
         TRUSTM_PROVIDER_DBGFN("Error: Invalid curve NID");
@@ -713,51 +716,14 @@ int trustm_ec_keymgmt_export(void *keydata, int selection, OSSL_CALLBACK *param_
     if (pubsize == 0)
         return 0;
 
-    OSSL_PARAM params[4];
+    OSSL_PARAM params[3];
     OSSL_PARAM *p = params;
-    switch (curve_nid) {
-        case NID_X9_62_prime256v1: /* P-256 */
-            private_key_len = 32;
-            break;            
-        case NID_secp384r1: /* P-384 */
-            private_key_len = 48;
-            break;
-        case NID_secp521r1: /* P-521 */
-            private_key_len = 66;
-            break;
-        case NID_brainpoolP256r1: /* Brainpool 256 */
-            private_key_len = 32;
-            break;
-        case NID_brainpoolP384r1: /* Brainpool 384 */
-            private_key_len = 48;
-            break;
-        case NID_brainpoolP512r1: /* Brainpool 512 */
-            private_key_len = 64;
-            break;            
-        default:
-            TRUSTM_PROVIDER_DBGFN("Error: Unsupported curve");
-            OPENSSL_free(pubbuff);
-            return 0;
-    }    
-    if (curve_nid == NID_undef) {
-        TRUSTM_PROVIDER_DBGFN("Error: Invalid curve NID");
-        return 0;
-    }
 
     if (selection & OSSL_KEYMGMT_SELECT_ALL_PARAMETERS)
         *p++ = OSSL_PARAM_construct_utf8_string(OSSL_PKEY_PARAM_GROUP_NAME, (char *)OBJ_nid2sn(curve_nid), 0);
 
     if (selection & OSSL_KEYMGMT_SELECT_PUBLIC_KEY)
         *p++ = OSSL_PARAM_construct_octet_string(OSSL_PKEY_PARAM_PUB_KEY, pubbuff, pubsize);
-   
-    if (selection & OSSL_KEYMGMT_SELECT_PRIVATE_KEY) {
-            TRUSTM_PROVIDER_DBGFN("create reference key with keyID embedded:");
-            memset(privkey, 0x00, private_key_len);                     
-            privkey[private_key_len - 1] = (trustm_ec_key->private_key_id >> 8) & 0xFF; 
-            privkey[private_key_len - 2] = trustm_ec_key->private_key_id & 0xFF; 
-
-            *p++  = OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_PRIV_KEY, privkey, private_key_len);
-    }  
 
     *p = OSSL_PARAM_construct_end();
 
