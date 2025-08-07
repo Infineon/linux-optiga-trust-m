@@ -377,8 +377,8 @@ extern const OSSL_DISPATCH trustm_ec_encoder_SubjectPublicKeyInfo_pem_functions[
 extern const OSSL_DISPATCH trustm_ec_encoder_SubjectPublicKeyInfo_der_functions[];
 
 // dummy encoders
-extern const OSSL_DISPATCH trustm_encoder_SubjectPrivateKeyInfo_pem_functions[];
-extern const OSSL_DISPATCH trustm_encoder_SubjectPrivateKeyInfo_der_functions[];
+extern const OSSL_DISPATCH trustm_encoder_PrivateKeyInfo_pem_functions[];
+extern const OSSL_DISPATCH trustm_encoder_PrivateKeyInfo_der_functions[];
 
 // todo: add pem and der encoding format here too
 static const OSSL_ALGORITHM trustm_encoders[] = {
@@ -391,10 +391,10 @@ static const OSSL_ALGORITHM trustm_encoders[] = {
     { "EC", "provider=trustm,output=der,structure=SubjectPublicKeyInfo", trustm_ec_encoder_SubjectPublicKeyInfo_der_functions },
     { "EC", "provider=trustm,output=pem,structure=SubjectPublicKeyInfo", trustm_ec_encoder_SubjectPublicKeyInfo_pem_functions },
     // dummy private key encoders
-    { "RSA", "provider=trustm,output=der,structure=SubjectPrivateKeyInfo", trustm_encoder_SubjectPrivateKeyInfo_der_functions },
-    { "RSA", "provider=trustm,output=pem,structure=SubjectPrivateKeyInfo", trustm_encoder_SubjectPrivateKeyInfo_pem_functions },
-    { "EC", "provider=trustm,output=der,structure=SubjectPrivateKeyInfo", trustm_encoder_SubjectPrivateKeyInfo_der_functions },
-    { "EC", "provider=trustm,output=pem,structure=SubjectPrivateKeyInfo",  trustm_encoder_SubjectPrivateKeyInfo_pem_functions },
+    { "RSA", "provider=trustm,output=der,structure=PrivateKeyInfo", trustm_encoder_PrivateKeyInfo_der_functions },
+    { "RSA", "provider=trustm,output=pem,structure=PrivateKeyInfo", trustm_encoder_PrivateKeyInfo_pem_functions },
+    { "EC", "provider=trustm,output=der,structure=PrivateKeyInfo", trustm_encoder_PrivateKeyInfo_der_functions },
+    { "EC", "provider=trustm,output=pem,structure=PrivateKeyInfo",  trustm_encoder_PrivateKeyInfo_pem_functions },
     { NULL, NULL, NULL }
 };
 
