@@ -18,7 +18,6 @@
 #include <openssl/pem.h>
 #include <openssl/ec.h>
 
-
 #include "trustm_helper.h"
 #include "trustm_provider_common.h"
 #include "trustm_ec_key_helper.h"
@@ -676,6 +675,7 @@ static int trustm_encode_PrivateKeyInfo_pem(void *ctx, OSSL_CORE_BIO *cout, cons
 static OSSL_FUNC_encoder_does_selection_fn trustm_encoder_PrivateKeyInfo_pem_does_selection;
 static int trustm_encoder_PrivateKeyInfo_pem_does_selection(void *ctx, int selection)
 {
+
     TRUSTM_PROVIDER_DBGFN("selection: %d (0x%X)", selection, selection); 
     if (selection & OSSL_KEYMGMT_SELECT_PRIVATE_KEY)
         return 1;
