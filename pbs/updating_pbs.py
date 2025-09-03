@@ -12,7 +12,7 @@ def start():
 
         # Check if required directories exist
         if not os.path.exists(bundle_file_dir) or not os.path.exists(transport_key_dir):
-            print("Error: Required directories are missing. Please run 'xx script' first.")
+            print("Error: Required directories are missing. Please create required bundle_file directory and transport_key directory first.")
             return False 
 
         default_pbs_value = "0102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F202122232425262728292A2B2C2D2E2F303132333435363738393A3B3C3D3E3F40"
@@ -20,7 +20,6 @@ def start():
         chipID = str(OnChipID())
         print(f"Chip ID: {chipID}")
 
-        # Process PBS keys
         return process_pbs_keys(None, chipID, default_pbs_value)
 
     except Exception as e:
@@ -41,19 +40,16 @@ def OnTransKey(key_file_path):
 def process_pbs_keys(extract_dir, chipID, default_pbs_value):
     """ Process PBS keys by extracting them using a transport key. """
     try:
-        # Step 1: Check if there's exactly one .7z file in the bundle_file directory
         bundle_file_dir = os.path.join(os.getcwd(), "bundle_file")
         zip_files = [f for f in os.listdir(bundle_file_dir) if f.endswith(".7z")]
         if len(zip_files) != 1:
-            print(f"Error: Expected exactly 1 .7z file in {bundle_file_dir}, but found {len(zip_files)}.")
-            # Update the pbsfile with the default value and return
+            print(f"Warning: Expected exactly 1 .7z file in {bundle_file_dir}, but found {len(zip_files)}.")
             write_pbs_file_with_default_value(default_pbs_value)
             return False
 
         zip_file_path = os.path.join(bundle_file_dir, zip_files[0])
         extract_dir = os.path.join(bundle_file_dir, os.path.splitext(zip_files[0])[0])
 
-        # Extract if necessary
         if not os.path.exists(extract_dir) or not os.listdir(extract_dir):
             os.makedirs(extract_dir, exist_ok=True)
             command_output = subprocess.run(
@@ -63,49 +59,39 @@ def process_pbs_keys(extract_dir, chipID, default_pbs_value):
             )
             if command_output.returncode != 0:
                 print(f"Error extracting {zip_files[0]}: {command_output.stderr}")
-                # Update the pbsfile with the default value and return
                 write_pbs_file_with_default_value(default_pbs_value)
                 return False
             print(f"Extracted {zip_files[0]} to {extract_dir}")
         else:
             print(f"Skipping extraction: {extract_dir} already exists and is not empty.")
 
-        # Step 2: Check for transport key file
         transport_key_dir = os.path.join(os.getcwd(), "transport_key")
         transport_key_files = [f for f in os.listdir(transport_key_dir) if f.endswith(".txt")]
         if len(transport_key_files) != 1:
             print(f"Error: Expected exactly 1 transport key file in {transport_key_dir}, but found {len(transport_key_files)}.")
-            # Update the pbsfile with the default value and return
             write_pbs_file_with_default_value(default_pbs_value)
             return False
-        
-        # Read the transport key from the only .txt file
         transport_key_path = os.path.join(transport_key_dir, transport_key_files[0])
         if not os.path.exists(transport_key_path):
             print(f"Error: Transport key file {transport_key_path} not found.")
-            # Update the pbsfile with the default value and return
             write_pbs_file_with_default_value(default_pbs_value)
             return False
 
         transport_key = OnTransKey(transport_key_path)
         print(f"Transport Key for Chip ID {chipID}: {transport_key}")
         
-        # Step 3: Check if the keys are already extracted (auto_keys.txt and PBS_keys.txt)
         auto_keys_path = os.path.join(extract_dir, "auto_keys.txt")
         pbs_keys_path = os.path.join(extract_dir, "PBS_keys.txt")
         
         if os.path.exists(auto_keys_path) and os.path.exists(pbs_keys_path):
             print(f"Keys already extracted. Skipping extraction.")
         else:
-            # Extract the keys using the transport key from the corresponding _keys.7z file
             keys_archive_path = os.path.join(extract_dir, f"{chipID}_keys.7z")
             if not os.path.exists(keys_archive_path):
                 print(f"Error: Keys archive {keys_archive_path} not found.")
-                # Update the pbsfile with the default value and return
                 write_pbs_file_with_default_value(default_pbs_value)
                 return False
 
-            # Use the transport key to extract the archive (you can customize the extraction command if necessary)
             command_output = subprocess.run(
                 ["7z", "x", keys_archive_path, f"-o{extract_dir}", f"-p{transport_key}"],
                 capture_output=True,
@@ -113,24 +99,20 @@ def process_pbs_keys(extract_dir, chipID, default_pbs_value):
             )
             if command_output.returncode != 0:
                 print(f"Error extracting keys archive {keys_archive_path} using transport key: {command_output.stderr}")
-                # Update the pbsfile with the default value and return
                 write_pbs_file_with_default_value(default_pbs_value)
                 return False
 
             print(f"Extracted keys from {keys_archive_path} using transport key.")
 
-        # Step 4: Read PBS value from the extracted PBS_keys.txt file
         if not os.path.exists(pbs_keys_path):
             print(f"Error: PBS_keys.txt not found in {extract_dir}. Using default PBS value.")
             extracted_pbs_value = None
         else:
             extracted_pbs_value = OnExtractChipSpecificKey(pbs_keys_path)
 
-        # Use extracted PBS value or fallback to default
         pbs_value = extracted_pbs_value if extracted_pbs_value else default_pbs_value
         print(f"Chip ID = {chipID}. PBS value: {pbs_value}")
 
-        # Step 5: Write the PBS value to pbsfile.txt under the pbs directory
         pbs_file_path = os.path.join(os.getcwd(), "pbsfile.txt")
         with open(pbs_file_path, 'w') as f:
             f.write(pbs_value)
@@ -140,7 +122,6 @@ def process_pbs_keys(extract_dir, chipID, default_pbs_value):
 
     except Exception as e:
         print(f"\nError processing PBS keys: {str(e)}")
-        # Write the default value to pbsfile.txt in case of error
         write_pbs_file_with_default_value(default_pbs_value)
         return False
 
@@ -165,20 +146,16 @@ def write_pbs_file_with_default_value(default_pbs_value):
     pbs_file_path = os.path.join(os.getcwd(), "pbsfile.txt")
     with open(pbs_file_path, 'w') as f:
         f.write(default_pbs_value)
-    print(f"PBS file set to default value.")
+    print(f"PBS value set to default value.")
 
 def OnChipID():
     parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     chipinfo_path = os.path.join(parent_dir, "bin", "trustm_chipinfo")
-    # Execute CLI command
     result = subprocess.run([chipinfo_path], 
                             capture_output=True, 
                             text=True)
     
-    # Parse the output
     output = result.stdout
-    
-    # Extract values using regex (similar to your original implementation)
     batch_match = re.search(r'Batch Number.*?: ((?:0x[0-9a-fA-F]{2}\s*){6})', output)
     x_coord_match = re.search(r'X-coordinate.*?: 0x([0-9a-fA-F]{4})', output)
     y_coord_match = re.search(r'Y-coordinate.*?: 0x([0-9a-fA-F]{4})', output)
@@ -186,9 +163,7 @@ def OnChipID():
     if not all([batch_match, x_coord_match, y_coord_match]):
         raise ValueError("Could not extract all required values from CLI output")
     
-    # Process batch number
     batch_hex = batch_match.group(1).replace('0x', '').replace(' ', '').strip()
-    # Get coordinates
     x_coord = x_coord_match.group(1)
     y_coord = y_coord_match.group(1)
 
