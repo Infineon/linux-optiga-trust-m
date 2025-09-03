@@ -26,6 +26,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <dirent.h>
+#include <sys/stat.h>
+#include <libgen.h>
 
 #include <sys/ipc.h>
 #include <sys/shm.h>
@@ -47,6 +50,11 @@
 
 #include <openssl/core_names.h>
 #include <openssl/decoder.h>
+
+#define PBS_FILENAME "pbsfile.txt"
+#define PBS_FOLDER "pbs"
+#define PATH_MAX 4096
+static char cached_pbs_file_path[PATH_MAX] = {0};
 
 // Define the buffer size
 #define BUFSIZE 32768
@@ -1062,15 +1070,15 @@ uint16_t trustmReadX509PEM(X509 **x509, const char *filename)
 }
 
 
-/**********************************************************************
-* trustm_readUID()
-**********************************************************************/
+
 optiga_lib_status_t trustm_readUID(utrustm_UID_t *UID)
 {
     uint16_t offset, bytes_to_read;
     uint16_t optiga_oid;
     uint8_t read_data_buffer[1024];
-
+/**********************************************************************
+* trustm_readUID()
+**********************************************************************/
     optiga_lib_status_t return_status;
 
     uint16_t i;
@@ -1150,6 +1158,59 @@ optiga_lib_status_t trustm_WaitForCompletion(uint16_t wait_time)
     return optiga_lib_status;
  }   
 
+/**********************************************************************
+* check_pbs_folder and find_pbs_folder: Function to search for PBS folder recursively
+**********************************************************************/
+// Check if the given directory contains the "pbs" folder
+int check_pbs_folder(const char *dir, char *pbs_file_path, size_t max_len) {
+    struct stat path_stat;
+    snprintf(pbs_file_path, max_len, "%s/pbs/pbsfile.txt", dir);
+    
+    return (stat(pbs_file_path, &path_stat) == 0);
+}
+
+int find_pbs_folder(const char *start_dir, char *pbs_file_path, size_t max_len) {
+    struct stat path_stat;
+    
+    // 1. Check in the current directory
+    if (check_pbs_folder(start_dir, pbs_file_path, max_len)) {
+        return 1;
+    }
+
+    // 2. Get the parent directory of start_dir
+    char parent_dir[PATH_MAX];
+    strncpy(parent_dir, start_dir, sizeof(parent_dir));
+    parent_dir[sizeof(parent_dir) - 1] = '\0'; 
+    char *dir_name = dirname(parent_dir); 
+
+    // 3. Open the parent directory and search its subdirectories
+    DIR *dir = opendir(dir_name);
+    if (!dir) {
+        return 0; 
+    }
+
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL) {
+        // Skip "." and ".."
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+            continue;
+        }
+
+        // Construct full path of each sibling directory
+        char sibling_path[PATH_MAX];
+        snprintf(sibling_path, sizeof(sibling_path), "%s/%s", dir_name, entry->d_name);
+        
+        if (stat(sibling_path, &path_stat) == 0 && S_ISDIR(path_stat.st_mode)) {
+            if (check_pbs_folder(sibling_path, pbs_file_path, max_len)) {
+                closedir(dir);
+                return 1;
+            }
+        }
+    }
+
+    closedir(dir);
+    return 0; 
+}
 
 /**********************************************************************
 * _trustm_Open()
@@ -1160,29 +1221,74 @@ optiga_lib_status_t _trustm_Open(void)
     
     pal_shm_mutex_acquire(&optiga_mutex,"/trustm-mutex");
 
-
     TRUSTM_HELPER_DBGFN(">");
-    
+
     do
     {
-    
+        // Initialize GPIO
         pal_gpio_init(&optiga_reset_0);
         pal_gpio_init(&optiga_vdd_0);
-        //Create an instance of optiga_util to open the application on OPTIGA.
-         if (NULL == me_util)
-         {        
-                me_util = optiga_util_create(0, helper_optiga_util_callback, NULL);
-                if (NULL == me_util)
-                {
-                    TRUSTM_HELPER_ERRFN("Fail : optiga_util_create\n");
-                    break;
-                }
-                TRUSTM_HELPER_DBGFN("TrustM util instance created. \n");
-         }else
-         {  TRUSTM_HELPER_DBGFN("TrustM me_util instance exist. \n");
+
+        // PBS update variables
+        char pbs_file_path[PATH_MAX];
+        uint8_t pbs_buffer[64] = {0};
+        uint8_t temp_buffer[128];
+        uint32_t bytes_to_read;
+        
+        // Check if the PBS file path has already been cached
+        if (cached_pbs_file_path[0] == '\0') { 
+            // Start searching from current directory
+            char start_dir[PATH_MAX];
+            getcwd(start_dir, sizeof(start_dir));
+
+            if (find_pbs_folder(start_dir, pbs_file_path, sizeof(pbs_file_path))) {
+                strncpy(cached_pbs_file_path, pbs_file_path, sizeof(cached_pbs_file_path));
             }
-         if (NULL == me_crypt)
-         {
+        }
+
+        if (cached_pbs_file_path[0] != '\0') {
+            bytes_to_read = 0;
+            trustmReadDER(temp_buffer, &bytes_to_read, cached_pbs_file_path);
+
+            if (bytes_to_read > 0) {
+                bytes_to_read = 64;
+                char* pbsInput = (char*)temp_buffer;
+
+                // Convert and write PBS
+                for (size_t count = 0; count < sizeof(pbs_buffer) / sizeof(*pbs_buffer); count++) {
+                    sscanf(pbsInput, "%2hhx", &pbs_buffer[count]);
+                    pbsInput += 2;
+                }
+
+                pal_status_t pal_return_status = pal_os_datastore_write(
+                    OPTIGA_PLATFORM_BINDING_SHARED_SECRET_ID,
+                    pbs_buffer,
+                    bytes_to_read);
+
+                if (PAL_STATUS_SUCCESS != pal_return_status) {
+                    printf("Failed to write PBS to datastore, but continuing initialization.\n");
+                }
+            }
+        }
+
+        // Create an instance of optiga_util to open the application on OPTIGA.
+        if (NULL == me_util)
+        { 
+            me_util = optiga_util_create(0, helper_optiga_util_callback, NULL);
+            if (NULL == me_util)
+            {
+                TRUSTM_HELPER_ERRFN("Fail : optiga_util_create\n");
+                break;
+            }
+            TRUSTM_HELPER_DBGFN("TrustM util instance created. \n");
+        }
+        else
+        { 
+            TRUSTM_HELPER_DBGFN("TrustM me_util instance exists. \n");
+        }
+
+        if (NULL == me_crypt)
+        {
             me_crypt = optiga_crypt_create(0, helper_optiga_crypt_callback, NULL);
             if (NULL == me_crypt)
             {
@@ -1190,28 +1296,30 @@ optiga_lib_status_t _trustm_Open(void)
                 break;
             }
             TRUSTM_HELPER_DBGFN("TrustM crypt instance created. \n");
-         }
-         else
-         {  TRUSTM_HELPER_DBGFN("TrustM me_crypt instance exist. \n");
-             
-            }
+        }
+        else
+        { 
+            TRUSTM_HELPER_DBGFN("TrustM me_crypt instance exists. \n");
+        }
+
         TRUSTM_HELPER_DBGFN("TrustM Open. \n");
         TRUSTM_CLI_WORKAROUND_TIMER_ARM;
+
         /**
          * Open the application on OPTIGA which is a precondition to perform any other operations
          * using optiga_util_open_application
-         */        
-        if(*optiga_mutex.pid==EMPTY_PID || *optiga_mutex.pid != getpid() )
+         */ 
+        if (*optiga_mutex.pid == EMPTY_PID || *optiga_mutex.pid != getpid())
         {
             TRUSTM_HELPER_DBGFN("optiga_util_open_application:Init\n");
             optiga_lib_status = OPTIGA_LIB_BUSY;
             return_status = optiga_util_open_application(me_util, 0); // skip restore
-            //Wait until the optiga_util_open_application is completed
+            // Wait until the optiga_util_open_application is completed
             trustm_WaitForCompletion(BUSY_WAIT_TIME_OUT);
-            
+
             if (OPTIGA_LIB_SUCCESS != optiga_lib_status)
             {
-                //optiga util open application failed
+                // optiga util open application failed
                 TRUSTM_HELPER_ERRFN("Fail : optiga_util_open_application \n");
                 trustmPrintErrorCode(optiga_lib_status);
                 return_status = optiga_lib_status;
@@ -1220,13 +1328,13 @@ optiga_lib_status_t _trustm_Open(void)
             *optiga_mutex.pid = getpid(); 
         }
 
-        
         TRUSTM_HELPER_DBGFN("Success : optiga_util_open_application \n");
-    }while(FALSE);      
+    } while (FALSE); 
 
     TRUSTM_HELPER_DBGFN("<");
     return return_status;
 }
+
 
 /**********************************************************************
 * trustm_Open()
