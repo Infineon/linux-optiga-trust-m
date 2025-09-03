@@ -15,6 +15,8 @@
 #include "trustm_helper.h"
 #include "trustm_ec_key_helper.h"
 
+#define ASN1_INTEGER 0x02
+#define ASN1_SEQUENCE 0x30
 
 // helper function to return NID from trustm ecc curve name
 int trustm_ecc_curve_to_nid(optiga_ecc_curve_t curve)
@@ -215,7 +217,7 @@ static unsigned char *der_append_tlv(unsigned char *p, unsigned char tag,
     return p + vlen;
 }
 
-int trustm_key_write(BIO *bout, trustm_ec_key_t *trustm_ec_key)
+int trustm_ec_key_write(BIO *bout, trustm_ec_key_t *trustm_ec_key)
 {
     int curve_nid;
     EVP_PKEY *pkey = NULL;
@@ -306,7 +308,7 @@ int trustm_key_write(BIO *bout, trustm_ec_key_t *trustm_ec_key)
     unsigned char *p = seq_content;
 
     unsigned char v1 = 1;
-    p = der_append_tlv(p, 0x02, &v1, 1);
+    p = der_append_tlv(p, ASN1_INTEGER, &v1, 1);
     p = der_append_tlv(p, 0x04, privkey, private_key_len);    
     p = der_append_tlv(p, 0xA0, oid_tlv, (size_t)oid_tlv_len);
 
@@ -320,7 +322,7 @@ int trustm_key_write(BIO *bout, trustm_ec_key_t *trustm_ec_key)
 
     unsigned char der[4096];
     unsigned char *dp = der;
-    dp = der_append_tlv(dp, 0x30, seq_content, seq_content_len);
+    dp = der_append_tlv(dp, ASN1_SEQUENCE, seq_content, seq_content_len);
     size_t derlen = dp - der;
 
     const unsigned char *pp = der;
@@ -344,3 +346,57 @@ err:
     return ret;
 }
 
+int trustm_rsa_key_write(BIO *bout, trustm_rsa_key_t *trustm_rsa_key)
+{
+    TRUSTM_PROVIDER_DBGFN(">");
+    if (!bout || !trustm_rsa_key || trustm_rsa_key->modulus_length == 0)
+        return 0;
+
+    int ret = 0;
+    EVP_PKEY *pkey = NULL;
+    unsigned char seq_content[4096];
+    unsigned char *p = seq_content;
+
+    unsigned char version = 0x00;
+    p = der_append_tlv(p, ASN1_INTEGER, &version, 1);
+
+    p = der_append_tlv(p, ASN1_INTEGER, trustm_rsa_key->modulus, trustm_rsa_key->modulus_length);
+
+    unsigned char exp_bytes[3] = {0x01, 0x00, 0x01};
+    p = der_append_tlv(p, ASN1_INTEGER, exp_bytes, sizeof(exp_bytes));
+
+    unsigned char priv_exponent[1] = {0x00};
+    unsigned char prime1[1] = {0x01};
+    
+    uint8_t prime2[2];
+    prime2[0] = (trustm_rsa_key->private_key_id >> 8) & 0xFF; // high byte
+    prime2[1] = trustm_rsa_key->private_key_id & 0xFF;        // low byte
+    
+    unsigned char exponent1[1] = {0x00};
+    unsigned char exponent2[1] = {0x00};
+    unsigned char coefficient[4] = {0};
+
+    p = der_append_tlv(p, ASN1_INTEGER, priv_exponent, sizeof(priv_exponent));
+    p = der_append_tlv(p, ASN1_INTEGER, prime1, sizeof(prime1));
+    p = der_append_tlv(p, ASN1_INTEGER, prime2, sizeof(prime2));
+    p = der_append_tlv(p, ASN1_INTEGER, exponent1, sizeof(exponent1));
+    p = der_append_tlv(p, ASN1_INTEGER, exponent2, sizeof(exponent2));
+    p = der_append_tlv(p, ASN1_INTEGER, coefficient, sizeof(coefficient));
+
+    size_t seq_len = p - seq_content;
+    unsigned char *der = malloc(seq_len + 16);
+    if (!der)
+        return 0;
+    p = der_append_tlv(der, ASN1_SEQUENCE, seq_content, seq_len);
+
+    const unsigned char *der_ptr = der;
+    pkey = d2i_AutoPrivateKey(NULL, &der_ptr, (long)(p - der));
+    if (pkey && PEM_write_bio_PrivateKey(bout, pkey, NULL, NULL, 0, NULL, NULL)){
+        ret = 1;
+    }
+
+    EVP_PKEY_free(pkey);
+    free(der);
+    TRUSTM_PROVIDER_DBGFN("<");
+    return ret;
+}
