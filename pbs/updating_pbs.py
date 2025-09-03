@@ -12,7 +12,7 @@ def start():
 
         # Check if required directories exist
         if not os.path.exists(bundle_file_dir) or not os.path.exists(transport_key_dir):
-            print("Error: Required directories are missing. Please create required bundle_file directory and transport_key directory first.")
+            print("Required directories are missing. Please create required bundle_file directory and transport_key directory first.")
             return False 
 
         default_pbs_value = "0102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F202122232425262728292A2B2C2D2E2F303132333435363738393A3B3C3D3E3F40"
@@ -43,7 +43,7 @@ def process_pbs_keys(extract_dir, chipID, default_pbs_value):
         bundle_file_dir = os.path.join(os.getcwd(), "bundle_file")
         zip_files = [f for f in os.listdir(bundle_file_dir) if f.endswith(".7z")]
         if len(zip_files) != 1:
-            print(f"Warning: Expected exactly 1 .7z file in {bundle_file_dir}, but found {len(zip_files)}.")
+            print(f"Warning: Expected exactly one .7z file in {bundle_file_dir} for Trust M MTR/Express, but found {len(zip_files)}.If you are using Trust M V1/V3, please ignore this warning message")
             write_pbs_file_with_default_value(default_pbs_value)
             return False
 
