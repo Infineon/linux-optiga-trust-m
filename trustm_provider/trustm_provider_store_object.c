@@ -2,7 +2,7 @@
 
 #include "trustm_provider_common.h"
 #include "trustm_helper.h"
-#include "trustm_ec_key_helper.h"
+#include "trustm_key_helper.h"
 
 #include <openssl/core_dispatch.h>
 #include <openssl/core_names.h>

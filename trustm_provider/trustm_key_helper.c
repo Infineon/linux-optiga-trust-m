@@ -13,7 +13,7 @@
 
 #include "trustm_provider_common.h"
 #include "trustm_helper.h"
-#include "trustm_ec_key_helper.h"
+#include "trustm_key_helper.h"
 
 #define ASN1_INTEGER 0x02
 #define ASN1_SEQUENCE 0x30

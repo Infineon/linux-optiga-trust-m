@@ -6,7 +6,7 @@
 
 #include "trustm_provider_common.h"
 #include "trustm_helper.h"
-#include "trustm_ec_key_helper.h"
+#include "trustm_key_helper.h"
 #define DEFAULT_EC_KEY_ID 0xE0F1
 
 typedef struct trustm_ec_gen_ctx_str {

@@ -20,7 +20,7 @@
 
 #include "trustm_helper.h"
 #include "trustm_provider_common.h"
-#include "trustm_ec_key_helper.h"
+#include "trustm_key_helper.h"
 
 typedef struct trustm_encoder_ctx_str {
     const OSSL_CORE_HANDLE *core;
