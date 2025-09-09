@@ -8,7 +8,7 @@
 #include <openssl/kdf.h>
 
 #include "trustm_provider_common.h"
-#include "trustm_ec_key_helper.h"
+#include "trustm_key_helper.h"
 
 
 typedef struct trustm_keyexch_ctx_str {

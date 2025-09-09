@@ -19,7 +19,10 @@ int trustm_ecc_public_key_to_point(trustm_ec_key_t *trustm_ec_key);
 int trustm_buffer_to_ecc_point(trustm_ec_key_t *trustm_ec_key, const unsigned char *buf, size_t len);
 // helper function to set uncompressed form buffer
 int trustm_ec_point_to_uncompressed_buffer(trustm_ec_key_t *trustm_ec_key, void **buffer);
-int trustm_key_write(BIO *bout, trustm_ec_key_t *trustm_ec_key);
+
+int trustm_ec_key_write(BIO *bout, trustm_ec_key_t *trustm_ec_key);
+int trustm_rsa_key_write(BIO *bout, trustm_rsa_key_t *trustm_rsa_key);
+
 
 
 #endif

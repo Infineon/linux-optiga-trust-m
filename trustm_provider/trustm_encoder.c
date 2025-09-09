@@ -20,7 +20,7 @@
 
 #include "trustm_helper.h"
 #include "trustm_provider_common.h"
-#include "trustm_ec_key_helper.h"
+#include "trustm_key_helper.h"
 
 typedef struct trustm_encoder_ctx_str {
     const OSSL_CORE_HANDLE *core;
@@ -648,9 +648,8 @@ const OSSL_DISPATCH trustm_ec_encoder_text_functions[] = {
 };
 
 // exporting private key ID into key.pem
-//////////////////////////////////////////////////////////////////////////////////
-static OSSL_FUNC_encoder_encode_fn trustm_encode_PrivateKeyInfo_pem;
-static int trustm_encode_PrivateKeyInfo_pem(void *ctx, OSSL_CORE_BIO *cout, const void *key, 
+static OSSL_FUNC_encoder_encode_fn trustm_ec_encode_PrivateKeyInfo_pem;
+static int trustm_ec_encode_PrivateKeyInfo_pem(void *ctx, OSSL_CORE_BIO *cout, const void *key, 
                                             const OSSL_PARAM key_abstract[], int selection, 
                                             OSSL_PASSPHRASE_CALLBACK *cb, void *cbarg)
 {
@@ -665,7 +664,29 @@ static int trustm_encode_PrivateKeyInfo_pem(void *ctx, OSSL_CORE_BIO *cout, cons
     if (bout == NULL)
         return 0;
     if (selection & OSSL_KEYMGMT_SELECT_PRIVATE_KEY) {
-        ret = trustm_key_write(bout, trustm_ec_key);
+        ret = trustm_ec_key_write(bout, trustm_ec_key);
+    }
+    BIO_free(bout);
+    TRUSTM_PROVIDER_DBGFN("<");
+    return ret;
+}
+static OSSL_FUNC_encoder_encode_fn trustm_rsa_encode_PrivateKeyInfo_pem;
+static int trustm_rsa_encode_PrivateKeyInfo_pem(void *ctx, OSSL_CORE_BIO *cout, const void *key, 
+                                            const OSSL_PARAM key_abstract[], int selection, 
+                                            OSSL_PASSPHRASE_CALLBACK *cb, void *cbarg)
+{
+    trustm_encoder_ctx_t *trustm_encoder_ctx = ctx;
+    trustm_rsa_key_t *trustm_rsa_key = (trustm_rsa_key_t *) key;
+    BIO *bout;
+    int ret = 0;
+    TRUSTM_PROVIDER_DBGFN(">");
+
+    TRUSTM_PROVIDER_DBGFN("selection: %d (0x%X)", selection, selection); 
+    bout = BIO_new_from_core_bio(trustm_encoder_ctx->libctx, cout);
+    if (bout == NULL)
+        return 0;
+    if (selection & OSSL_KEYMGMT_SELECT_PRIVATE_KEY) {
+        ret = trustm_rsa_key_write(bout, trustm_rsa_key);
     }
     BIO_free(bout);
     TRUSTM_PROVIDER_DBGFN("<");
@@ -682,16 +703,29 @@ static int trustm_encoder_PrivateKeyInfo_pem_does_selection(void *ctx, int selec
     return 0;
 }
 
-const OSSL_DISPATCH trustm_encoder_PrivateKeyInfo_pem_functions[] = {
+const OSSL_DISPATCH trustm_ec_encoder_PrivateKeyInfo_pem_functions[] = {
     { OSSL_FUNC_ENCODER_NEWCTX, (void(*)(void))trustm_encoder_newctx },
     { OSSL_FUNC_ENCODER_FREECTX, (void(*)(void))trustm_encoder_freectx },
     { OSSL_FUNC_ENCODER_DOES_SELECTION, (void(*)(void))trustm_encoder_PrivateKeyInfo_pem_does_selection },
-    { OSSL_FUNC_ENCODER_ENCODE, (void(*)(void))trustm_encode_PrivateKeyInfo_pem},
+    { OSSL_FUNC_ENCODER_ENCODE, (void(*)(void))trustm_ec_encode_PrivateKeyInfo_pem},
+    { 0, NULL }
+};
+const OSSL_DISPATCH trustm_rsa_encoder_PrivateKeyInfo_pem_functions[] = {
+    { OSSL_FUNC_ENCODER_NEWCTX, (void(*)(void))trustm_encoder_newctx },
+    { OSSL_FUNC_ENCODER_FREECTX, (void(*)(void))trustm_encoder_freectx },
+    { OSSL_FUNC_ENCODER_DOES_SELECTION, (void(*)(void))trustm_encoder_PrivateKeyInfo_pem_does_selection },
+    { OSSL_FUNC_ENCODER_ENCODE, (void(*)(void))trustm_rsa_encode_PrivateKeyInfo_pem},
     { 0, NULL }
 };
 
-static OSSL_FUNC_encoder_encode_fn trustm_encode_PrivateKeyInfo_der;
-static int trustm_encode_PrivateKeyInfo_der(void *ctx, OSSL_CORE_BIO *cout, const void *key, 
+static OSSL_FUNC_encoder_encode_fn trustm_ec_encode_PrivateKeyInfo_der;
+static int trustm_ec_encode_PrivateKeyInfo_der(void *ctx, OSSL_CORE_BIO *cout, const void *key, 
+                                            const OSSL_PARAM key_abstract[], int selection, 
+                                            OSSL_PASSPHRASE_CALLBACK *cb, void *cbarg)
+{
+    return 1;
+}
+static int trustm_rsa_encode_PrivateKeyInfo_der(void *ctx, OSSL_CORE_BIO *cout, const void *key, 
                                             const OSSL_PARAM key_abstract[], int selection, 
                                             OSSL_PASSPHRASE_CALLBACK *cb, void *cbarg)
 {
@@ -706,12 +740,18 @@ static int trustm_encoder_PrivateKeyInfo_der_does_selection(void *ctx, int selec
     
     return 0;
 }
-
-const OSSL_DISPATCH trustm_encoder_PrivateKeyInfo_der_functions[] = {
+const OSSL_DISPATCH trustm_ec_encoder_PrivateKeyInfo_der_functions[] = {
     { OSSL_FUNC_ENCODER_NEWCTX, (void(*)(void))trustm_encoder_newctx },
     { OSSL_FUNC_ENCODER_FREECTX, (void(*)(void))trustm_encoder_freectx },
     { OSSL_FUNC_ENCODER_DOES_SELECTION, (void(*)(void))trustm_encoder_PrivateKeyInfo_der_does_selection },
-    { OSSL_FUNC_ENCODER_ENCODE, (void(*)(void))trustm_encode_PrivateKeyInfo_der},
+    { OSSL_FUNC_ENCODER_ENCODE, (void(*)(void))trustm_ec_encode_PrivateKeyInfo_der},
+    { 0, NULL }
+};
+const OSSL_DISPATCH trustm_rsa_encoder_PrivateKeyInfo_der_functions[] = {
+    { OSSL_FUNC_ENCODER_NEWCTX, (void(*)(void))trustm_encoder_newctx },
+    { OSSL_FUNC_ENCODER_FREECTX, (void(*)(void))trustm_encoder_freectx },
+    { OSSL_FUNC_ENCODER_DOES_SELECTION, (void(*)(void))trustm_encoder_PrivateKeyInfo_der_does_selection },
+    { OSSL_FUNC_ENCODER_ENCODE, (void(*)(void))trustm_rsa_encode_PrivateKeyInfo_der},
     { 0, NULL }
 };
 ////////////////////////// dummy private key encoders ///////////////////////////////
