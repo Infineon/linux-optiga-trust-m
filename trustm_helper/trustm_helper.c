@@ -1,27 +1,9 @@
-/**
-* MIT License
-*
-* Copyright (c) 2020 Infineon Technologies AG
-*
-* Permission is hereby granted, free of charge, to any person obtaining a copy
-* of this software and associated documentation files (the "Software"), to deal
-* in the Software without restriction, including without limitation the rights
-* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the Software is
-* furnished to do so, subject to the following conditions:
-*
-* The above copyright notice and this permission notice shall be included in all
-* copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-* SOFTWARE
+/*
+ * SPDX-FileCopyrightText: 2025 Infineon Technologies AG
+ *
+ * SPDX-License-Identifier: MIT
+ */
 
-*/
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -1070,15 +1052,14 @@ uint16_t trustmReadX509PEM(X509 **x509, const char *filename)
 }
 
 
-
+/**********************************************************************
+* trustm_readUID()
+**********************************************************************/
 optiga_lib_status_t trustm_readUID(utrustm_UID_t *UID)
 {
     uint16_t offset, bytes_to_read;
     uint16_t optiga_oid;
     uint8_t read_data_buffer[1024];
-/**********************************************************************
-* trustm_readUID()
-**********************************************************************/
     optiga_lib_status_t return_status;
 
     uint16_t i;
@@ -1172,18 +1153,15 @@ int check_pbs_folder(const char *dir, char *pbs_file_path, size_t max_len) {
 int find_pbs_folder(const char *start_dir, char *pbs_file_path, size_t max_len) {
     struct stat path_stat;
     
-    // 1. Check in the current directory
     if (check_pbs_folder(start_dir, pbs_file_path, max_len)) {
         return 1;
     }
 
-    // 2. Get the parent directory of start_dir
     char parent_dir[PATH_MAX];
     strncpy(parent_dir, start_dir, sizeof(parent_dir));
     parent_dir[sizeof(parent_dir) - 1] = '\0'; 
     char *dir_name = dirname(parent_dir); 
 
-    // 3. Open the parent directory and search its subdirectories
     DIR *dir = opendir(dir_name);
     if (!dir) {
         return 0; 
@@ -1191,12 +1169,9 @@ int find_pbs_folder(const char *start_dir, char *pbs_file_path, size_t max_len) 
 
     struct dirent *entry;
     while ((entry = readdir(dir)) != NULL) {
-        // Skip "." and ".."
         if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
             continue;
         }
-
-        // Construct full path of each sibling directory
         char sibling_path[PATH_MAX];
         snprintf(sibling_path, sizeof(sibling_path), "%s/%s", dir_name, entry->d_name);
         
@@ -1237,7 +1212,6 @@ optiga_lib_status_t _trustm_Open(void)
         
         // Check if the PBS file path has already been cached
         if (cached_pbs_file_path[0] == '\0') { 
-            // Start searching from current directory
             char start_dir[PATH_MAX];
             getcwd(start_dir, sizeof(start_dir));
 
@@ -1253,8 +1227,6 @@ optiga_lib_status_t _trustm_Open(void)
             if (bytes_to_read > 0) {
                 bytes_to_read = 64;
                 char* pbsInput = (char*)temp_buffer;
-
-                // Convert and write PBS
                 for (size_t count = 0; count < sizeof(pbs_buffer) / sizeof(*pbs_buffer); count++) {
                     sscanf(pbsInput, "%2hhx", &pbs_buffer[count]);
                     pbsInput += 2;

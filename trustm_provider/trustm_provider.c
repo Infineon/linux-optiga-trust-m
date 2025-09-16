@@ -1,3 +1,9 @@
+/*
+ * SPDX-FileCopyrightText: 2025 Infineon Technologies AG
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,7 +32,6 @@
 #define PBS_FOLDER "pbs"
 #define PATH_MAX 4096
 static char cached_pbs_file_path[PATH_MAX] = {0};
-
 
 ///////////////////////////////// trustm hardware related /////////////////////////////////
 #ifdef WORKAROUND
@@ -89,7 +94,6 @@ optiga_lib_status_t trustmProvider_WaitForCompletion(uint16_t wait_time)
 /**********************************************************************
 * check_pbs_folder and find_pbs_folder: Function to search for PBS folder recursively
 **********************************************************************/
-// Check if the given directory contains the "pbs" folder
 int check_pbs_folder(const char *dir, char *pbs_file_path, size_t max_len) {
     struct stat path_stat;
     snprintf(pbs_file_path, max_len, "%s/pbs/pbsfile.txt", dir);
