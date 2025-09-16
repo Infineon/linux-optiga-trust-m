@@ -1,3 +1,9 @@
+/*
+ * SPDX-FileCopyrightText: 2025 Infineon Technologies AG
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
 #ifndef _TRUSTM_EC_KEY_HELPER_
 #define _TRUSTM_EC_KEY_HELPER_
 

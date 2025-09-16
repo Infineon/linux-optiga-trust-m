@@ -1,8 +1,13 @@
+/*
+ * SPDX-FileCopyrightText: 2025 Infineon Technologies AG
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
 #include <openssl/crypto.h>
 #include <openssl/core_dispatch.h>
 #include <openssl/core_names.h>
 #include <openssl/params.h>
-
 
 #include "trustm_provider_common.h"
 #include "trustm_helper.h"

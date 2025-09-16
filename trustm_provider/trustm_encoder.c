@@ -1,3 +1,9 @@
+/*
+ * SPDX-FileCopyrightText: 2025 Infineon Technologies AG
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
 #include <string.h>
 #include <math.h>
 
@@ -12,8 +18,6 @@
 #include <openssl/asn1.h>
 #include <openssl/asn1t.h>
 #include <openssl/bio.h>
-
-#include <openssl/param_build.h>
 #include <openssl/evp.h>
 #include <openssl/pem.h>
 #include <openssl/ec.h>
