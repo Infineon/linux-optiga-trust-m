@@ -668,24 +668,25 @@ static int trustm_object_loadkey_e0e0(trustm_object_ctx_t *trustm_object_ctx, OS
     trustm_object_ctx->me_util = me_util;
     trustm_object_ctx->me_crypt = me_crypt;
     
-    do {
-        trustm_util_ShieldedConnection();
-        optiga_lib_status = OPTIGA_LIB_BUSY;
-        return_status = optiga_util_read_data(trustm_object_ctx->me_util,
-					      0xE0E0,
-					      9, //offset
-					      read_data_buffer,
-					      &bytes_to_read);
-        if(OPTIGA_LIB_SUCCESS != return_status){
-            TRUSTM_PROVIDER_ERRFN("unable to read optiga util data, err = 0x%04X", return_status);
-            }
-        while(optiga_lib_status == OPTIGA_LIB_BUSY);
-        if(OPTIGA_LIB_SUCCESS != optiga_lib_status){
-            return_status = optiga_lib_status;
-            break;
-            }
-        } while (FALSE);
-
+    trustm_util_ShieldedConnection();
+    optiga_lib_status = OPTIGA_LIB_BUSY;
+    return_status = optiga_util_read_data(
+            trustm_object_ctx->me_util,
+            0xE0E0,
+            9, //offset
+            read_data_buffer,
+            &bytes_to_read
+    );
+    if(OPTIGA_LIB_SUCCESS != return_status){
+        return 0;
+    }
+    trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
+    return_status = optiga_lib_status;
+    if (return_status != OPTIGA_LIB_SUCCESS) {
+        TRUSTM_PROVIDER_ERRFN("Error reading data from 0xE0E0 \n");
+        return 0;
+    }
+    TRUSTM_PROVIDER_SSL_MUTEX_RELEASE;
     const unsigned char *p = read_data_buffer;
     X509 *cert = d2i_X509(NULL, &p, bytes_to_read);
     EVP_PKEY *pkey = X509_get_pubkey(cert);
@@ -724,7 +725,6 @@ static int trustm_object_loadkey_e0e0(trustm_object_ctx_t *trustm_object_ctx, OS
     params[3] = OSSL_PARAM_construct_end();
     ret = object_cb(params, object_cbarg);
 
-    TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
     TRUSTM_PROVIDER_DBGFN("<");
     return ret;
 }
@@ -960,10 +960,11 @@ static int trustm_object_load(void *ctx, OSSL_CALLBACK *object_cb, void *object_
             ret = trustm_object_load_pkey_rsa(trustm_object_ctx, object_cb, object_cbarg);
         }
 	
-        if ((trustm_object_ctx->key_id == 0xE0F0)) {
+        if ((trustm_object_ctx->key_id == 0xE0F0)) 
+        {
             ret = trustm_object_loadkey_e0e0(trustm_object_ctx, object_cb, object_cbarg);
-	}
-	else if ((trustm_object_ctx->key_id >= 0xE0F1) && (trustm_object_ctx->key_id <= 0xE0F3))
+        }
+        else if ((trustm_object_ctx->key_id >= 0xE0F1) && (trustm_object_ctx->key_id <= 0xE0F3))
         {
             if (trustm_object_ctx->new_key)
                 if (trustm_genpkey_ec(trustm_object_ctx) == 0)
