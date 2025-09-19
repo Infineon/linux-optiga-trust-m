@@ -656,6 +656,78 @@ static int trustm_genpkey_ec(trustm_object_ctx_t *trustm_object_ctx)
     TRUSTM_PROVIDER_DBGFN("<");
     return 1;
 }
+static int trustm_object_loadkey_e0e0(trustm_object_ctx_t *trustm_object_ctx, OSSL_CALLBACK *object_cb, void * object_cbarg)
+{
+    int ret = 0;
+    uint8_t read_data_buffer[1024];
+    uint16_t bytes_to_read = sizeof(read_data_buffer);
+    optiga_lib_status_t return_status;
+    TRUSTM_PROVIDER_DBGFN(">");
+
+    TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE
+    trustm_object_ctx->me_util = me_util;
+    trustm_object_ctx->me_crypt = me_crypt;
+    
+    do {
+        trustm_util_ShieldedConnection();
+        optiga_lib_status = OPTIGA_LIB_BUSY;
+        return_status = optiga_util_read_data(trustm_object_ctx->me_util,
+					      0xE0E0,
+					      9, //offset
+					      read_data_buffer,
+					      &bytes_to_read);
+        if(OPTIGA_LIB_SUCCESS != return_status){
+            TRUSTM_PROVIDER_ERRFN("unable to read optiga util data, err = 0x%04X", return_status);
+            }
+        while(optiga_lib_status == OPTIGA_LIB_BUSY);
+        if(OPTIGA_LIB_SUCCESS != optiga_lib_status){
+            return_status = optiga_lib_status;
+            break;
+            }
+        } while (FALSE);
+
+    const unsigned char *p = read_data_buffer;
+    X509 *cert = d2i_X509(NULL, &p, bytes_to_read);
+    EVP_PKEY *pkey = X509_get_pubkey(cert);
+
+    trustm_ec_key_t *trustm_ec_key = NULL;
+    trustm_ec_key = OPENSSL_zalloc(sizeof(trustm_ec_key_t));
+
+    trustm_ec_key->core = trustm_object_ctx->core;
+    trustm_ec_key->me_util = trustm_object_ctx->me_util;
+    trustm_ec_key->me_crypt = trustm_object_ctx->me_crypt;
+    trustm_ec_key->private_key_id = trustm_object_ctx->key_id;
+
+    unsigned char *der_buf = trustm_ec_key->public_key;
+    int der_len = i2d_PUBKEY(pkey, &der_buf); 
+    
+    trustm_ec_key->public_key_length = (size_t)der_len;
+    trustm_ec_key->key_curve = OPTIGA_ECC_CURVE_NIST_P_256;
+    
+    trustm_ec_key->public_key_header_length = 23; //size of prime256v1 header
+    trustm_ec_key->key_usage = (OPTIGA_KEY_USAGE_AUTHENTICATION | OPTIGA_KEY_USAGE_SIGN);
+
+    if (trustm_ecc_public_key_to_point(trustm_ec_key) == 0){
+        TRUSTM_PROVIDER_ERRFN("Error converting EC public key to points\n");
+        ret = 0;
+    }
+    
+    int object_type = OSSL_OBJECT_PKEY;
+    OSSL_PARAM params[4];
+    const char keytype[] = "EC";
+
+    params[0] = OSSL_PARAM_construct_int(OSSL_OBJECT_PARAM_TYPE, &object_type);
+    params[1] = OSSL_PARAM_construct_utf8_string(OSSL_OBJECT_PARAM_DATA_TYPE,
+                                                 (char *)keytype, sizeof(keytype));
+    params[2] = OSSL_PARAM_construct_octet_string(OSSL_OBJECT_PARAM_REFERENCE,
+                                                  &trustm_ec_key, sizeof(trustm_ec_key));
+    params[3] = OSSL_PARAM_construct_end();
+    ret = object_cb(params, object_cbarg);
+
+    TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
+    TRUSTM_PROVIDER_DBGFN("<");
+    return ret;
+}
 
 static int trustm_object_load_pkey_ec(trustm_object_ctx_t *trustm_object_ctx, OSSL_CALLBACK *object_cb, void *object_cbarg)
 {
@@ -887,7 +959,11 @@ static int trustm_object_load(void *ctx, OSSL_CALLBACK *object_cb, void *object_
                     return 0;
             ret = trustm_object_load_pkey_rsa(trustm_object_ctx, object_cb, object_cbarg);
         }
-        if ((trustm_object_ctx->key_id >= 0xE0F0) && (trustm_object_ctx->key_id <= 0xE0F3))
+	
+        if ((trustm_object_ctx->key_id == 0xE0F0)) {
+            ret = trustm_object_loadkey_e0e0(trustm_object_ctx, object_cb, object_cbarg);
+	}
+	else if ((trustm_object_ctx->key_id >= 0xE0F1) && (trustm_object_ctx->key_id <= 0xE0F3))
         {
             if (trustm_object_ctx->new_key)
                 if (trustm_genpkey_ec(trustm_object_ctx) == 0)
