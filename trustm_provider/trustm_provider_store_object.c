@@ -692,7 +692,6 @@ static int trustm_object_loadkey_e0e0(trustm_object_ctx_t *trustm_object_ctx, OS
         TRUSTM_PROVIDER_ERRFN("Error reading data from 0xE0E0 \n");
         goto error;
     }
-
     const unsigned char *p = read_data_buffer;
     X509 *cert = d2i_X509(NULL, &p, bytes_to_read);
     if (!cert) {
