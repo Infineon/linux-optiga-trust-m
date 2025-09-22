@@ -333,6 +333,7 @@ static int trustm_object_load_pkey_rsa(trustm_object_ctx_t *trustm_object_ctx, O
     trustm_metadata_t oidMetadata;
     uint8_t read_data_buffer[2048];
     uint16_t bytes_to_read = sizeof(read_data_buffer);
+    int ret = 0;
 
     uint8_t rsaheader2048[] = {0x30, 0x82, 0x01, 0x22,
                                 0x30, 0x0d,
@@ -476,7 +477,6 @@ static int trustm_object_load_pkey_rsa(trustm_object_ctx_t *trustm_object_ctx, O
     int object_type = OSSL_OBJECT_PKEY;
     OSSL_PARAM params[4];
     const char keytype[] = "RSA";
-    int ret = 0;
 
     params[0] = OSSL_PARAM_construct_int(OSSL_OBJECT_PARAM_TYPE, &object_type);
     params[1] = OSSL_PARAM_construct_utf8_string(OSSL_OBJECT_PARAM_DATA_TYPE, (char *)keytype, 0);
@@ -757,6 +757,7 @@ static int trustm_object_load_pkey_ec(trustm_object_ctx_t *trustm_object_ctx, OS
     uint8_t read_data_buffer[2048];
     uint16_t bytes_to_read = sizeof(read_data_buffer);
     uint32_t public_key_offset;
+    int ret = 0;
 
     // header templates
     uint8_t eccheader256[] = {0x30,0x59, // SEQUENCE
@@ -948,7 +949,6 @@ static int trustm_object_load_pkey_ec(trustm_object_ctx_t *trustm_object_ctx, OS
     int object_type = OSSL_OBJECT_PKEY;
     OSSL_PARAM params[4];
     const char keytype[] = "EC";
-    int ret = 0;
 
     params[0] = OSSL_PARAM_construct_int(OSSL_OBJECT_PARAM_TYPE, &object_type);
     params[1] = OSSL_PARAM_construct_utf8_string(OSSL_OBJECT_PARAM_DATA_TYPE, (char *)keytype, 0);
