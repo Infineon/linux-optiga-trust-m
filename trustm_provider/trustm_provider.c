@@ -231,21 +231,29 @@ optiga_lib_status_t trustmProvider_Close(void)
         return_status = optiga_crypt_destroy(me_crypt);
         if(OPTIGA_LIB_SUCCESS != return_status)
         {
-        TRUSTM_PROVIDER_ERRFN("Fail : optiga_crypt_destroy \n");
+			TRUSTM_PROVIDER_ERRFN("Fail : optiga_crypt_destroy \n");
         }
+        me_crypt = NULL;
     }
 
     if (me_util != NULL)
-    {   TRUSTM_PROVIDER_DBGFN("optiga_util_destroy\n");
+    {   
+		TRUSTM_PROVIDER_DBGFN("optiga_util_destroy\n");
         return_status=optiga_util_destroy(me_util);   
-    }
-    //~ TRUSTM_WORKAROUND_TIMER_DISARM;
+        if(OPTIGA_LIB_SUCCESS != return_status)
+        {
+			TRUSTM_PROVIDER_ERRFN("Fail : optiga_util_destroy \n");
+        }
+        trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
+		return_status = optiga_lib_status;
 
-    // No point deinit the GPIO as it is a fix pin
-    //pal_gpio_deinit(&optiga_reset_0);
-    //pal_gpio_deinit(&optiga_vdd_0);
-    me_util=NULL;
-    me_crypt=NULL;    
+		if (return_status != OPTIGA_LIB_SUCCESS)
+		{
+			TRUSTM_PROVIDER_ERRFN("Failed to destroy util_crypt \n");
+		}
+		me_util=NULL;  
+    }
+    
     TRUSTM_PROVIDER_DBGFN("TrustM instance destroyed.\n");
     TRUSTM_PROVIDER_DBGFN("<");
     return return_status;
@@ -510,18 +518,21 @@ static int trustm_get_params(void *provctx, OSSL_PARAM params[])
 static void trustm_teardown(void *provctx) 
 {
     trustm_ctx_t * trustm_ctx = provctx;
-  
+    if (trustm_ctx == NULL) {
+        return;
+    }
     TRUSTM_PROVIDER_DBGFN("> Provider destroy");
     pal_shm_mutex_acquire(&ssl_mutex,"/ssl-mutex");
     
     trustm_ctx->me_crypt = NULL;
     
     trustmProvider_Close();    
-    pal_shm_mutex_release(&ssl_mutex);
-    TRUSTM_PROVIDER_DBGFN("<");
-    
     OSSL_LIB_CTX_free(trustm_ctx->libctx);
-    OPENSSL_clear_free(trustm_ctx, sizeof(trustm_ctx_t));
+    OPENSSL_clear_free(trustm_ctx, sizeof(trustm_ctx_t));   
+    pal_shm_mutex_release(&ssl_mutex);
+    
+    TRUSTM_PROVIDER_DBGFN("<");
+
 }
 
 // todo: expand this list as more functions get implemented

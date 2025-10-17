@@ -113,24 +113,24 @@ static int trustm_rsa_keymgmt_gen_set_params(void *ctx, const OSSL_PARAM params[
 
     p = OSSL_PARAM_locate_const(params, TRUSTM_PRIVATE_RSA_KEY_OID);
     if (p != NULL && !OSSL_PARAM_get_uint32(p, &trustm_rsa_gen_ctx->private_key_id))
-        return 0;
+        goto error;
 
     // check if valid RSA OID provided
     if (trustm_rsa_gen_ctx->private_key_id < 0xE0FC || trustm_rsa_gen_ctx->private_key_id > 0xE0FD) 
     {
         TRUSTM_PROVIDER_ERRFN("Invalid RSA key OID %.4X\n", trustm_rsa_gen_ctx->private_key_id);
-        return 0;
+        goto error;
     }
     
     p = OSSL_PARAM_locate_const(params, TRUSTM_KEY_USAGE);
     if (p != NULL && !OSSL_PARAM_get_int(p, (int *)&trustm_rsa_gen_ctx->key_usage))
-        return 0;
+        goto error;
 
     p = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_RSA_BITS);
     if (p != NULL)
     {
         if (!OSSL_PARAM_get_size_t(p, &bits))
-            return 0;
+            goto error;
 
         // manually set key length parameter
         if (bits == 1024)
@@ -142,25 +142,30 @@ static int trustm_rsa_keymgmt_gen_set_params(void *ctx, const OSSL_PARAM params[
         else 
         {
             TRUSTM_PROVIDER_ERRFN("Invalid RSA key length %d\n", bits);
-            return 0;
+            goto error;
         }
     }
 
     p = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_RSA_PRIMES);
     if (p != NULL && (!OSSL_PARAM_get_size_t(p, &primes) || primes != 2))
-        return 0;
+        goto error;
 
     p = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_RSA_E);
     if (p != NULL) 
     {
         if (!OSSL_PARAM_get_BN(p, &e))
-            return 0;
+            goto error;
 
         trustm_rsa_gen_ctx->exponent = BN_get_word(e);
         BN_free(e);
     }
+
     TRUSTM_PROVIDER_DBGFN("<");
     return 1;
+
+error:
+    if (e)BN_free(e);
+    return 0;
 }
 
 static const OSSL_PARAM * trustm_rsa_keymgmt_gen_settable_params(void *ctx, void *provctx)
@@ -250,8 +255,7 @@ static void *trustm_rsa_keymgmt_gen(void *ctx, OSSL_CALLBACK *cb, void *cbarg)
     if (OPTIGA_LIB_SUCCESS != return_status)
     {
         TRUSTM_PROVIDER_ERRFN("Error in optiga_crypt_rsa_generate_keypair\nError code : 0x%.4X\n", return_status);
-        OPENSSL_clear_free(trustm_rsa_key, sizeof(trustm_rsa_key_t));
-        return NULL;
+        goto error;
     }
 
     // wait until the optiga_crypt_rsa_generate_keypair operation is completed
@@ -262,8 +266,7 @@ static void *trustm_rsa_keymgmt_gen(void *ctx, OSSL_CALLBACK *cb, void *cbarg)
     if (return_status != OPTIGA_LIB_SUCCESS)
     {
         TRUSTM_PROVIDER_ERRFN("Error generating RSA key pair. Return status: %d\n", return_status);
-        OPENSSL_clear_free(trustm_rsa_key, sizeof(trustm_rsa_key_t));
-        return NULL;
+        goto error;
     }
 
     // saving public key to private_key_id+0x10E4
@@ -279,8 +282,7 @@ static void *trustm_rsa_keymgmt_gen(void *ctx, OSSL_CALLBACK *cb, void *cbarg)
 
     if (OPTIGA_LIB_SUCCESS != return_status) 
     {
-        OPENSSL_clear_free(trustm_rsa_key, sizeof(trustm_rsa_key_t));
-        return NULL;
+        goto error;
     }
 
     trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT); 
@@ -288,8 +290,8 @@ static void *trustm_rsa_keymgmt_gen(void *ctx, OSSL_CALLBACK *cb, void *cbarg)
 
     if (return_status != OPTIGA_LIB_SUCCESS)
     {
-        OPENSSL_clear_free(trustm_rsa_key, sizeof(trustm_rsa_key_t));
-        return NULL;
+        TRUSTM_PROVIDER_ERRFN("Error writing public key to OID 0x%.4X\n", (trustm_rsa_key->private_key_id)+0x10E4);
+        goto error;
     }
 
     trustm_rsa_key->public_key_length += i;
@@ -321,8 +323,8 @@ static void *trustm_rsa_keymgmt_gen(void *ctx, OSSL_CALLBACK *cb, void *cbarg)
 
     if (tolen < 0)
     {
-        OPENSSL_clear_free(trustm_rsa_key, sizeof(trustm_rsa_key_t));
-        return NULL;
+        TRUSTM_PROVIDER_ERRFN("Error extracting RSA modulus\n");
+        goto error;
     }
 
     trustm_rsa_key->modulus_length = tolen;
@@ -331,6 +333,11 @@ static void *trustm_rsa_keymgmt_gen(void *ctx, OSSL_CALLBACK *cb, void *cbarg)
     TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
     TRUSTM_PROVIDER_DBGFN("<");
     return trustm_rsa_key;
+
+error:
+    TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
+    if (trustm_rsa_key) OPENSSL_clear_free(trustm_rsa_key, sizeof(trustm_rsa_key_t));
+    return NULL;
 }
 
 static void trustm_rsa_keymgmt_gen_cleanup(void *ctx)
@@ -374,12 +381,12 @@ static int trustm_rsa_keymgmt_get_params(void *keydata, OSSL_PARAM params[])
             size = 1024;
 
         if (!OSSL_PARAM_set_int(p, size))
-            return 0;
+            goto error;
     }
 
     p = OSSL_PARAM_locate(params, TRUSTM_KEY_USAGE);
     if (p != NULL && !OSSL_PARAM_set_int(p, trustm_rsa_key->key_usage))
-        return 0;
+        goto error;
 
     p = OSSL_PARAM_locate(params, OSSL_PKEY_PARAM_RSA_N);
     if (p != NULL)
@@ -388,7 +395,7 @@ static int trustm_rsa_keymgmt_get_params(void *keydata, OSSL_PARAM params[])
         if (!OSSL_PARAM_set_BN(p, bignum))
         {
             BN_free(bignum);
-            return 0;
+            goto error;
         }
         BN_free(bignum);
     }
@@ -402,12 +409,15 @@ static int trustm_rsa_keymgmt_get_params(void *keydata, OSSL_PARAM params[])
         if (!OSSL_PARAM_set_BN(p, bignum))
         {
             BN_free(bignum);
-            return 0;
+            goto error;
         }
         BN_free(bignum);
     }
+
     TRUSTM_PROVIDER_DBGFN("<");
     return 1;
+error:
+    return 0;
 }
 
 static const OSSL_PARAM * trustm_rsa_keymgmt_gettable_params(void *provctx)
