@@ -244,16 +244,8 @@ optiga_lib_status_t trustmProvider_Close(void)
         {
 			TRUSTM_PROVIDER_ERRFN("Fail : optiga_util_destroy \n");
         }
-        trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
-		return_status = optiga_lib_status;
-
-		if (return_status != OPTIGA_LIB_SUCCESS)
-		{
-			TRUSTM_PROVIDER_ERRFN("Failed to destroy util_crypt \n");
-		}
 		me_util=NULL;  
     }
-    
     TRUSTM_PROVIDER_DBGFN("TrustM instance destroyed.\n");
     TRUSTM_PROVIDER_DBGFN("<");
     return return_status;
