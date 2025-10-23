@@ -44,14 +44,13 @@ static void * trustm_rand_newctx(void *provctx, void *parent, const OSSL_DISPATC
     TRUSTM_PROVIDER_DBGFN(">"); 
     trustm_ctx_t *trustm_ctx = provctx;
     trustm_rand_ctx_t *trustm_rand_ctx = OPENSSL_zalloc(sizeof(trustm_rand_ctx_t));
-    TRUSTM_PROVIDER_DBGFN("<"); 
     if (trustm_rand_ctx == NULL) {
         return NULL;
     }
 
     trustm_rand_ctx->core = trustm_ctx->core;
     trustm_rand_ctx->me_crypt = trustm_ctx->me_crypt;
-
+	TRUSTM_PROVIDER_DBGFN("<"); 
     return trustm_rand_ctx;
 }
 
@@ -62,9 +61,9 @@ static void trustm_rand_freectx(void *ctx)
     if (trustm_rand_ctx == NULL) {
         return;
     }
-        
+    
+    CRYPTO_THREAD_lock_free(trustm_rand_ctx->lock);    
     OPENSSL_clear_free(trustm_rand_ctx, sizeof(trustm_rand_ctx_t));
-    CRYPTO_THREAD_lock_free(trustm_rand_ctx->lock);
     TRUSTM_PROVIDER_DBGFN("<"); 
 }
 
@@ -93,91 +92,53 @@ trustm_rand_generate(void *ctx, unsigned char *out, size_t outlen,
     trustm_rand_ctx_t * trustm_rand_ctx = ctx;
 
     optiga_lib_status_t return_status;
-    int i,j,k;
-    uint8_t tempbuf[MAX_RAND_INPUT];    
-    int ret = TRUSTM_PROVIDER_FAIL;
+    uint8_t tempbuf[MAX_RAND_INPUT]; 
+    size_t remaining = outlen; 
+    size_t offset = 0;   
     
-    i = outlen % MAX_RAND_INPUT; // max random number output, find the reminder
-    j = (outlen - i)/MAX_RAND_INPUT; // Get the count 
     TRUSTM_PROVIDER_DBGFN(">");
     TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE
     trustm_rand_ctx->me_crypt = me_crypt;
-
-    do 
-    {   
-        k = 0;
-        if(i > 0)  
-        {
-            trustm_crypt_ShieldedConnection();
-            optiga_lib_status = OPTIGA_LIB_BUSY;
-            return_status = optiga_crypt_random(trustm_rand_ctx->me_crypt, 
-                                OPTIGA_RNG_TYPE_TRNG, 
-                                tempbuf,
-                                MAX_RAND_INPUT);
-            if (OPTIGA_LIB_SUCCESS != return_status)
-                break;			
-            trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
-            return_status = optiga_lib_status;
-            if (return_status != OPTIGA_LIB_SUCCESS)
-            {
-                TRUSTM_ERROR_raise(trustm_rand_ctx->core, TRUSTM_ERR_CANNOT_GET_RANDOM);
-                break;
-            }
-
-            for (k=0;k<i;k++)
-            {
-                *(out+k) = tempbuf[k]; 
-            }
-        }
-
-        for(;j>0;j--)  
-        {
-            trustm_crypt_ShieldedConnection();
-            optiga_lib_status = OPTIGA_LIB_BUSY;
-            return_status = optiga_crypt_random(trustm_rand_ctx->me_crypt, 
-                                OPTIGA_RNG_TYPE_TRNG, 
-                                (out+k),
-                                MAX_RAND_INPUT);
-            if (OPTIGA_LIB_SUCCESS != return_status)
-            {
-                TRUSTM_ERROR_raise(trustm_rand_ctx->core, TRUSTM_ERR_CANNOT_GET_RANDOM);
-                break;			
-            }
-            //Wait until the optiga_crypt_random operation is completed
-            trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
-            return_status = optiga_lib_status;
-            if (return_status != OPTIGA_LIB_SUCCESS)
-            {
-                TRUSTM_ERROR_raise(trustm_rand_ctx->core, TRUSTM_ERR_CANNOT_GET_RANDOM);
-                break;
-            }
-            k += (MAX_RAND_INPUT);
-        }
-
-        ret = TRUSTM_PROVIDER_SUCCESS;
-    }while(FALSE);
-    
-    TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
-
-	// Capture OPTIGA Error
-	if (return_status != OPTIGA_LIB_SUCCESS) 
+    while (remaining > 0) 
     {
-		trustmPrintErrorCode(return_status);
-        TRUSTM_ERROR_raise(trustm_rand_ctx->core, TRUSTM_ERR_CANNOT_GET_RANDOM);
-    }
-    // if fail returns all zero
-    if (ret != TRUSTM_PROVIDER_SUCCESS)
-    {
-        TRUSTM_PROVIDER_DBGFN("error ret 0!!!\n");
-        for(i=0;i<outlen;i++)
+        size_t bytes_to_generate = (remaining > MAX_RAND_INPUT) ? MAX_RAND_INPUT : remaining;
+
+        trustm_crypt_ShieldedConnection();
+        optiga_lib_status = OPTIGA_LIB_BUSY;
+        return_status = optiga_crypt_random(trustm_rand_ctx->me_crypt,
+                                            OPTIGA_RNG_TYPE_TRNG,
+                                            tempbuf,
+                                            bytes_to_generate);
+
+        if (OPTIGA_LIB_SUCCESS != return_status) 
         {
-            *(out+i) = 0;
+            TRUSTM_ERROR_raise(trustm_rand_ctx->core, TRUSTM_ERR_CANNOT_GET_RANDOM);
+            goto error; 
         }
+
+        //Wait until the optiga_crypt_random operation is completed
+		trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
+        return_status = optiga_lib_status;
+        if (return_status != OPTIGA_LIB_SUCCESS)
+        {
+            TRUSTM_ERROR_raise(trustm_rand_ctx->core, TRUSTM_ERR_CANNOT_GET_RANDOM);
+            goto error; 
+        }
+
+        memcpy(out + offset, tempbuf, bytes_to_generate);
+        offset += bytes_to_generate;
+        remaining -= bytes_to_generate;
     }
     
+    TRUSTM_PROVIDER_SSL_MUTEX_RELEASE  
     TRUSTM_PROVIDER_DBGFN("<");    
-    return ret;
-    #undef MAX_RAND_INPUT    
+    return 1;
+ 
+error:
+    TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
+    return 0;  
+    
+    #undef MAX_RAND_INPUT 
 }
 
 

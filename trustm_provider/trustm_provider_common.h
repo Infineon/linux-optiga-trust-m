@@ -113,10 +113,6 @@
 #define TRUE                (1U)
 #endif
 
-// trustm Provider return code
-#define TRUSTM_PROVIDER_SUCCESS	1
-#define TRUSTM_PROVIDER_FAIL		0
-
 /*
 Shared SSL mutex across functions
 */

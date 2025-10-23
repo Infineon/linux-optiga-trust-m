@@ -256,7 +256,7 @@ static void *trustm_ec_keymgmt_gen(void *ctx, OSSL_CALLBACK *cb, void *cbarg)
     trustm_ec_key->key_usage = 0x13;
     trustm_ec_key->public_key_length = sizeof(trustm_ec_key->public_key);
 
-    TRUSTM_PROVIDER_DBG("Key OID : 0x%.4X\nKey curve 0x%.2X\nKey usage 0x%.2X\n", trustm_ec_key->private_key_id, trustm_ec_key->key_curve, trustm_ec_key->key_usage);
+    TRUSTM_PROVIDER_DBG("Key OID: 0x%.4X Key curve: 0x%.2X Key usage: 0x%.2X\n", trustm_ec_key->private_key_id, trustm_ec_key->key_curve, trustm_ec_key->key_usage);
 
     TRUSTM_PROVIDER_SSL_MUTEX_ACQUIRE
     trustm_ec_key->me_crypt = me_crypt;
