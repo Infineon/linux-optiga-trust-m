@@ -115,6 +115,7 @@ static void trustm_signature_freectx(void *ctx)
     TRUSTM_PROVIDER_DBGFN("<");
 }
 
+
 static void *trustm_signature_dupctx(void *ctx)
 {
     trustm_signature_ctx_t *src = ctx;
@@ -261,6 +262,7 @@ static int trustm_rsa_signature_sign(void *ctx, unsigned char *sig, size_t *sigl
 
         memcpy(sig, temp_sig, *siglen);
     }
+    
 	TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
     TRUSTM_PROVIDER_DBGFN("<");
     return 1;
@@ -345,7 +347,6 @@ error:
     return 0;
 }
 
-// basically digest sign, can be used for both sign and verify operations
 static int trustm_rsa_signature_digest_init(void *ctx, const char *mdname, void *provkey, const OSSL_PARAM params[])
 {
     trustm_signature_ctx_t *trustm_signature_ctx = ctx;
@@ -378,14 +379,13 @@ static int trustm_rsa_signature_digest_init(void *ctx, const char *mdname, void 
     
 	TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
     TRUSTM_PROVIDER_DBGFN("<");
-    return  (trustm_rsa_signature_set_ctx_params(trustm_signature_ctx, params)
+    return (trustm_rsa_signature_set_ctx_params(trustm_signature_ctx, params)
             && rsa_signature_scheme_init(trustm_signature_ctx, mdname));
 error:
     TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
     return 0;
 }
 
-// basically digest sign, can be used for both sign and verify operations
 static int trustm_ecdsa_signature_digest_init(void *ctx, const char *mdname, void *provkey, const OSSL_PARAM params[])
 {
     trustm_signature_ctx_t *trustm_signature_ctx = ctx;
@@ -426,7 +426,6 @@ error:
     return 0;
 }
 
-// basically digest update, can be used for both sign and verify operations
 static int trustm_rsa_signature_digest_update(void *ctx, const unsigned char *data, size_t datalen)
 {
     trustm_signature_ctx_t *trustm_signature_ctx = ctx;
@@ -489,7 +488,6 @@ error:
     return 0;
 }
 
-// basically digest update, can be used for both sign and verify operations
 static int trustm_ecdsa_signature_digest_update(void *ctx, const unsigned char *data, size_t datalen)
 {
     trustm_signature_ctx_t *trustm_signature_ctx = ctx;
@@ -1208,10 +1206,8 @@ static int trustm_rsa_signature_set_ctx_params(void *ctx, const OSSL_PARAM param
     p = OSSL_PARAM_locate_const(params, OSSL_SIGNATURE_PARAM_DIGEST);
     if (p != NULL)
     {
-        if (p->data_type != OSSL_PARAM_UTF8_STRING){
-            TRUSTM_PROVIDER_ERRFN("Invalid data type for digest parameter\n");
+        if (p->data_type != OSSL_PARAM_UTF8_STRING)
             return 0;
-        } 
         else 
         {
             if ((strcasecmp("SHA256", p->data) == 0) || ((strcasecmp("RSA+SHA256", p->data) == 0)))
@@ -1297,11 +1293,12 @@ static int trustm_signature_get_ctx_params(void *ctx, OSSL_PARAM params[])
     OSSL_PARAM *p;
     unsigned char *aid = NULL;
     int aid_len = 0;
+    int res = 0;
     TRUSTM_PROVIDER_DBGFN(">");
 
     x509_algor = X509_ALGOR_new();
     if (x509_algor == NULL)
-        goto cleanup;
+        goto error;
 
     // if the signature algorithm is RSA
     if (trustm_signature_ctx->trustm_rsa_key != NULL)
@@ -1320,7 +1317,7 @@ static int trustm_signature_get_ctx_params(void *ctx, OSSL_PARAM params[])
             break;
 
         default:
-            goto cleanup; 
+            goto error; 
         }
 
         X509_ALGOR_set0(x509_algor, oid, V_ASN1_NULL, NULL);
@@ -1338,18 +1335,18 @@ static int trustm_signature_get_ctx_params(void *ctx, OSSL_PARAM params[])
     {
         aid_len = i2d_X509_ALGOR(x509_algor, &aid);
         if (aid_len <= 0)
-            goto cleanup;
+            goto error;
 
         if (!OSSL_PARAM_set_octet_string(p, aid, aid_len))
-            goto cleanup;
+            goto error;
     }
 
     TRUSTM_PROVIDER_DBGFN("<");
-    return 1;
-cleanup:
+    res = 1;
+error:
     if (aid) OPENSSL_free(aid);
     if (x509_algor) X509_ALGOR_free(x509_algor);
-    return 0;
+    return res;
 }
 
 static const OSSL_PARAM *trustm_signature_gettable_ctx_params(void *ctx, void *provctx)

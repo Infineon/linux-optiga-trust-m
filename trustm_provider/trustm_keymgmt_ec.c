@@ -620,6 +620,7 @@ static int trustm_ec_keymgmt_import(void *keydata, int selection, const OSSL_PAR
     BIGNUM *bn_private_key = NULL;
     char *curve_name = NULL;
     char curve_name_buf[64] = {0};
+    int res = 0;
     TRUSTM_PROVIDER_DBGFN(">");
     TRUSTM_PROVIDER_DBGFN("selection: %d (0x%X)", selection, selection); 
     if (trustm_ec_key == NULL)
@@ -671,12 +672,13 @@ static int trustm_ec_keymgmt_import(void *keydata, int selection, const OSSL_PAR
                 goto error;
         }
     }
+    
     TRUSTM_PROVIDER_DBGFN("<");
-    return 1;
+    res = 1;
 error:
     OPENSSL_free(private_key_data);
     BN_free(bn_private_key);
-    return 0;
+    return res;
 }
 
 int trustm_ec_keymgmt_export(void *keydata, int selection, OSSL_CALLBACK *param_cb, void *cbarg)
