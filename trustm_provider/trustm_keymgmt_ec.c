@@ -619,7 +619,6 @@ static int trustm_ec_keymgmt_import(void *keydata, int selection, const OSSL_PAR
     size_t private_key_data_len = 0;
     BIGNUM *bn_private_key = NULL;
     char *curve_name = NULL;
-    char curve_name_buf[64] = {0};
     int res = 0;
     TRUSTM_PROVIDER_DBGFN(">");
     TRUSTM_PROVIDER_DBGFN("selection: %d (0x%X)", selection, selection); 
@@ -641,29 +640,26 @@ static int trustm_ec_keymgmt_import(void *keydata, int selection, const OSSL_PAR
 			TRUSTM_PROVIDER_DBGFN(" Private key %04X ", trustm_ec_key->private_key_id );
         }
         p = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_GROUP_NAME);
-        if (p != NULL && OSSL_PARAM_get_utf8_string(p, &curve_name,sizeof(curve_name_buf))) 
+        if (p != NULL && OSSL_PARAM_get_utf8_string(p, &curve_name,0)) 
         {
+            TRUSTM_PROVIDER_DBGFN("Curve name: %s", curve_name);
             if (strcmp(curve_name, "secp384r1") == 0) {
                 trustm_ec_key->key_curve = OPTIGA_ECC_CURVE_NIST_P_384;
-                TRUSTM_PROVIDER_DBGFN("Curve name: %s, Curve: NIST P-384 (secp384r1)", curve_name_buf);
             } else if (strcmp(curve_name, "prime256v1") == 0 || strcmp(curve_name, "secp256r1") == 0) {
                 trustm_ec_key->key_curve = OPTIGA_ECC_CURVE_NIST_P_256;
-                TRUSTM_PROVIDER_DBGFN("Curve name: %s, Curve: NIST P-256 (secp256r1)", curve_name_buf);
             } else if (strcmp(curve_name, "secp521r1") == 0) {
                 trustm_ec_key->key_curve = OPTIGA_ECC_CURVE_NIST_P_521;
-                TRUSTM_PROVIDER_DBGFN("Curve name: %s, Curve: NIST P-521 (secp521r1)", curve_name_buf);
             } else if (strcmp(curve_name, "brainpoolP256r1") == 0) {
                 trustm_ec_key->key_curve = OPTIGA_ECC_CURVE_BRAIN_POOL_P_256R1;
-                TRUSTM_PROVIDER_DBGFN("Curve name: %s, Curve: Brainpool P-256r1", curve_name_buf);
             } else if (strcmp(curve_name, "brainpoolP384r1") == 0) {
                 trustm_ec_key->key_curve = OPTIGA_ECC_CURVE_BRAIN_POOL_P_384R1;
-                TRUSTM_PROVIDER_DBGFN("Curve name: %s, Curve: Brainpool P-384r1", curve_name_buf);
             } else if (strcmp(curve_name, "brainpoolP512r1") == 0) {
                 trustm_ec_key->key_curve = OPTIGA_ECC_CURVE_BRAIN_POOL_P_512R1;
-                TRUSTM_PROVIDER_DBGFN("Curve name: %s, Curve: Brainpool P-512r1", curve_name_buf);
             } else {
-                TRUSTM_PROVIDER_DBGFN("Unsupported curve name: %s", curve_name_buf);
+                TRUSTM_PROVIDER_DBGFN("Unsupported curve name: %s", curve_name);
             }
+            OPENSSL_free(curve_name);  
+            curve_name = NULL;
         }
         p = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_PUB_KEY);
         if (p != NULL)
