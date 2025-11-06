@@ -9,7 +9,6 @@
 #include <openssl/core_names.h>
 #include <openssl/params.h>
 
-#include <openssl/param_build.h>
 #include <openssl/evp.h>
 #include <openssl/pem.h>
 #include <openssl/ec.h>

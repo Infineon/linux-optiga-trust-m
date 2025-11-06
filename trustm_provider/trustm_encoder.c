@@ -18,9 +18,7 @@
 #include <openssl/asn1.h>
 #include <openssl/asn1t.h>
 #include <openssl/bio.h>
-#include <openssl/evp.h>
-#include <openssl/pem.h>
-#include <openssl/ec.h>
+
 
 #include "trustm_helper.h"
 #include "trustm_provider_common.h"

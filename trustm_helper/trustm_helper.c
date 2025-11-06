@@ -1672,10 +1672,7 @@ void trustm_ecc_r_s_padding_check(uint8_t * sig, uint16_t* sig_len )
         if (*sig==0x02 && *(sig+2) == 0x00 && *(sig+3) <=0x7F)
         {   TRUSTM_HELPER_DBGFN("Fixing R \n");
             j=*sig_len;
-            for(i=2; i < j; i++)
-            {   
-                sig[i]=sig[i+1];
-            }
+            memmove(sig + 2, sig + 3, j - 3); 
             *(sig+1) -= 1; // update length field
             *sig_len -=1;
             #ifdef DEBUG_TRUSTM_HELPER                            
@@ -1690,13 +1687,7 @@ void trustm_ecc_r_s_padding_check(uint8_t * sig, uint16_t* sig_len )
         {   
             TRUSTM_HELPER_DBGFN("Fixing S \n");
             sig[i+1] -= 1; // update length field
-            i +=2;
-            j=*sig_len;
-            for(; i < j; i++)
-            {   
-                sig[i]=sig[i+1];
-            }
-             
+            memmove(sig + i + 2, sig + i + 3, *sig_len - (i + 3));            
             *sig_len -=1;
             #ifdef DEBUG_TRUSTM_HELPER                            
             trustmHexDump(sig,*sig_len);

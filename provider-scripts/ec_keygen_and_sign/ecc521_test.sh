@@ -1,18 +1,15 @@
 #!/bin/bash
 
-# SPDX-FileCopyrightText: Copyright (c) 2024 Infineon Technologies AG
+# SPDX-FileCopyrightText: Copyright (c) 2025 Infineon Technologies AG
 #
 # SPDX-License-Identifier: MIT
 
-# Perform multiple sequential read
 echo "input" > mydata.txt
 
 # Private Key OID
 KEY_OID=e0f1
 
-for i in $(seq 1 10); do
 set +e 
-echo "test $i"
 rm testsignature_521.bin
 set -e
 echo "Trust M key gen for ECC521 at 0x$KEY_OID"
@@ -25,4 +22,3 @@ echo "------> verify Trust M signature with openssl"
 openssl dgst -verify pub_$KEY_OID.pem -keyform pem -sha256 -signature testsignature_521.bin mydata.txt
 
 
-done
