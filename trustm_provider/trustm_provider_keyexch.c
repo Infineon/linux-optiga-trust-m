@@ -195,8 +195,7 @@ static int trustm_keyexch_derive_kdf(trustm_keyexch_ctx_t *trustm_keyexch_ctx, u
     if (OPTIGA_LIB_SUCCESS != return_status)
     {
         TRUSTM_PROVIDER_ERRFN("Error in optiga_crypt_ecdh\nError code : 0x%.4X\n", return_status);
-        TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
-        return 0;
+        goto error;
     }
     
     trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
@@ -205,18 +204,15 @@ static int trustm_keyexch_derive_kdf(trustm_keyexch_ctx_t *trustm_keyexch_ctx, u
     if (return_status != OPTIGA_LIB_SUCCESS)
     {
         TRUSTM_PROVIDER_ERRFN("Error in trustm_keyexch_derive_kdf\nError code : 0x%.4X\n", return_status);
-        TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
-        return 0;
+        goto error;
     }  
 
 
     if ((kdf = EVP_KDF_fetch(trustm_keyexch_ctx->libctx, trustm_keyexch_ctx->kdf_name, trustm_keyexch_ctx->kdf_propq)) == NULL
         || (kctx = EVP_KDF_CTX_new(kdf)) == NULL)
     {
-        EVP_KDF_CTX_free(kctx);
-        EVP_KDF_free(kdf);
-        TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
-        return 0;
+        TRUSTM_PROVIDER_ERRFN("Error fetching KDF %s\n", trustm_keyexch_ctx->kdf_name);
+        goto error;
     }
 
     *p++ = OSSL_PARAM_construct_utf8_string(OSSL_KDF_PARAM_DIGEST, trustm_keyexch_ctx->kdf_hash, 0);
@@ -227,12 +223,12 @@ static int trustm_keyexch_derive_kdf(trustm_keyexch_ctx_t *trustm_keyexch_ctx, u
     res = EVP_KDF_derive(kctx, secret, outlen, params) > 0;
     *secretlen = trustm_keyexch_ctx->kdf_outlen;
 
-    TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
-
-
-    EVP_KDF_CTX_free(kctx);
-    EVP_KDF_free(kdf);
     TRUSTM_PROVIDER_DBGFN("<");
+
+error:
+    TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
+    if (kctx) EVP_KDF_CTX_free(kctx);
+    if (kdf) EVP_KDF_free(kdf);
     return res;
 }
 
@@ -243,6 +239,7 @@ static int trustm_keyexch_derive_plain(trustm_keyexch_ctx_t *trustm_keyexch_ctx,
     uint8_t shared_secret[66];
     uint16_t shared_secret_length;
     public_key_from_host_t peer_public_key_details;
+
     TRUSTM_PROVIDER_DBGFN(">");
     if (trustm_keyexch_ctx->peer_curve != trustm_keyexch_ctx->trustm_private_ec_key->key_curve)
     {
@@ -282,8 +279,7 @@ static int trustm_keyexch_derive_plain(trustm_keyexch_ctx_t *trustm_keyexch_ctx,
     if (OPTIGA_LIB_SUCCESS != return_status)
     {
         TRUSTM_PROVIDER_ERRFN("Error in optiga_crypt_ecdh\nError code : 0x%.4X\n", return_status);
-        TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
-        return 0;
+        goto error;
     }
     
     trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
@@ -292,8 +288,7 @@ static int trustm_keyexch_derive_plain(trustm_keyexch_ctx_t *trustm_keyexch_ctx,
     if (return_status != OPTIGA_LIB_SUCCESS)
     {
         TRUSTM_PROVIDER_ERRFN("Error in trustm_keyexch_derive_plain\nError code : 0x%.4X\n", return_status);
-        TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
-        return 0;
+        goto error;
     }   
 
     *secretlen = shared_secret_length;
@@ -302,15 +297,17 @@ static int trustm_keyexch_derive_plain(trustm_keyexch_ctx_t *trustm_keyexch_ctx,
         if (*secretlen > outlen)
         {
             TRUSTM_PROVIDER_ERRFN("Error secretlen  :  %d   larger than outlen  :  %d\n", *secretlen, outlen);
-            TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
-            return 0;
+            goto error;
         }
         memcpy(secret, shared_secret, *secretlen);
     }
-
-    TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
+    
+	TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
     TRUSTM_PROVIDER_DBGFN("<");
     return 1;
+error:
+    TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
+    return 0;
 }
 
 

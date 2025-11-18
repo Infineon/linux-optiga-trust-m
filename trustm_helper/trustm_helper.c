@@ -1689,14 +1689,13 @@ void trustm_ecc_r_s_padding_check(uint8_t * sig, uint16_t* sig_len )
         if (sig[i]==0x02 && sig[i+2] == 0x00 && sig[i+3] <=0x7F)
         {   
             TRUSTM_HELPER_DBGFN("Fixing S \n");
-            sig[i+1] -= 1; // update length field
+            sig[i+1] -= 1; // update length field            
             i +=2;
             j=*sig_len;
             for(; i < j; i++)
             {   
                 sig[i]=sig[i+1];
-            }
-             
+            }           
             *sig_len -=1;
             #ifdef DEBUG_TRUSTM_HELPER                            
             trustmHexDump(sig,*sig_len);
