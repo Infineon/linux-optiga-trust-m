@@ -1,0 +1,15 @@
+openssl_conf = openssl_init
+
+[openssl_init]
+providers = provider_sect
+
+[provider_sect]
+trustm_provider = trustm_provider_sect
+default = default_sect
+
+[default_sect]
+activate = 1
+
+[trustm_provider_sect]
+activate = 1
+module = trustm_provider.so
