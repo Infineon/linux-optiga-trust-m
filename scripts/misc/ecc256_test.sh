@@ -12,7 +12,7 @@ set -e
 for i in $(seq 1 1); do
 set +e
 echo "test $i"
-rm testsignature_384.bin
+rm testsignature_256.bin
 set -e
 echo "Testing ECC256"
 echo "Trust M key gen for ECC256 at 0x$KEY_OID"
