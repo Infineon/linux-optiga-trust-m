@@ -2,11 +2,11 @@
 
 
 sudo apt update 
-sudo apt -y install git gcc libssl-dev gpiod libgpiod-dev curl
+sudo apt -y install git gcc libssl-dev gpiod libgpiod-dev curl xxd
 
 
 set -e
-echo "-----> Build Trust M Linux Tools and provider"
+echo "-----> Build Trust M Linux Tools (CLI-only)"
 sudo make uninstall
 make clean
 make -j5
