@@ -4,14 +4,18 @@ source config.sh
 echo "Read out metadata for 0x$TARGET_AES_OID"
 $EXEPATH/trustm_metadata -r  0x$TARGET_AES_OID | tee aes_metadata.txt
 payload_version_hex=$(grep -oP 'C1 02 \K(..) (..)' aes_metadata.txt | tr -d ' ')
-PAYLOAD_VERSION=$(printf "%04X" $payload_version_hex)
+PAYLOAD_VERSION=$((0x$payload_version_hex))
+echo "Current payload version: 0x$(printf '%04X' "$PAYLOAD_VERSION")  (${PAYLOAD_VERSION})"
+if ((PAYLOAD_VERSION >= 0x7FFF )); then
+    echo "Reached maximum payload value 0x7FFF!"
+    echo "Please run step0_reset_payload_version.sh to reset payload version!"
+fi    
 NEW_PAYLOAD_VERSION=$((PAYLOAD_VERSION + 1))
 AES_NEW_PAYLOAD_VERSION=$(printf "%04X" $NEW_PAYLOAD_VERSION)
-echo "Current Payload version: 0x$PAYLOAD_VERSION"
-echo "Increase payload version by 1: 0x$AES_NEW_PAYLOAD_VERSION"
+echo "New payload version : 0x${AES_NEW_PAYLOAD_VERSION}  (${NEW_PAYLOAD_VERSION})"
 
 echo "Generate manifest & fragment for AES key protected update"
-raw_output=$($UPDATEPATH/trustm_protected_update_set payload_version="$AES_NEW_PAYLOAD_VERSION" trust_anchor_oid=$TRUST_ANCHOR_OID target_oid=$TARGET_AES_OID sign_algo=$SIGN_ALGO priv_key="$TRUST_ANCHOR_PRIV_KEY" payload_type=key key_algo="$KEY_ALGO" key_usage="$KEY_USAGE" key_data="$AES_KEY_TO_UPDATE" label="test" seed_length=64 enc_algo="AES-CCM-16-64-128" secret_oid=$PROTECTED_UPDATE_SECRET_OID secret="$PROTECTED_UPDATE_SECRET") 
+raw_output=$($UPDATEPATH/trustm_protected_update_set payload_version="$NEW_PAYLOAD_VERSION" trust_anchor_oid=$TRUST_ANCHOR_OID target_oid=$TARGET_AES_OID sign_algo=$SIGN_ALGO priv_key="$TRUST_ANCHOR_PRIV_KEY" payload_type=key key_algo="$KEY_ALGO" key_usage="$KEY_USAGE" key_data="$AES_KEY_TO_UPDATE" label="test" seed_length=64 enc_algo="AES-CCM-16-64-128" secret_oid=$PROTECTED_UPDATE_SECRET_OID secret="$PROTECTED_UPDATE_SECRET") 
 manifest_hex=$(echo "$raw_output" | awk '
     /uint8_t manifest_data/ {p=1; next}
     p && /fragment_01/ {p=0}
