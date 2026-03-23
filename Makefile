@@ -120,6 +120,11 @@ endif
 CC = gcc
 DEBUG = -g
 
+LIBGPIOD_VERSION := $(shell pkg-config --modversion libgpiod 2>/dev/null)
+ifeq ($(shell echo $(LIBGPIOD_VERSION) | cut -c1),1)
+  CFLAGS += -DLIBGPIOD_V1
+endif
+
 CFLAGS += -c
 ifeq ($(ARCH), arm64)
 CFLAGS += -fPIC
