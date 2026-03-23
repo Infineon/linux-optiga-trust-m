@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: 2025 Infineon Technologies AG
+ *
+ * SPDX-License-Identifier: MIT
+ */
 #include <string.h>
 
 #include <openssl/core_dispatch.h>
@@ -101,8 +106,7 @@ static int rsa_asymcipher_encrypt(void *ctx, unsigned char *out, size_t *outlen,
     if (OPTIGA_LIB_SUCCESS != return_status)
     {
         TRUSTM_PROVIDER_ERRFN("Error in optiga_crypt_rsa_encrypt_message\nError code : 0x%.4X\n", return_status);
-        TRUSTM_PROVIDER_SSL_MUTEX_RELEASE;
-        return 0;
+        goto error;
     }
 
     trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
@@ -111,8 +115,7 @@ static int rsa_asymcipher_encrypt(void *ctx, unsigned char *out, size_t *outlen,
     if (return_status != OPTIGA_LIB_SUCCESS)
     {
         TRUSTM_PROVIDER_ERRFN("Error encrypting message with RSA");
-        TRUSTM_PROVIDER_SSL_MUTEX_RELEASE;
-        return 0;
+        goto error;
     }
 
     *outlen = trustm_rsa_asymcipher_ctx->encrypted_message_length;
@@ -122,8 +125,7 @@ static int rsa_asymcipher_encrypt(void *ctx, unsigned char *out, size_t *outlen,
         if (*outlen > outsize)
         {
             TRUSTM_PROVIDER_ERRFN("Error outlen : %d is larger than outsize : %d\n", *outlen, outsize);
-            TRUSTM_PROVIDER_SSL_MUTEX_RELEASE;
-            return 0;
+            goto error;
         }
 
         memcpy(out, trustm_rsa_asymcipher_ctx->encrypted_message, *outlen);
@@ -132,6 +134,9 @@ static int rsa_asymcipher_encrypt(void *ctx, unsigned char *out, size_t *outlen,
     TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
     TRUSTM_PROVIDER_DBGFN("<");
     return 1;
+error:
+    TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
+    return 0;
 }
 
 
@@ -157,8 +162,7 @@ static int rsa_asymcipher_decrypt(void *ctx, unsigned char *out, size_t *outlen,
     if (OPTIGA_LIB_SUCCESS != return_status)
     {
         TRUSTM_PROVIDER_ERRFN("Error in optiga_crypt_rsa_decrypt_and_export\nError code : %.4X\n", return_status);
-        TRUSTM_PROVIDER_SSL_MUTEX_RELEASE;
-        return 0;
+        goto error;
     }
 
     trustmProvider_WaitForCompletion(BUSY_WAIT_TIME_OUT);
@@ -167,8 +171,7 @@ static int rsa_asymcipher_decrypt(void *ctx, unsigned char *out, size_t *outlen,
     if (return_status != OPTIGA_LIB_SUCCESS)
     {
         TRUSTM_PROVIDER_ERRFN("Error decrypting message with RSA.\nError code : %.4X\n", return_status);
-        TRUSTM_PROVIDER_SSL_MUTEX_RELEASE;
-        return 0;
+        goto error;
     }
 
     *outlen = trustm_rsa_asymcipher_ctx->decrypted_message_length;
@@ -178,8 +181,7 @@ static int rsa_asymcipher_decrypt(void *ctx, unsigned char *out, size_t *outlen,
         if (*outlen > outsize)
         {
             TRUSTM_PROVIDER_ERRFN("Error outlen : %d is larger than outsize : %d\n", *outlen, outsize);
-            TRUSTM_PROVIDER_SSL_MUTEX_RELEASE;
-            return 0;
+            goto error;
         }
 
         memcpy(out, trustm_rsa_asymcipher_ctx->decrypted_message, *outlen);
@@ -188,6 +190,9 @@ static int rsa_asymcipher_decrypt(void *ctx, unsigned char *out, size_t *outlen,
     TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
     TRUSTM_PROVIDER_DBGFN("<");
     return 1;
+error:
+    TRUSTM_PROVIDER_SSL_MUTEX_RELEASE
+    return 0;
 }
 
 static void rsa_asymcipher_freectx(void *ctx)
