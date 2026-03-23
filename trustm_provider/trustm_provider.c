@@ -5,6 +5,12 @@
  */
 
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <dirent.h>
+#include <sys/stat.h>
+#include <libgen.h>
 
 
 #include <openssl/core_dispatch.h>
@@ -22,6 +28,10 @@
 
 #include "trustm_provider_common.h"
 
+#define PBS_FILENAME "pbsfile.txt"
+#define PBS_FOLDER "pbs"
+#define PATH_MAX 4096
+static char cached_pbs_file_path[PATH_MAX] = {0};
 
 ///////////////////////////////// trustm hardware related /////////////////////////////////
 #ifdef WORKAROUND
@@ -81,6 +91,52 @@ optiga_lib_status_t trustmProvider_WaitForCompletion(uint16_t wait_time)
     
 }
 
+/**********************************************************************
+* check_pbs_folder and find_pbs_folder: Function to search for PBS folder recursively
+**********************************************************************/
+int check_pbs_folder(const char *dir, char *pbs_file_path, size_t max_len) {
+    struct stat path_stat;
+    snprintf(pbs_file_path, max_len, "%s/pbs/pbsfile.txt", dir);
+    
+    return (stat(pbs_file_path, &path_stat) == 0);
+}
+
+int find_pbs_folder(const char *start_dir, char *pbs_file_path, size_t max_len) {
+    struct stat path_stat;
+    
+    if (check_pbs_folder(start_dir, pbs_file_path, max_len)) {
+        return 1;
+    }
+    char parent_dir[PATH_MAX];
+    strncpy(parent_dir, start_dir, sizeof(parent_dir));
+    parent_dir[sizeof(parent_dir) - 1] = '\0'; 
+    char *dir_name = dirname(parent_dir); 
+
+    DIR *dir = opendir(dir_name);
+    if (!dir) {
+        return 0; 
+    }
+
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL) {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+            continue;
+        }
+
+        char sibling_path[PATH_MAX];
+        snprintf(sibling_path, sizeof(sibling_path), "%s/%s", dir_name, entry->d_name);
+        
+        if (stat(sibling_path, &path_stat) == 0 && S_ISDIR(path_stat.st_mode)) {
+            if (check_pbs_folder(sibling_path, pbs_file_path, max_len)) {
+                closedir(dir);
+                return 1;
+            }
+        }
+    }
+
+    closedir(dir);
+    return 0; 
+}
 
 /**********************************************************************
 * trustmProvider_Open()
@@ -93,8 +149,44 @@ optiga_lib_status_t trustmProvider_Open(void)
 
     do
     {
+        char pbs_file_path[PATH_MAX];
+        uint8_t pbs_buffer[64] = {0};
+        uint8_t temp_buffer[128];
+        uint32_t bytes_to_read;
         
-        //Create an instance of optiga_util to open the application on OPTIGA.
+        if (cached_pbs_file_path[0] == '\0') { 
+            char start_dir[PATH_MAX];
+            getcwd(start_dir, sizeof(start_dir));
+
+            if (find_pbs_folder(start_dir, pbs_file_path, sizeof(pbs_file_path))) {
+                strncpy(cached_pbs_file_path, pbs_file_path, sizeof(cached_pbs_file_path));
+            }
+        }
+
+        if (cached_pbs_file_path[0] != '\0') {
+            bytes_to_read = 0;
+            trustmReadDER(temp_buffer, &bytes_to_read, cached_pbs_file_path);
+
+            if (bytes_to_read > 0) {
+                bytes_to_read = 64;
+                char* pbsInput = (char*)temp_buffer;
+
+                for (size_t count = 0; count < sizeof(pbs_buffer) / sizeof(*pbs_buffer); count++) {
+                    sscanf(pbsInput, "%2hhx", &pbs_buffer[count]);
+                    pbsInput += 2;
+                }
+
+                pal_status_t pal_return_status = pal_os_datastore_write(
+                    OPTIGA_PLATFORM_BINDING_SHARED_SECRET_ID,
+                    pbs_buffer,
+                    bytes_to_read);
+
+                if (PAL_STATUS_SUCCESS != pal_return_status) {
+                    printf("Failed to write PBS to datastore, but continuing initialization.\n");
+                }
+            }
+        }
+        
         pal_shm_mutex_acquire(&trustm_eng_mutex,"/trustm-mutex");
         if (me_util == NULL)
         {
