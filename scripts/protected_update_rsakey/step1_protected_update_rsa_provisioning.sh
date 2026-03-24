@@ -3,7 +3,7 @@ source config.sh
 
 set -e
 
-echo "provisioning for ECC key Protected Update"
+echo "provisioning for RSA key Protected Update"
 echo "Step1: Provisioning initial Trust Anchor, metadata for Trust Anchor"
 echo "Write sample_ec_256_cert.pem into 0x$TRUST_ANCHOR_OID"
 $EXEPATH/trustm_cert -w 0x$TRUST_ANCHOR_OID -i "$TRUST_ANCHOR_CERT"
@@ -29,14 +29,14 @@ $EXEPATH/trustm_metadata -w 0x$PROTECTED_UPDATE_SECRET_OID -F protected_update_s
 echo "Read out metadata for 0x$PROTECTED_UPDATE_SECRET_OID after Provisioning"
 $EXEPATH/trustm_metadata -r  0x$PROTECTED_UPDATE_SECRET_OID
 
-echo "Step3: Provisioning metadata for 0x$TARGET_ECC_OID"
-echo "Set AES protected update for 0x$TARGET_ECC_OID (Provision for Protected Update)"
-echo $TARGET_ECC_OID_META | xxd -r -p > targetOID_metadata.bin
+echo "Step3: Provisioning metadata for 0x$TARGET_RSA_OID"
+echo "Set AES protected update for 0x$TARGET_RSA_OID (Provision for Protected Update)"
+echo $TARGET_RSA_OID_META | xxd -r -p > targetOID_metadata.bin
 echo "Printout targetOID_metadata.bin"
 xxd targetOID_metadata.bin
-echo "Write targetOID_metadata.bin as metadata of 0x$TARGET_ECC_OID"
-$EXEPATH/trustm_metadata -w 0x$TARGET_ECC_OID -F targetOID_metadata.bin
-echo "Read out metadata of 0x$TARGET_ECC_OID"
-$EXEPATH/trustm_metadata -r 0x$TARGET_ECC_OID 
+echo "Write targetOID_metadata.bin as metadata of 0x$TARGET_RSA_OID"
+$EXEPATH/trustm_metadata -w 0x$TARGET_RSA_OID -F targetOID_metadata.bin
+echo "Read out metadata of 0x$TARGET_RSA_OID"
+$EXEPATH/trustm_metadata -r 0x$TARGET_RSA_OID 
 
 
