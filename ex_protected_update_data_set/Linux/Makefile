@@ -1,7 +1,7 @@
 #/**
 #* MIT License
 #*
-#* Copyright (c) 2020 Infineon Technologies AG
+#* Copyright (c) 2026 Infineon Technologies AG
 #*
 #* Permission is hereby granted, free of charge, to any person obtaining a copy
 #* of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,15 @@
 ARCH := $(shell dpkg --print-architecture)
 BINDIR = bin
 APPDIR = .
-MBEDTLS_LIB = ../../trustm_lib/external/mbedtls
+
+# Always choose mbedtls 4.x to build
+TRUSTM = ../../trustm_lib
+
+MBEDTLS_LIB    := $(TRUSTM)/external/mbedtls-4.x
+TF_PSA_DIR     := $(MBEDTLS_LIB)/tf-psa-crypto
+MBEDTLS_CONFIG := $(TRUSTM)/config/mbedtls_4.x_default_config.h
+TF_PSA_CONFIG  := $(TRUSTM)/config/tf_psa_default_config.h
+
 ifeq ($(ARCH), arm64)
 LIB_INSTALL_DIR = /usr/lib/aarch64-linux-gnu
 else
@@ -38,13 +46,28 @@ INCDIR = ../include
 INCDIR += ../include/pal
 INCDIR += $(MBEDTLS_LIB)/include
 INCDIR += $(MBEDTLS_LIB)/include/mbedtls
+INCDIR += $(TRUSTM)/config
+INCDIR += $(MBEDTLS_LIB)/library
+INCDIR += $(TF_PSA_DIR)/include
+INCDIR += $(TF_PSA_DIR)/utilities
+INCDIR += $(TF_PSA_DIR)/dispatch
+INCDIR += $(TF_PSA_DIR)/platform
+INCDIR += $(TF_PSA_DIR)/drivers/builtin/include
+INCDIR += $(TF_PSA_DIR)/drivers/builtin/src
+INCDIR += $(TF_PSA_DIR)/core
+INCDIR += $(TF_PSA_DIR)/extras
+
 
 
 
 LIBDIR = ../src
 LIBDIR += ../pal
-#~ LIBDIR += $(MBEDTLS_LIB)
 LIBDIR += $(MBEDTLS_LIB)/library
+LIBDIR += $(TF_PSA_DIR)/core
+LIBDIR += $(TF_PSA_DIR)/platform
+LIBDIR += $(TF_PSA_DIR)/utilities
+LIBDIR += $(TF_PSA_DIR)/extras
+LIBDIR += $(TF_PSA_DIR)/drivers/builtin/src
 
 
 ifdef INCDIR
@@ -54,6 +77,10 @@ endif
 
 ifdef LIBDIR
 	LIBSRC += $(shell find $(LIBDIR) -name '*.c') 
+	# Select the correct PAL crypt for the requested Mbed TLS variant.
+	# pal_crypt_psa.c targets Mbed TLS 4.x / TF-PSA-Crypto (PSA Crypto API),
+	# whereas the original pal_crypt_mbedtls.c targets Mbed TLS 2.x / 3.x.
+	LIBSRC := $(filter-out %/pal_crypt_mbedtls.c,$(LIBSRC))
 	LIBOBJ := $(patsubst %.c,%.o,$(LIBSRC))
 	LIB = libtrustm_update.so
 endif
@@ -82,6 +109,11 @@ CFLAGS += -Wno-pointer-sign
 ifeq ($(ARCH), arm64)
 CFLAGS += -fPIC
 endif
+CFLAGS += -DMBEDTLS_USER_CONFIG_FILE=\"../../$(MBEDTLS_CONFIG)\"
+CFLAGS += -DTF_PSA_CRYPTO_USER_CONFIG_FILE=\"../../$(TF_PSA_CONFIG)\"
+
+
+LDFLAGS += -lpthread
 
 LDFLAGS_1 = -L$(BINDIR) -Wl,-R$(BINDIR)
 LDFLAGS_1 += -ltrustm_update
