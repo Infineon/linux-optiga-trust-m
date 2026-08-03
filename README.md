@@ -122,7 +122,7 @@ Note: For support for mbedtls 2.x/3.x, please check out the [`feature/mbedtls-2.
 
 ### <a name="build_lib"></a>First time building the library
 
-Run the commands below in sequence to install the required dependencies and the OPTIGA™ Trust M provider. 
+Run the commands below in sequence to install the required dependencies and the OPTIGA™ Trust M CLI tools and provider. 
 
     cd linux-optiga-trust-m
     ./trustm_installation_script.sh
