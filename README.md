@@ -118,15 +118,16 @@ Getting the initial code from GitHub with submodules
 git clone --recurse-submodules https://github.com/Infineon/linux-optiga-trust-m.git
 ```
 
+Note: For support for mbedtls 2.x/3.x, please check out the [`feature/mbedtls-2.x/3.x`](https://github.com/Infineon/linux-optiga-trust-m/tree/feature/mbedtls-2.x/3.x) branch.
+
 ### <a name="build_lib"></a>First time building the library
-Run the commands below in sequence to install the required dependencies and the OPTIGA™ Trust M provider. 
+
+Run the commands below in sequence to install the required dependencies and the OPTIGA™ Trust M CLI tools and provider. 
 
     cd linux-optiga-trust-m
     ./trustm_installation_script.sh
 
-Note: 
-
-Enable I2C interface for Raspberry Pi to communicate with OPTIGA™ Trust M
+Note: Enable I2C interface for Raspberry Pi to communicate with OPTIGA™ Trust M
 
 ## <a name="cli_usage"></a>CLI Tools Usage
 

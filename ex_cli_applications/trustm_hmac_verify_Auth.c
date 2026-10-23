@@ -43,10 +43,10 @@
 
 #include "pal_os_memory.h"
 #include "pal_crypt.h"
-#include "mbedtls/ccm.h"
-#include "mbedtls/md.h"
-#include "mbedtls/ssl.h"
-   
+#include <psa/crypto.h>
+
+#define PSA_CRYPT_SHA256_SIZE           (32U)
+
 typedef struct _OPTFLAG {
         uint16_t        secretoid       : 1;
         uint16_t        secret          : 1;
@@ -80,6 +80,7 @@ void helpmenu(void)
     printf("-s <filename> : Input user secret \n");
     printf("-r <OID>      : Read from target OID\n");
     printf("-w <OID>      : Write into target OID 0xNNNN \n");
+    printf("-i <filename> : Input data to write into target OID (use with -w)\n");
     printf("-o <filename> : Output Data stored inside target OID\n");
     printf("-X            : Bypass Shielded Communication \n");
     printf("-h            : Print this help \n");
@@ -92,33 +93,53 @@ static pal_status_t pal_crypt_hmac(pal_crypt_t* p_pal_crypt,
                                    uint32_t input_data_length,
                                    uint8_t * hmac)
 {
+    (void)p_pal_crypt;
     pal_status_t return_value = PAL_STATUS_FAILURE;
-
-    const mbedtls_md_info_t * hmac_info;
-    mbedtls_md_type_t digest_type;
-    
-    do
-    {
 #ifdef OPTIGA_LIB_DEBUG_NULL_CHECK
-        if ((NULL == input_data) || (NULL == hmac))
-        {
+    if (secret_key == NULL || input_data == NULL || hmac == NULL){
+        return PAL_STATUS_FAILURE;
+    }
+#endif // OPTIGA_LIB_DEBUG_NULL_CHECK
+    do{
+        psa_status_t status;
+        psa_key_attributes_t attr = PSA_KEY_ATTRIBUTES_INIT;
+        psa_key_id_t key_id = 0;
+        size_t mac_len = 0;
+        
+        status = psa_crypto_init();
+        if (status != PSA_SUCCESS){
             break;
         }
-#endif  //OPTIGA_LIB_DEBUG_NULL_CHECK
-
-        digest_type = (((uint16_t)OPTIGA_HMAC_SHA_256 == hmac_type)? MBEDTLS_MD_SHA256: MBEDTLS_MD_SHA384);
         
-        hmac_info = mbedtls_md_info_from_type(digest_type);
-
-        if (0 != mbedtls_md_hmac(hmac_info, secret_key, secret_key_len, input_data, input_data_length, hmac))
-        {
+        /* These apps use SHA-256 only */
+        if ((uint16_t)OPTIGA_HMAC_SHA_256 != hmac_type){
             break;
         }
-        
+
+        psa_set_key_type(&attr, PSA_KEY_TYPE_HMAC);
+        psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_SIGN_MESSAGE);
+        psa_set_key_algorithm(&attr, PSA_ALG_HMAC(PSA_ALG_SHA_256));
+
+        status = psa_import_key(&attr, secret_key, (size_t)secret_key_len, &key_id);
+        psa_reset_key_attributes(&attr);
+        if (status != PSA_SUCCESS){
+            break;
+        }
+        status = psa_mac_compute(key_id,
+                                PSA_ALG_HMAC(PSA_ALG_SHA_256),
+                                input_data,
+                                (size_t)input_data_length,
+                                hmac,
+                                PSA_CRYPT_SHA256_SIZE,
+                                &mac_len);
+
+        psa_destroy_key(key_id);
+
+        if (status != PSA_SUCCESS || mac_len != PSA_CRYPT_SHA256_SIZE){
+            break;
+        }
         return_value = PAL_STATUS_SUCCESS;
-
-    } while (FALSE);
-
+    } while(FALSE); 
     return return_value;
 }
 
@@ -138,8 +159,6 @@ pal_status_t CalcHMAC(const uint8_t * secret_key,
 }
 
 pal_status_t pal_return_status;
-uint16_t offset, bytes_to_read,bytes_to_read1;
-uint8_t read_data_buffer[100];
 
 /**
  * Optional data
@@ -182,10 +201,10 @@ int main (int argc, char **argv)
 
     uint16_t secret_oid = 0xF1D0;// default secret OID;
     uint16_t target_oid = 0xF1D5;// default target OID;
-    uint8_t hmac_type=0x20;// default HMAC_SHA256
-    uint16_t offset, bytes_to_read,bytes_to_read1;
-    uint8_t read_data_buffer[100];
-    uint8_t user_secret[64];
+    uint8_t user_secret[64] = {0};
+    uint8_t hmac_type = (uint8_t)OPTIGA_HMAC_SHA_256;// default HMAC_SHA256
+    uint16_t offset, bytes_to_read, bytes_to_read1;
+    uint8_t read_data_buffer[2048];
     
     char *inFile = NULL;
     char *secFile = NULL;
@@ -295,8 +314,17 @@ int main (int argc, char **argv)
                 OPTIGA_CRYPT_SET_COMMS_PROTECTION_LEVEL(me_crypt, OPTIGA_COMMS_FULL_PROTECTION);
             }
             
-            bytes_to_read1 = 0;
-            trustmReadDER(user_secret, (uint32_t *)&bytes_to_read1, secFile);
+            {
+                uint32_t secret_len_tmp = 0;
+                if (trustmReadDER(user_secret, &secret_len_tmp, secFile) != 0 ||
+                    secret_len_tmp == 0 ||
+                    secret_len_tmp > sizeof(user_secret))
+                {
+                    printf("Failed to read secret file: %s\n", secFile);
+                    break;
+                }
+                bytes_to_read1 = (uint16_t)secret_len_tmp;
+            }
             printf("Input secret : \n");
             trustmHexDump(user_secret,bytes_to_read1);              
             optiga_lib_status = OPTIGA_LIB_BUSY;
@@ -330,7 +358,7 @@ int main (int argc, char **argv)
             
             // Function name in line with SRM
             pal_return_status = CalcHMAC(user_secret,
-                                    sizeof(user_secret),
+                                    bytes_to_read1,
                                     input_data_buffer,
                                     sizeof(input_data_buffer),
                                     hmac_buffer);
@@ -396,8 +424,17 @@ int main (int argc, char **argv)
                     printf("Input filename missing!!!\n");
                     break;
                 }
-                bytes_to_read = 0;
-                trustmReadDER(read_data_buffer, (uint32_t *)&bytes_to_read, inFile);
+                {
+                    uint32_t data_len_tmp = 0;
+                    if (trustmReadDER(read_data_buffer, &data_len_tmp, inFile) != 0 ||
+                        data_len_tmp == 0 ||
+                        data_len_tmp > sizeof(read_data_buffer))
+                    {
+                        printf("Failed to read input file: %s\n", inFile);
+                        break;
+                    }
+                    bytes_to_read = (uint16_t)data_len_tmp;
+                }
                 printf("Input data : \n");
                 trustmHexDump(read_data_buffer,bytes_to_read);
 
